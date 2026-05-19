@@ -14,38 +14,45 @@ repositories {
 }
 
 def runeLiteVersion = 'latest.release'
-def pluginMainClass = 'com.example.ExamplePluginTest'
 
 dependencies {
-	compileOnly group: 'net.runelite', name:'client', version: runeLiteVersion
+	compileOnly group: 'net.runelite', name: 'client', version: runeLiteVersion
 
 	compileOnly 'org.projectlombok:lombok:1.18.30'
 	annotationProcessor 'org.projectlombok:lombok:1.18.30'
 
-	testImplementation 'junit:junit:4.12'
-	testImplementation group: 'net.runelite', name:'client', version: runeLiteVersion
-	testImplementation group: 'net.runelite', name:'jshell', version: runeLiteVersion
+	implementation 'org.json:json:20231013'
+    testImplementation 'junit:junit:4.12'
+	testImplementation group: 'net.runelite', name: 'client', version: runeLiteVersion
+	testImplementation group: 'net.runelite', name: 'jshell', version: runeLiteVersion
 }
 
-group = 'com.example'
+group = 'com.gecompanion'
 
 tasks.withType(JavaCompile).configureEach {
 	options.encoding = 'UTF-8'
 	options.release.set(11)
 }
 
-tasks.register('run', JavaExec) {
-	classpath = sourceSets.test.runtimeClasspath
-	mainClass = pluginMainClass
+tasks.register('runClient', JavaExec) {
+	classpath = sourceSets.main.output + sourceSets.test.runtimeClasspath
 
-	jvmArgs "-ea"
-	args "--developer-mode", "--debug"
+	mainClass = 'gecompanion.ExamplePluginTest'
+
+	jvmArgs "-ea",
+			"-Xmx512m",
+			"--add-opens=java.desktop/sun.awt=ALL-UNNAMED",
+			"--add-opens=java.desktop/sun.java2d=ALL-UNNAMED"
+
+	args "--developer-mode",
+			"--debug",
+			"--insecure-write-credentials"
 }
 
 tasks.register('shadowJar', Jar) {
 	dependsOn configurations.testRuntimeClasspath
 	manifest {
-		attributes('Main-Class': pluginMainClass, 'Multi-Release': true)
+		attributes('Main-Class': 'gecompanion.ExamplePluginTest', 'Multi-Release': true)
 	}
 
 	duplicatesStrategy = DuplicatesStrategy.EXCLUDE
