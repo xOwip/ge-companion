@@ -66,6 +66,8 @@ public class GECompanionPanel extends PluginPanel
     private java.util.Map<Integer, PriceData> priceCache = new java.util.HashMap<>();
     private java.util.Map<String, Integer> nameToId = new java.util.HashMap<>();
     private java.util.Map<Integer, Long> avgPrice24h = new java.util.HashMap<>();
+    private java.util.Map<Integer, Long> avgPrice1h = new java.util.HashMap<>();
+    private java.util.Map<Integer, Long> avgPrice6h = new java.util.HashMap<>();
     private java.util.Map<Integer, Integer> itemLimits = new java.util.HashMap<>();
     // Pinned/watched items
     private final java.util.List<String> pinnedItems = new java.util.ArrayList<>();
@@ -111,11 +113,13 @@ public class GECompanionPanel extends PluginPanel
         build();
     }
 
-    public void onPricesUpdated(java.util.Map<Integer, PriceData> priceCache, java.util.Map<String, Integer> nameToId, java.util.Map<Integer, Long> avgPrice24h, java.util.Map<Integer, Integer> itemLimits)
+    public void onPricesUpdated(java.util.Map<Integer, PriceData> priceCache, java.util.Map<String, Integer> nameToId, java.util.Map<Integer, Long> avgPrice24h, java.util.Map<Integer, Long> avgPrice1h, java.util.Map<Integer, Long> avgPrice6h, java.util.Map<Integer, Integer> itemLimits)
     {
         this.priceCache = priceCache;
         this.nameToId = nameToId;
         this.avgPrice24h = avgPrice24h;
+        this.avgPrice1h = avgPrice1h;
+        this.avgPrice6h = avgPrice6h;
         this.itemLimits = itemLimits;
         secondsSinceRefresh = 0;
         showTab(activeTab);
@@ -544,7 +548,10 @@ public class GECompanionPanel extends PluginPanel
                         String displayName = sb.toString().trim();
                         String price = String.valueOf(pd.getMid());
                         String delta = "0.00";
-                        Long avg = avgPrice24h.get(id);
+                        java.util.Map<Integer, Long> avgCache = avgPrice24h;
+                        if (activeTimeFrame.equals("1H")) avgCache = avgPrice1h;
+                        else if (activeTimeFrame.equals("6H")) avgCache = avgPrice6h;
+                        Long avg = avgCache.get(id);
                         if (avg != null && avg > 0 && pd.getMid() > 0)
                         {
                             double pct = ((double)(pd.getMid() - avg) / avg) * 100.0;
@@ -1300,7 +1307,10 @@ public class GECompanionPanel extends PluginPanel
 
         String price = String.valueOf(pd.getMid());
         String delta = "0.00";
-        Long avg = avgPrice24h.get(id);
+        java.util.Map<Integer, Long> avgCache = avgPrice24h;
+        if (activeTimeFrame.equals("1H")) avgCache = avgPrice1h;
+        else if (activeTimeFrame.equals("6H")) avgCache = avgPrice6h;
+        Long avg = avgCache.get(id);
         if (avg != null && avg > 0)
         {
             double pct = ((double)(pd.getMid() - avg) / avg) * 100.0;
@@ -1317,19 +1327,23 @@ public class GECompanionPanel extends PluginPanel
         bar.setBackground(new Color(26, 23, 24));
         bar.setBorder(new EmptyBorder(5, 6, 5, 6));
 
-        String[] frames = {"1H", "24H", "7D", "30D"};
+        String[] frames = {"1H", "6H", "24H", "30D"};
         for (String frame : frames)
         {
             JButton btn = new JButton(frame);
             btn.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
             btn.setFocusPainted(false);
             btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            boolean isDisabled = frame.equals("30D");
             btn.setBackground(frame.equals(activeTimeFrame) ? new Color(26, 21, 0) : new Color(14, 12, 13));
-            btn.setForeground(frame.equals(activeTimeFrame) ? GOLD : TAB_INACTIVE);
-            btn.setBorder(BorderFactory.createLineBorder(frame.equals(activeTimeFrame) ? GOLD : new Color(58, 53, 48)));
+            btn.setForeground(isDisabled ? new Color(45, 40, 38) : frame.equals(activeTimeFrame) ? GOLD : TAB_INACTIVE);
+            btn.setBorder(BorderFactory.createLineBorder(isDisabled ? new Color(35, 30, 28) : frame.equals(activeTimeFrame) ? GOLD : new Color(58, 53, 48)));
+            btn.setEnabled(!isDisabled);
             btn.addActionListener(e -> {
-                activeTimeFrame = frame;
-                showTab(activeTab);
+                if (!isDisabled) {
+                    activeTimeFrame = frame;
+                    showTab(activeTab);
+                }
             });
             bar.add(btn);
         }

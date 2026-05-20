@@ -67,6 +67,10 @@ public class GECompanionPlugin extends Plugin
 	private final Map<Integer, PriceData> priceCache = new HashMap<>();
 	// 24h average prices — itemId -> avg price
 	private final Map<Integer, Long> avgPrice24h = new HashMap<>();
+	// 1h average prices — itemId -> avg price
+	private final Map<Integer, Long> avgPrice1h = new HashMap<>();
+	// 6h average prices — itemId -> avg price
+	private final Map<Integer, Long> avgPrice6h = new HashMap<>();
 	// Name -> itemId mapping
 	private final Map<String, Integer> nameToId = new HashMap<>();
 	// Item GE limits — itemId -> limit
@@ -156,11 +160,13 @@ public class GECompanionPlugin extends Plugin
 				}
 
 				log.debug("Fetched prices for {} items", priceCache.size());
-				// Fetch 24h averages for delta calculation
+// Fetch all timeframe averages
 				fetch24hAverages();
+				fetchTimeframeAverages("1h", avgPrice1h);
+				fetchTimeframeAverages("6h", avgPrice6h);
 
 				// Update panel on EDT
-				javax.swing.SwingUtilities.invokeLater(() -> panel.onPricesUpdated(priceCache, nameToId, avgPrice24h, itemLimits));
+				javax.swing.SwingUtilities.invokeLater(() -> panel.onPricesUpdated(priceCache, nameToId, avgPrice24h, avgPrice1h, avgPrice6h, itemLimits));
 			}
 		}
 		catch (Exception e)
@@ -169,7 +175,51 @@ public class GECompanionPlugin extends Plugin
 		}
 	}
 
-	private void fetch24hAverages()
+	private void fetchTimeframeAverages(String interval, Map<Integer, Long> cache)
+{
+    try
+    {
+        Request request = new Request.Builder()
+            .url("https://prices.runescape.wiki/api/v1/osrs/" + interval)
+            .header("User-Agent", "GE Companion RuneLite Plugin")
+            .build();
+
+        try (Response response = okHttpClient.newCall(request).execute())
+        {
+            if (!response.isSuccessful() || response.body() == null) return;
+
+            String body = response.body().string();
+            JSONObject json = new JSONObject(body);
+            JSONObject data = json.getJSONObject("data");
+
+            cache.clear();
+            for (String key : data.keySet())
+            {
+                try
+                {
+                    int id = Integer.parseInt(key);
+                    JSONObject item = data.getJSONObject(key);
+                    long avgHigh = item.optLong("avgHighPrice", 0);
+                    long avgLow = item.optLong("avgLowPrice", 0);
+                    if (avgHigh > 0 && avgLow > 0)
+                        cache.put(id, (avgHigh + avgLow) / 2);
+                    else if (avgHigh > 0)
+                        cache.put(id, avgHigh);
+                    else if (avgLow > 0)
+                        cache.put(id, avgLow);
+                }
+                catch (NumberFormatException e) { }
+            }
+            log.debug("Fetched {} averages for {} items", interval, cache.size());
+        }
+    }
+    catch (Exception e)
+    {
+        log.warn("Error fetching {} averages", interval, e);
+    }
+}
+
+private void fetch24hAverages()
 {
     try
     {
