@@ -38,7 +38,7 @@ public class GECompanionPanel extends PluginPanel
     private static final Color LIVE_GREEN = new Color(74, 154, 48);
     private static final Color GREEN_UP = new Color(74, 154, 48);
     private static final Color RED_DOWN = new Color(192, 57, 43);
-    private static final Color BG_ROW_HOVER = new Color(28, 25, 26);
+    private static final Color BG_ROW_HOVER = new Color(45, 40, 38);
     private static final Color BG_ROW_SELECTED = new Color(26, 24, 20);
 
     private final GECompanionConfig config;
@@ -689,7 +689,14 @@ public class GECompanionPanel extends PluginPanel
                         currentOpenSearchRow.setBackground(BG_DARK);
                         currentOpenSearchRow.setBorder(new MatteBorder(0, 3, 0, 1, new Color(26, 24, 24)));
                         for (Component c : currentOpenSearchRow.getComponents())
-                            if (c instanceof JPanel) c.setBackground(BG_DARK);
+                        {
+                            if (c instanceof JPanel)
+                            {
+                                c.setBackground(BG_DARK);
+                                for (Component cc : ((JPanel)c).getComponents())
+                                    if (cc instanceof JPanel) cc.setBackground(BG_DARK);
+                            }
+                        }
                         currentOpenSearchRow = null;
                     }
                     selectedItemName = null;
@@ -922,7 +929,14 @@ public class GECompanionPanel extends PluginPanel
                         currentOpenWatchlistRow.setBackground(BG_DARK);
                         currentOpenWatchlistRow.setBorder(new MatteBorder(0, 0, 1, 0, new Color(80, 75, 70)));
                         for (Component c : currentOpenWatchlistRow.getComponents())
-                            if (c instanceof JPanel) c.setBackground(BG_DARK);
+                        {
+                            if (c instanceof JPanel)
+                            {
+                                c.setBackground(BG_DARK);
+                                for (Component cc : ((JPanel)c).getComponents())
+                                    if (cc instanceof JPanel) cc.setBackground(BG_DARK);
+                            }
+                        }
                         currentOpenWatchlistRow = null;
                     }
                     selectedWatchlistItemName = null;
