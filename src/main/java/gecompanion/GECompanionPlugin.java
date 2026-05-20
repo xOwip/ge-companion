@@ -16,6 +16,12 @@ import com.google.inject.Provides;
 import javax.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.Client;
+import net.runelite.api.ItemContainer;
+import net.runelite.api.InventoryID;
+import net.runelite.api.Item;
+import net.runelite.api.events.ItemContainerChanged;
+import net.runelite.client.eventbus.EventBus;
+import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
@@ -57,7 +63,13 @@ public class GECompanionPlugin extends Plugin
 	private OkHttpClient okHttpClient;
 
 	@Inject
+	private EventBus eventBus;
+
+	@Inject
 	private ConfigManager configManager;
+
+	@Inject
+	private net.runelite.client.game.ItemManager itemManager;
 
 	private GECompanionPanel panel;
 	private NavigationButton navButton;
@@ -91,6 +103,7 @@ public class GECompanionPlugin extends Plugin
 				.build();
 
 		clientToolbar.addNavigation(navButton);
+        eventBus.register(this);
 
 		// Start price refresh scheduler
 		scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -103,6 +116,7 @@ public class GECompanionPlugin extends Plugin
 	protected void shutDown() throws Exception
 	{
 		clientToolbar.removeNavigation(navButton);
+        eventBus.unregister(this);
 		if (scheduler != null)
 		{
 			scheduler.shutdown();
@@ -311,7 +325,61 @@ private void fetchMapping()
 	{
 		return nameToId;
 	}
-	public void saveConfig(String key, String value)
+	@Subscribe
+    public void onItemContainerChanged(ItemContainerChanged event)
+    {
+        if (event.getContainerId() != InventoryID.BANK.getId()) return;
+
+        ItemContainer container = event.getItemContainer();
+        if (container == null) return;
+
+        java.util.List<String> newBankItems = new java.util.ArrayList<>();
+        java.util.Map<String, Integer> newBankQuantities = new java.util.HashMap<>();
+
+        for (Item item : container.getItems())
+        {
+            if (item.getId() <= 0 || item.getQuantity() <= 0) continue;
+
+            // Look up item name from nameToId reverse map
+            for (java.util.Map.Entry<String, Integer> entry : nameToId.entrySet())
+            {
+                if (entry.getValue() == item.getId())
+                {
+                    String name = entry.getKey();
+                    // Capitalize first letter of each word
+                    String[] words = name.split(" ");
+                    StringBuilder sb = new StringBuilder();
+                    for (String word : words)
+                    {
+                        if (word.length() > 0)
+                            sb.append(Character.toUpperCase(word.charAt(0)))
+                              .append(word.substring(1)).append(" ");
+                    }
+                    String displayName = sb.toString().trim();
+                    newBankItems.add(displayName);
+                    newBankQuantities.put(displayName, item.getQuantity());
+                    break;
+                }
+            }
+        }
+
+// Calculate total bank value using ItemManager
+		long totalBankValue = 0;
+		for (Item item : container.getItems())
+		{
+			if (item.getId() <= 0 || item.getQuantity() <= 0) continue;
+			long price = itemManager.getItemPrice(item.getId());
+			totalBankValue += price * item.getQuantity();
+		}
+
+		final long finalBankValue = totalBankValue;
+		// Update panel on EDT
+		javax.swing.SwingUtilities.invokeLater(() -> {
+			panel.updateBankItems(newBankItems, newBankQuantities, finalBankValue);
+		});
+    }
+
+    public void saveConfig(String key, String value)
 	{
 		configManager.setConfiguration("gecompanion", key, value);
 	}

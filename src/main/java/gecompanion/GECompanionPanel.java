@@ -46,6 +46,7 @@ public class GECompanionPanel extends PluginPanel
 
     private int activeTab = 1;
     private String activeTimeFrame = "24H";
+    private boolean bankAllItemsCollapsed = true;
     private JPanel tabContentPanel;
     private JLabel[] tabLabels = new JLabel[3];
     private JLabel timerLabel;
@@ -111,6 +112,18 @@ public class GECompanionPanel extends PluginPanel
         setBackground(BG_DARK);
         setBorder(new EmptyBorder(0, 0, 0, 0));
         build();
+    }
+
+    private long totalBankValue = 0;
+
+    public void updateBankItems(java.util.List<String> items, java.util.Map<String, Integer> quantities, long bankValue)
+    {
+        this.bankItems.clear();
+        this.bankItems.addAll(items);
+        this.bankQuantities.clear();
+        this.bankQuantities.putAll(quantities);
+        this.totalBankValue = bankValue;
+        if (activeTab == 2) showTab(2);
     }
 
     public void onPricesUpdated(java.util.Map<Integer, PriceData> priceCache, java.util.Map<String, Integer> nameToId, java.util.Map<Integer, Long> avgPrice24h, java.util.Map<Integer, Long> avgPrice1h, java.util.Map<Integer, Long> avgPrice6h, java.util.Map<Integer, Integer> itemLimits)
@@ -452,6 +465,10 @@ public class GECompanionPanel extends PluginPanel
         scrollPane.getViewport().setBackground(BG_DARK);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(0, 0));
+        scrollPane.addMouseWheelListener(e -> scrollPane.getVerticalScrollBar().setValue(
+            scrollPane.getVerticalScrollBar().getValue() + (int)(e.getUnitsToScroll() * 8)));
+        scrollPane.getViewport().addMouseWheelListener(e -> scrollPane.getVerticalScrollBar().setValue(
+            scrollPane.getVerticalScrollBar().getValue() + (int)(e.getUnitsToScroll() * 8)));
 
         panel.add(scrollPane, BorderLayout.CENTER);
 
@@ -842,6 +859,10 @@ public class GECompanionPanel extends PluginPanel
         scrollPane.getViewport().setBackground(BG_DARK);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(0, 0));
+        scrollPane.addMouseWheelListener(e -> scrollPane.getVerticalScrollBar().setValue(
+            scrollPane.getVerticalScrollBar().getValue() + (int)(e.getUnitsToScroll() * 8)));
+        scrollPane.getViewport().addMouseWheelListener(e -> scrollPane.getVerticalScrollBar().setValue(
+            scrollPane.getVerticalScrollBar().getValue() + (int)(e.getUnitsToScroll() * 8)));
 
         panel.add(buildTimeFrameBar(), BorderLayout.NORTH);
         panel.add(scrollPane, BorderLayout.CENTER);
@@ -1014,23 +1035,19 @@ public class GECompanionPanel extends PluginPanel
         hero.setBackground(new Color(26, 23, 24));
         hero.setBorder(new EmptyBorder(8, 8, 8, 8));
 
-        JLabel heroLabel = new JLabel("Total Bank Value");
+        JLabel heroLabel = new JLabel("Total Bank Value (approx.)");
         heroLabel.setForeground(TEXT_DIM);
         heroLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_SECTION));
         heroLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel heroValue = new JLabel(bankItems.isEmpty() ? "─── No bank data ───" : "Calculating...");
+        String bankValueStr = bankItems.isEmpty() ? "─── No bank data ───" : formatFullPrice(String.valueOf(totalBankValue)) + " gp";
+        JLabel heroValue = new JLabel(bankValueStr);
         heroValue.setForeground(GOLD);
         heroValue.setFont(new Font("Monospaced", Font.BOLD, FONT_TITLE));
         heroValue.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JPanel pillPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
         pillPanel.setBackground(new Color(26, 23, 24));
-        if (!bankItems.isEmpty())
-        {
-            pillPanel.add(buildPill("▲ +180.4M week", true));
-            pillPanel.add(buildPill("▼ -44.2M month", false));
-        }
 
         hero.add(heroLabel);
         hero.add(Box.createVerticalStrut(2));
@@ -1087,12 +1104,23 @@ public class GECompanionPanel extends PluginPanel
                     Double.parseDouble(a[5].replace("+", ""))
             ));
 
+            // Filter by minimum value threshold
+            int minStackValue = config.minBankItemValue();
+            allBankItems.removeIf(bankItem -> {
+                try {
+                    long price = Long.parseLong(bankItem[1]);
+                    int qty = bankQuantities.getOrDefault(bankItem[0], 0);
+                    long stackValue = price * qty;
+                    return price < 50000 || stackValue < minStackValue;
+                } catch (NumberFormatException e) { return true; }
+            });
+
             // Top Gainers
             int gainersCount = Math.min(config.gainersCount(), allBankItems.size());
             for (int i = 0; i < gainersCount; i++)
             {
                 if (Double.parseDouble(allBankItems.get(i)[5].replace("+", "")) > 0)
-                    listPanel.add(buildBankItemBlock(allBankItems.get(i)));
+                    listPanel.add(buildBankItemBlock(allBankItems.get(i), true));
             }
 
             // Top Losers
@@ -1108,19 +1136,33 @@ public class GECompanionPanel extends PluginPanel
             for (int i = allBankItems.size() - 1; i >= allBankItems.size() - losersCount; i--)
             {
                 if (Double.parseDouble(allBankItems.get(i)[5].replace("+", "")) < 0)
-                    listPanel.add(buildBankItemBlock(allBankItems.get(i)));
+                    listPanel.add(buildBankItemBlock(allBankItems.get(i), true));
             }
 
-            // All Items
-            JLabel allLabel = new JLabel("≡ All Bank Items");
+// All Items — collapsible
+            JLabel allLabel = new JLabel((bankAllItemsCollapsed ? "≡ All Bank Items ▶" : "≡ All Bank Items ▼"));
             allLabel.setForeground(TAB_INACTIVE);
             allLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_SECTION));
             allLabel.setBorder(new EmptyBorder(6, 7, 2, 7));
             allLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            allLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            allLabel.addMouseListener(new MouseAdapter()
+            {
+                public void mouseClicked(MouseEvent e)
+                {
+                    bankAllItemsCollapsed = !bankAllItemsCollapsed;
+                    showTab(2);
+                }
+                public void mouseEntered(MouseEvent e) { allLabel.setForeground(TEXT_PRIMARY); }
+                public void mouseExited(MouseEvent e) { allLabel.setForeground(TAB_INACTIVE); }
+            });
             listPanel.add(allLabel);
 
-            for (String[] item : allBankItems)
-                listPanel.add(buildBankItemBlock(item));
+            if (!bankAllItemsCollapsed)
+            {
+                for (String[] item : allBankItems)
+                    listPanel.add(buildBankItemBlock(item, false));
+            }
         }
 
         JScrollPane scrollPane = new JScrollPane(listPanel);
@@ -1129,7 +1171,13 @@ public class GECompanionPanel extends PluginPanel
         scrollPane.getViewport().setBackground(BG_DARK);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(0, 0));
-
+        scrollPane.addMouseWheelListener(e -> scrollPane.getVerticalScrollBar().setValue(
+            scrollPane.getVerticalScrollBar().getValue() + (int)(e.getUnitsToScroll() * 8)));
+        scrollPane.getViewport().addMouseWheelListener(e -> scrollPane.getVerticalScrollBar().setValue(
+            scrollPane.getVerticalScrollBar().getValue() + (int)(e.getUnitsToScroll() * 8)));
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.setWheelScrollingEnabled(true);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         JPanel searchBar = new JPanel(new BorderLayout());
         searchBar.setBackground(new Color(28, 25, 26));
         searchBar.setBorder(new EmptyBorder(4, 6, 4, 6));
@@ -1168,7 +1216,8 @@ public class GECompanionPanel extends PluginPanel
         return panel;
     }
 
-    private JPanel buildBankItemBlock(String[] item)
+
+    private JPanel buildBankItemBlock(String[] item, boolean colorCode)
     {
         String name = item[0];
         String price = item[1];
@@ -1177,15 +1226,18 @@ public class GECompanionPanel extends PluginPanel
         boolean isUp = delta.startsWith("+");
         boolean isDown = delta.startsWith("-");
 
+        Color borderColor = colorCode && isUp ? new Color(0, 100, 0) : colorCode && isDown ? new Color(100, 0, 0) : new Color(80, 75, 70);
+        Color bgColor = colorCode && isUp ? new Color(10, 20, 10) : colorCode && isDown ? new Color(20, 10, 10) : BG_DARK;
+
         JPanel block = new JPanel();
         block.setLayout(new BoxLayout(block, BoxLayout.Y_AXIS));
-        block.setBackground(BG_DARK);
+        block.setBackground(bgColor);
         block.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JPanel row = new JPanel(new BorderLayout());
-        row.setBackground(BG_DARK);
-        row.setBorder(new MatteBorder(0, 0, 1, 0, new Color(80, 75, 70)));
-        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
+        row.setBackground(bgColor);
+        row.setBorder(new MatteBorder(0, 3, 1, 0, borderColor));
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 68));
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
         row.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
@@ -1197,26 +1249,28 @@ public class GECompanionPanel extends PluginPanel
 
         JPanel info = new JPanel();
         info.setLayout(new BoxLayout(info, BoxLayout.Y_AXIS));
-        info.setBackground(BG_DARK);
-        info.setBorder(new EmptyBorder(5, 7, 5, 7));
+        info.setBackground(bgColor);
+        info.setBorder(new EmptyBorder(5, 7, 8, 0));
 
         JLabel nameLabel = new JLabel(name);
         nameLabel.setForeground(TEXT_PRIMARY);
         nameLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_ITEM_NAME));
+        nameLabel.setMaximumSize(new Dimension(175, 20));
 
         JLabel priceLabel = new JLabel(formatPrice(price) + " gp");
         priceLabel.setForeground(GOLD);
         priceLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_PRICE));
 
-        info.add(nameLabel);
-        info.add(priceLabel);
-        row.add(info, BorderLayout.CENTER);
-
         JLabel deltaLabel = new JLabel(delta + "%");
         deltaLabel.setForeground(isUp ? GREEN_UP : isDown ? RED_DOWN : TAB_INACTIVE);
         deltaLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_DELTA));
-        deltaLabel.setBorder(new EmptyBorder(0, 0, 0, 8));
-        row.add(deltaLabel, BorderLayout.EAST);
+        deltaLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        info.add(nameLabel);
+        info.add(priceLabel);
+        info.add(deltaLabel);
+        row.add(info, BorderLayout.CENTER);
+
 
         // Inline detail slot
         JPanel detailSlot = new JPanel(new BorderLayout());
@@ -1282,10 +1336,11 @@ public class GECompanionPanel extends PluginPanel
             public void mouseExited(MouseEvent e)
             {
                 if (!name.equals(selectedBankItemName))
-                {
-                    row.setBackground(BG_DARK);
-                    info.setBackground(BG_DARK);
-                }
+                    if (!name.equals(selectedBankItemName))
+                    {
+                        row.setBackground(bgColor);
+                        info.setBackground(bgColor);
+                    }
             }
         });
 
@@ -1369,12 +1424,12 @@ public class GECompanionPanel extends PluginPanel
         namePrice.setBorder(new EmptyBorder(5, 7, 5, 0));
         namePrice.setMaximumSize(new Dimension(140, 60));
 
-        String detailName = name.length() > 24 ? name.substring(0, 21) + "..." : name;
+        String detailName = name.length() > 20 ? name.substring(0, 17) + "..." : name;
         JLabel nameLabel = new JLabel(detailName);
         nameLabel.setForeground(TEXT_PRIMARY);
         nameLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_ITEM_NAME));
         nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        if (name.length() > 24) nameLabel.setToolTipText(name);
+        if (name.length() > 20) nameLabel.setToolTipText(name);
 
         JLabel priceLabel = new JLabel(formatFullPrice(price) + " gp");
         priceLabel.setForeground(GOLD);

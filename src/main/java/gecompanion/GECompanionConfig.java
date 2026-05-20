@@ -81,6 +81,16 @@ public interface GECompanionConfig extends Config
 	)
 	default ChartRange defaultChartRange() { return ChartRange.MONTH; }
 
+    @ConfigItem(
+          keyName = "minBankItemValue",
+          name = "Min bank item value (gp)",
+          description = "Minimum total stack value to appear in Top Gainers/Losers",
+          section = bankSection,
+          position = 3
+    )
+    @Range(min = 0, max = 10000000)
+    default int minBankItemValue() { return 500000; }
+
     // ── DISPLAY ──
     @ConfigSection(
           name = "Display",
