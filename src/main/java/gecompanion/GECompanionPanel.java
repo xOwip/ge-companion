@@ -32,6 +32,7 @@ public class GECompanionPanel extends PluginPanel
     private static final Color BG_HEADER = new Color(26, 23, 24);
     private static final Color BG_DETAIL = new Color(20, 18, 18);
     private static final Color GOLD = new Color(212, 175, 55);
+    private static final Color PRICE_GOLD = new Color(255, 210, 50);
     private static final Color TEXT_PRIMARY = new Color(239, 241, 243);
     private static final Color TEXT_DIM = new Color(110, 100, 90);
     private static final Color TAB_INACTIVE = new Color(74, 69, 64);
@@ -363,7 +364,7 @@ public class GECompanionPanel extends PluginPanel
         footer.setMaximumSize(new Dimension(220, 24));
 
         boolean isWatched = pinnedItems.contains(item[0]);
-        JButton watchBtn = buildFooterBtn(isWatchlist ? "- Unwatch" : (isWatched ? "✓ Watch" : "+ Watch"), false);
+        JButton watchBtn = buildFooterBtn(isWatched ? "✓ Watch" : "+ Watch", isWatched);
         if (isWatchlist || isWatched)
             watchBtn.setBorder(BorderFactory.createLineBorder(GOLD));
         watchBtn.addActionListener(e -> {
@@ -666,7 +667,7 @@ public class GECompanionPanel extends PluginPanel
         nameLabel.setMaximumSize(new Dimension(190, 20));
 
         JLabel priceLabel = new JLabel(formatPrice(price) + " gp");
-        priceLabel.setForeground(GOLD);
+        priceLabel.setForeground(PRICE_GOLD);
         priceLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_PRICE));
 
         JLabel qtyLabel = new JLabel(buyQty.equals("0") ? "" : "Buy: " + buyQty + "/hr  Sell: " + sellQty + "/hr");
@@ -914,7 +915,7 @@ public class GECompanionPanel extends PluginPanel
         nameLabel.setMaximumSize(new Dimension(190, 20));
 
         JLabel priceLabel = new JLabel(formatPrice(price) + " gp");
-        priceLabel.setForeground(GOLD);
+        priceLabel.setForeground(PRICE_GOLD);
         priceLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_PRICE));
 
         JLabel deltaLabel = new JLabel(delta + "%");
@@ -1042,7 +1043,7 @@ public class GECompanionPanel extends PluginPanel
 
         String bankValueStr = bankItems.isEmpty() ? "─── No bank data ───" : formatFullPrice(String.valueOf(totalBankValue)) + " gp";
         JLabel heroValue = new JLabel(bankValueStr);
-        heroValue.setForeground(GOLD);
+        heroValue.setForeground(PRICE_GOLD);
         heroValue.setFont(new Font("Monospaced", Font.BOLD, FONT_TITLE));
         heroValue.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -1258,7 +1259,7 @@ public class GECompanionPanel extends PluginPanel
         nameLabel.setMaximumSize(new Dimension(175, 20));
 
         JLabel priceLabel = new JLabel(formatPrice(price) + " gp");
-        priceLabel.setForeground(GOLD);
+        priceLabel.setForeground(PRICE_GOLD);
         priceLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_PRICE));
 
         JLabel deltaLabel = new JLabel(delta + "%");
@@ -1432,7 +1433,7 @@ public class GECompanionPanel extends PluginPanel
         if (name.length() > 20) nameLabel.setToolTipText(name);
 
         JLabel priceLabel = new JLabel(formatFullPrice(price) + " gp");
-        priceLabel.setForeground(GOLD);
+        priceLabel.setForeground(PRICE_GOLD);
         priceLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_PRICE));
         priceLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
