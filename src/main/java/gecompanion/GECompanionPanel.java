@@ -1385,11 +1385,15 @@ public class GECompanionPanel extends PluginPanel
                 {
                     currentOpenBankDetail.setVisible(false);
                     currentOpenBankDetail = null;
+                    currentOpenBankDetail.setVisible(false);
+                    currentOpenBankDetail = null;
                     if (currentOpenBankRow != null)
                     {
-                        currentOpenBankRow.setBackground(BG_DARK);
+                        currentOpenBankRow.setBackground(bgColor);
+                        info.setBackground(bgColor);
+                        deltaRow.setBackground(bgColor);
                         for (Component c : currentOpenBankRow.getComponents())
-                            if (c instanceof JPanel) c.setBackground(BG_DARK);
+                            if (c instanceof JPanel) c.setBackground(bgColor);
                         currentOpenBankRow = null;
                     }
                     selectedBankItemName = null;
