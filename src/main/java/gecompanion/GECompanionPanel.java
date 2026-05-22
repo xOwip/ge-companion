@@ -1168,12 +1168,90 @@ public class GECompanionPanel extends PluginPanel
                 public void mouseExited(MouseEvent e) { allLabel.setForeground(TAB_INACTIVE); }
             });
             listPanel.add(allLabel);
+// Bank search bar — always visible
+            JPanel bankSearchWrap = new JPanel(new BorderLayout());
+            bankSearchWrap.setBackground(new Color(28, 25, 26));
+            bankSearchWrap.setBorder(new EmptyBorder(4, 6, 4, 6));
+            bankSearchWrap.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-            if (!bankAllItemsCollapsed)
+            JTextField bankSearchField = new JTextField();
+            bankSearchField.setBackground(new Color(14, 12, 13));
+            bankSearchField.setForeground(TEXT_PRIMARY);
+            bankSearchField.setCaretColor(TEXT_PRIMARY);
+            bankSearchField.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(58, 53, 48)),
+                    new EmptyBorder(3, 5, 3, 5)
+            ));
+            bankSearchField.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
+            bankSearchWrap.add(bankSearchField, BorderLayout.CENTER);
+            listPanel.add(bankSearchWrap);
+
+            JPanel bankResultsPanel = new JPanel();
+            bankResultsPanel.setLayout(new BoxLayout(bankResultsPanel, BoxLayout.Y_AXIS));
+            bankResultsPanel.setBackground(BG_DARK);
+            bankResultsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+            final java.util.List<String[]> finalBankItems = new java.util.ArrayList<>(allBankItems);
+
+            Runnable updateBankSearch = () -> {
+                bankResultsPanel.removeAll();
+                String query = bankSearchField.getText().trim().toLowerCase();
+                boolean hasQuery = !query.isEmpty();
+
+                if (!bankAllItemsCollapsed || hasQuery)
+                {
+                    java.util.List<String[]> filtered = hasQuery ?
+                            finalBankItems.stream()
+                            .filter(i -> i[0].toLowerCase().contains(query))
+                            .collect(java.util.stream.Collectors.toList()) :
+                            finalBankItems;
+
+                    if (filtered.isEmpty() && hasQuery)
+                    {
+                        JLabel noResults = new JLabel("No items found in your bank");
+                        noResults.setForeground(TEXT_DIM);
+                        noResults.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
+                        noResults.setBorder(new EmptyBorder(8, 7, 4, 7));
+                        noResults.setAlignmentX(Component.LEFT_ALIGNMENT);
+                        bankResultsPanel.add(noResults);
+                    }
+                    else
+                    {
+                        for (String[] i : filtered)
+                            bankResultsPanel.add(buildBankItemBlock(i, false));
+                    }
+                }
+                bankResultsPanel.revalidate();
+                bankResultsPanel.repaint();
+            };
+
+            bankSearchField.addFocusListener(new FocusAdapter()
             {
-                for (String[] item : allBankItems)
-                    listPanel.add(buildBankItemBlock(item, false));
-            }
+                public void focusGained(FocusEvent e)
+                {
+                    bankSearchField.setBorder(BorderFactory.createCompoundBorder(
+                            BorderFactory.createLineBorder(GOLD),
+                            new EmptyBorder(3, 5, 3, 5)
+                    ));
+                }
+                public void focusLost(FocusEvent e)
+                {
+                    bankSearchField.setBorder(BorderFactory.createCompoundBorder(
+                            BorderFactory.createLineBorder(new Color(58, 53, 48)),
+                            new EmptyBorder(3, 5, 3, 5)
+                    ));
+                }
+            });
+
+            bankSearchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener()
+            {
+                public void insertUpdate(javax.swing.event.DocumentEvent e) { SwingUtilities.invokeLater(updateBankSearch); }
+                public void removeUpdate(javax.swing.event.DocumentEvent e) { SwingUtilities.invokeLater(updateBankSearch); }
+                public void changedUpdate(javax.swing.event.DocumentEvent e) { SwingUtilities.invokeLater(updateBankSearch); }
+            });
+
+            updateBankSearch.run();
+            listPanel.add(bankResultsPanel);
         }
 
         JScrollPane scrollPane = new JScrollPane(listPanel);
@@ -1219,10 +1297,8 @@ public class GECompanionPanel extends PluginPanel
                 ));
             }
         });
-        searchBar.add(bankSearch, BorderLayout.CENTER);
 
         panel.add(scrollPane, BorderLayout.CENTER);
-        if (!bankItems.isEmpty()) panel.add(searchBar, BorderLayout.SOUTH);
 
         return panel;
     }
