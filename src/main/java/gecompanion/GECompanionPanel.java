@@ -19,13 +19,13 @@ public class GECompanionPanel extends PluginPanel
     private static final int FONT_PRICE = 13;
     private static final int FONT_DELTA = 13;
     private static final int FONT_SECTION = 13;
-    private static final int FONT_STAT_LABEL = 9;
-    private static final int FONT_STAT_VALUE = 13;
+    private static final int FONT_STAT_LABEL = 11;
+    private static final int FONT_STAT_VALUE = 14;
     private static final int FONT_BUTTON = 11;
     private static final int FONT_TIMEFRAME = 12;
     private static final int FONT_REFRESH = 17;
     private static final int FONT_META = 12;
-    private static final int FONT_LIMIT = 11;
+    private static final int FONT_LIMIT = 12;
 
     // Colors
     private static final Color BG_DARK = new Color(35, 31, 32);
@@ -33,6 +33,7 @@ public class GECompanionPanel extends PluginPanel
     private static final Color BG_DETAIL = new Color(20, 18, 18);
     private static final Color GOLD = new Color(212, 175, 55);
     private static final Color PRICE_GOLD = new Color(255, 210, 50);
+    private static final Color STAT_GOLD = new Color(255, 210, 50);
     private static final Color TEXT_PRIMARY = new Color(239, 241, 243);
     private static final Color TEXT_DIM = new Color(110, 100, 90);
     private static final Color TAB_INACTIVE = new Color(74, 69, 64);
@@ -342,18 +343,18 @@ public class GECompanionPanel extends PluginPanel
         inner.setBackground(BG_DETAIL);
         inner.setBorder(new EmptyBorder(6, 7, 6, 7));
 
-        inner.add(buildDetailHeader(name, price));
+        inner.add(buildDetailHeader(name, price, item.length > 6 ? item[6] : "?"));
         inner.add(Box.createVerticalStrut(6));
 
         JPanel grid = new JPanel(new GridLayout(2, 2, 2, 2));
         grid.setBackground(BG_DETAIL);
         grid.setAlignmentX(Component.LEFT_ALIGNMENT);
-        grid.setMaximumSize(new Dimension(220, 80));
+        grid.setMaximumSize(new Dimension(225, 90));
 
-        grid.add(buildStatBox("Current Price", formatPrice(price), GOLD, formatFullPrice(price) + " gp"));
-        grid.add(buildStatBox("Profit (w/ Tax)", profit, isUp ? GREEN_UP : RED_DOWN, null));
-        grid.add(buildStatBox("Buy Qty / hr", buyQty, TEXT_PRIMARY, null));
-        grid.add(buildStatBox("Sell Qty / hr", sellQty, TEXT_PRIMARY, null));
+        grid.add(buildStatBox("Current Price", formatPrice(price), STAT_GOLD, formatFullPrice(price) + " gp"));
+        grid.add(buildStatBox("Profit w/ Tax", profit, isUp ? GREEN_UP : RED_DOWN, null));
+        grid.add(buildStatBox("Buy Qty / hr", buyQty, STAT_GOLD, null));
+        grid.add(buildStatBox("Sell Qty / hr", sellQty, STAT_GOLD, null));
 
         inner.add(grid);
         inner.add(Box.createVerticalStrut(6));
@@ -445,6 +446,7 @@ public class GECompanionPanel extends PluginPanel
         searchResultsPanel.setLayout(new BoxLayout(searchResultsPanel, BoxLayout.Y_AXIS));
         searchResultsPanel.setBackground(BG_DARK);
         searchResultsPanel.setVisible(false);
+        searchResultsPanel.setAlignmentY(Component.TOP_ALIGNMENT);
 
         JPanel listWrapper = new JPanel(new BorderLayout())
         {
@@ -577,7 +579,10 @@ public class GECompanionPanel extends PluginPanel
                         }
                         Integer limit = itemLimits.get(id);
                         String limitStr = (limit != null && limit > 0) ? String.format("%,d", limit) : "?";
-                        results.add(new String[]{displayName, price, "0", "0", "0", delta, limitStr});
+                        long gpChange = (avg != null && avg > 0) ? (pd.getMid() - avg) : 0;
+                        String gpChangeStr = gpChange > 0 ? "+" + formatPrice(String.valueOf(Math.abs(gpChange))) + " gp" :
+                                gpChange < 0 ? "-" + formatPrice(String.valueOf(Math.abs(gpChange))) + " gp" : "0 gp";
+                        results.add(new String[]{displayName, price, "0", "0", "0", delta, limitStr, gpChangeStr});
                     }
                 }
             }
@@ -618,7 +623,7 @@ public class GECompanionPanel extends PluginPanel
                 searchResultsPanel.add(buildSearchItemBlock(item, searchIndex++));
             }
         }
-
+        searchResultsPanel.add(Box.createVerticalGlue());
         searchResultsPanel.revalidate();
         searchResultsPanel.repaint();
     }
@@ -631,6 +636,7 @@ public class GECompanionPanel extends PluginPanel
         String sellQty = item[4];
         String delta = item[5];
         String limit = item.length > 6 ? item[6] : "?";
+        String gpChange = item.length > 7 ? item[7] : "0";
 
         boolean isUp = delta.startsWith("+");
         boolean isDown = delta.startsWith("-");
@@ -640,6 +646,7 @@ public class GECompanionPanel extends PluginPanel
         block.setLayout(new BoxLayout(block, BoxLayout.Y_AXIS));
         block.setBackground(rowBg);
         block.setAlignmentX(Component.LEFT_ALIGNMENT);
+        block.setMaximumSize(new Dimension(Integer.MAX_VALUE, 800));
 
         JPanel row = new JPanel(new BorderLayout());
         row.setBackground(rowBg);
@@ -679,15 +686,17 @@ public class GECompanionPanel extends PluginPanel
         deltaLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_DELTA));
         deltaLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
+        JLabel gpChangeLabel = new JLabel("(" + gpChange + ")");
+        gpChangeLabel.setForeground(isUp ? GREEN_UP : isDown ? RED_DOWN : TAB_INACTIVE);
+        gpChangeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+        gpChangeLabel.setToolTipText(gpChange + " gp exact");
+
         JPanel deltaLimitRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         deltaLimitRow.setBackground(rowBg);
         deltaLimitRow.setAlignmentX(Component.LEFT_ALIGNMENT);
         deltaLimitRow.add(deltaLabel);
-        deltaLimitRow.add(Box.createHorizontalStrut(8));
-        JLabel limitLabel = new JLabel("Lmt: " + limit);
-        limitLabel.setForeground(TEXT_DIM);
-        limitLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
-        deltaLimitRow.add(limitLabel);
+        deltaLimitRow.add(Box.createHorizontalStrut(4));
+        deltaLimitRow.add(gpChangeLabel);
 
         info.add(nameLabel);
         info.add(priceLabel);
@@ -876,6 +885,7 @@ public class GECompanionPanel extends PluginPanel
         String price = item[1];
         String delta = item[5];
         String limit = item[6];
+        String gpChange = item.length > 7 ? item[7] : "0";
 
         boolean isUp = delta.startsWith("+");
         boolean isDown = delta.startsWith("-");
@@ -923,16 +933,16 @@ public class GECompanionPanel extends PluginPanel
         deltaLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_DELTA));
         deltaLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel limitLabel = new JLabel("Lmt: " + limit);
-        limitLabel.setForeground(TEXT_DIM);
-        limitLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+        JLabel gpChangeLabel = new JLabel("(" + gpChange + ")");
+        gpChangeLabel.setForeground(isUp ? GREEN_UP : isDown ? RED_DOWN : TAB_INACTIVE);
+        gpChangeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
 
         JPanel deltaLimitRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         deltaLimitRow.setBackground(rowBg);
         deltaLimitRow.setAlignmentX(Component.LEFT_ALIGNMENT);
         deltaLimitRow.add(deltaLabel);
-        deltaLimitRow.add(Box.createHorizontalStrut(8));
-        deltaLimitRow.add(limitLabel);
+        deltaLimitRow.add(Box.createHorizontalStrut(4));
+        deltaLimitRow.add(gpChangeLabel);
 
         info.add(nameLabel);
         info.add(priceLabel);
@@ -1223,6 +1233,7 @@ public class GECompanionPanel extends PluginPanel
         String name = item[0];
         String price = item[1];
         String delta = item[5];
+        String gpChange = item.length > 7 ? item[7] : "0 gp";
 
         boolean isUp = delta.startsWith("+");
         boolean isDown = delta.startsWith("-");
@@ -1267,11 +1278,21 @@ public class GECompanionPanel extends PluginPanel
         deltaLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_DELTA));
         deltaLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
+        JLabel gpChangeLabel = new JLabel("(" + gpChange + ")");
+        gpChangeLabel.setForeground(isUp ? GREEN_UP : isDown ? RED_DOWN : TAB_INACTIVE);
+        gpChangeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+
+        JPanel deltaRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        deltaRow.setBackground(bgColor);
+        deltaRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+        deltaRow.add(deltaLabel);
+        deltaRow.add(Box.createHorizontalStrut(4));
+        deltaRow.add(gpChangeLabel);
+
         info.add(nameLabel);
         info.add(priceLabel);
-        info.add(deltaLabel);
+        info.add(deltaRow);
         row.add(info, BorderLayout.CENTER);
-
 
         // Inline detail slot
         JPanel detailSlot = new JPanel(new BorderLayout());
@@ -1322,6 +1343,7 @@ public class GECompanionPanel extends PluginPanel
 
                 row.setBackground(BG_ROW_SELECTED);
                 info.setBackground(BG_ROW_SELECTED);
+                deltaRow.setBackground(BG_ROW_SELECTED);
 
                 tabContentPanel.revalidate();
                 tabContentPanel.repaint();
@@ -1332,16 +1354,17 @@ public class GECompanionPanel extends PluginPanel
                 {
                     row.setBackground(BG_ROW_HOVER);
                     info.setBackground(BG_ROW_HOVER);
+                    deltaRow.setBackground(BG_ROW_HOVER);
                 }
             }
             public void mouseExited(MouseEvent e)
             {
                 if (!name.equals(selectedBankItemName))
-                    if (!name.equals(selectedBankItemName))
-                    {
-                        row.setBackground(bgColor);
-                        info.setBackground(bgColor);
-                    }
+                {
+                    row.setBackground(bgColor);
+                    info.setBackground(bgColor);
+                    deltaRow.setBackground(bgColor);
+                }
             }
         });
 
@@ -1372,10 +1395,14 @@ public class GECompanionPanel extends PluginPanel
             double pct = ((double)(pd.getMid() - avg) / avg) * 100.0;
             delta = String.format("%+.2f", pct);
         }
+        long gpChange = (avg != null && avg > 0) ? (pd.getMid() - avg) : 0;
+        String gpChangeStr = gpChange > 0 ? "+" + formatPrice(String.valueOf(Math.abs(gpChange))) + " gp" :
+                gpChange < 0 ? "-" + formatPrice(String.valueOf(Math.abs(gpChange))) + " gp" : "0 gp";
         Integer limit = itemLimits.get(id);
         String limitStr = (limit != null && limit > 0) ? String.format("%,d", limit) : "?";
-        return new String[]{name, price, "0", "0", "0", delta, limitStr};
+        return new String[]{name, price, "0", "0", "0", delta, limitStr, gpChangeStr};
     }
+
 
     private JPanel buildTimeFrameBar()
     {
@@ -1406,12 +1433,12 @@ public class GECompanionPanel extends PluginPanel
         return bar;
     }
 
-    private JPanel buildDetailHeader(String name, String price)
+    private JPanel buildDetailHeader(String name, String price, String limit)
     {
         JPanel headerRow = new JPanel(new BorderLayout());
         headerRow.setBackground(BG_DETAIL);
         headerRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-        headerRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 42));
+        headerRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
 
         JPanel iconBox = new JPanel();
         iconBox.setPreferredSize(new Dimension(42, 42));
@@ -1423,7 +1450,7 @@ public class GECompanionPanel extends PluginPanel
         namePrice.setLayout(new BoxLayout(namePrice, BoxLayout.Y_AXIS));
         namePrice.setBackground(BG_DETAIL);
         namePrice.setBorder(new EmptyBorder(5, 7, 5, 0));
-        namePrice.setMaximumSize(new Dimension(140, 60));
+        namePrice.setMaximumSize(new Dimension(175, 80));
 
         String detailName = name.length() > 20 ? name.substring(0, 17) + "..." : name;
         JLabel nameLabel = new JLabel(detailName);
@@ -1437,8 +1464,14 @@ public class GECompanionPanel extends PluginPanel
         priceLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_PRICE));
         priceLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
+        JLabel limitLabel = new JLabel("Lmt: " + limit);
+        limitLabel.setForeground(TEXT_PRIMARY);
+        limitLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+        limitLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
         namePrice.add(nameLabel);
         namePrice.add(priceLabel);
+        namePrice.add(limitLabel);
         headerRow.add(namePrice, BorderLayout.CENTER);
 
         return headerRow;
@@ -1452,7 +1485,7 @@ public class GECompanionPanel extends PluginPanel
         box.setBorder(new EmptyBorder(5, 5, 5, 5));
 
         JLabel labelText = new JLabel(label.toUpperCase());
-        labelText.setForeground(TEXT_DIM);
+        labelText.setForeground(TEXT_PRIMARY);
         labelText.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
         labelText.setAlignmentX(Component.LEFT_ALIGNMENT);
 
