@@ -326,6 +326,14 @@ private void fetchMapping()
 		return nameToId;
 	}
 	@Subscribe
+	public void onConfigChanged(net.runelite.client.events.ConfigChanged event)
+	{
+		if (event.getGroup().equals("gecompanion"))
+		{
+			javax.swing.SwingUtilities.invokeLater(() -> panel.showTab(panel.getActiveTab()));
+		}
+	}
+	@Subscribe
     public void onItemContainerChanged(ItemContainerChanged event)
     {
         if (event.getContainerId() != InventoryID.BANK.getId()) return;

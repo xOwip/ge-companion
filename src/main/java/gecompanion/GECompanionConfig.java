@@ -90,6 +90,14 @@ public interface GECompanionConfig extends Config
     )
     @Range(min = 0, max = 10000000)
     default int minBankItemValue() { return 500000; }
+	@ConfigItem(
+			keyName = "sortMode",
+			name = "Sort Gainers/Losers by",
+			description = "Sort Top Gainers and Top Losers by GP change or % change",
+			section = bankSection,
+			position = 4
+	)
+	default SortMode sortMode() { return SortMode.GP_CHANGE; }
 
     // ── DISPLAY ──
     @ConfigSection(

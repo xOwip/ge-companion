@@ -47,6 +47,7 @@ public class GECompanionPanel extends PluginPanel
     private final GECompanionPlugin plugin;
 
     private int activeTab = 1;
+    public int getActiveTab() { return activeTab; }
     private String activeTimeFrame = "24H";
     private boolean bankAllItemsCollapsed = true;
     private JPanel tabContentPanel;
@@ -84,6 +85,10 @@ public class GECompanionPanel extends PluginPanel
     private JPanel currentOpenSearchRow = null;
     private JPanel currentOpenWatchlistRow = null;
     private JPanel currentOpenBankRow = null;
+private Color currentOpenBankRowColor = BG_DARK;
+private JPanel currentOpenBankInfo = null;
+private JPanel currentOpenBankDeltaRow = null;
+private String openBankItemName = null;
 
     // Mock item database
     private static final String[][] ITEMS = {
@@ -300,7 +305,7 @@ public class GECompanionPanel extends PluginPanel
         }
     }
 
-    private void showTab(int idx)
+    public void showTab(int index)
     {
         tabContentPanel.removeAll();
         currentOpenSearchDetail = null;
@@ -312,7 +317,7 @@ public class GECompanionPanel extends PluginPanel
         selectedItemName = null;
         selectedWatchlistItemName = null;
         selectedBankItemName = null;
-        switch (idx)
+        switch (index)
         {
             case 0: tabContentPanel.add(buildWatchlistTab(), BorderLayout.CENTER); break;
             case 1: tabContentPanel.add(buildSearchTab(), BorderLayout.CENTER); break;
@@ -1076,7 +1081,7 @@ public class GECompanionPanel extends PluginPanel
 
         if (!bankItems.isEmpty())
         {
-            JLabel gainersLabel = new JLabel("▲ Top Gainers");
+            JLabel gainersLabel = new JLabel("▲ Top Gainers (by " + config.sortMode().getLabel() + ")");
             gainersLabel.setForeground(GREEN_UP);
             gainersLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_SECTION));
             gainersLabel.setBorder(new EmptyBorder(6, 7, 2, 7));
@@ -1109,13 +1114,7 @@ public class GECompanionPanel extends PluginPanel
                 if (item != null) allBankItems.add(item);
             }
 
-            // Sort by delta descending
-            allBankItems.sort((a, b) -> Double.compare(
-                    Double.parseDouble(b[5].replace("+", "")),
-                    Double.parseDouble(a[5].replace("+", ""))
-            ));
-
-            // Filter by minimum value threshold
+// Filter by minimum value threshold
             int minStackValue = config.minBankItemValue();
             allBankItems.removeIf(bankItem -> {
                 try {
@@ -1126,29 +1125,45 @@ public class GECompanionPanel extends PluginPanel
                 } catch (NumberFormatException e) { return true; }
             });
 
-            // Top Gainers
-            int gainersCount = Math.min(config.gainersCount(), allBankItems.size());
-            for (int i = 0; i < gainersCount; i++)
+            // Split into gainers and losers
+            java.util.List<String[]> gainers = new java.util.ArrayList<>();
+            java.util.List<String[]> losers = new java.util.ArrayList<>();
+            for (String[] bankItem : allBankItems)
             {
-                if (Double.parseDouble(allBankItems.get(i)[5].replace("+", "")) > 0)
-                    listPanel.add(buildBankItemBlock(allBankItems.get(i), true));
+                double delta = Double.parseDouble(bankItem[5].replace("+", ""));
+                if (delta > 0) gainers.add(bankItem);
+                else if (delta < 0) losers.add(bankItem);
             }
+
+            // Sort gainers and losers
+            if (config.sortMode() == SortMode.GP_CHANGE)
+            {
+                gainers.sort((a, b) -> Long.compare(parseGpChange(b.length > 7 ? b[7] : "0 gp"), parseGpChange(a.length > 7 ? a[7] : "0 gp")));
+                losers.sort((a, b) -> Long.compare(parseGpChange(a.length > 7 ? a[7] : "0 gp"), parseGpChange(b.length > 7 ? b[7] : "0 gp")));
+            }
+            else
+            {
+                gainers.sort((a, b) -> Double.compare(Double.parseDouble(b[5].replace("+", "")), Double.parseDouble(a[5].replace("+", ""))));
+                losers.sort((a, b) -> Double.compare(Double.parseDouble(a[5].replace("+", "")), Double.parseDouble(b[5].replace("+", ""))));
+            }
+
+            // Top Gainers
+            int gainersCount = Math.min(config.gainersCount(), gainers.size());
+            for (int i = 0; i < gainersCount; i++)
+                listPanel.add(buildBankItemBlock(gainers.get(i), true));
 
             // Top Losers
             listPanel.add(new JSeparator());
-            JLabel losersLabel = new JLabel("▼ Top Losers");
+            JLabel losersLabel = new JLabel("▼ Top Losers (by " + config.sortMode().getLabel() + ")");
             losersLabel.setForeground(RED_DOWN);
             losersLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_SECTION));
             losersLabel.setBorder(new EmptyBorder(6, 7, 2, 7));
             losersLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
             listPanel.add(losersLabel);
 
-            int losersCount = Math.min(config.losersCount(), allBankItems.size());
-            for (int i = allBankItems.size() - 1; i >= allBankItems.size() - losersCount; i--)
-            {
-                if (Double.parseDouble(allBankItems.get(i)[5].replace("+", "")) < 0)
-                    listPanel.add(buildBankItemBlock(allBankItems.get(i), true));
-            }
+            int losersCount = Math.min(config.losersCount(), losers.size());
+            for (int i = 0; i < losersCount; i++)
+                listPanel.add(buildBankItemBlock(losers.get(i), true));
 
 // All Items — collapsible
             JLabel allLabel = new JLabel((bankAllItemsCollapsed ? "≡ All Bank Items ▶" : "≡ All Bank Items ▼"));
@@ -1385,8 +1400,6 @@ public class GECompanionPanel extends PluginPanel
                 {
                     currentOpenBankDetail.setVisible(false);
                     currentOpenBankDetail = null;
-                    currentOpenBankDetail.setVisible(false);
-                    currentOpenBankDetail = null;
                     if (currentOpenBankRow != null)
                     {
                         currentOpenBankRow.setBackground(bgColor);
@@ -1395,26 +1408,33 @@ public class GECompanionPanel extends PluginPanel
                         for (Component c : currentOpenBankRow.getComponents())
                             if (c instanceof JPanel) c.setBackground(bgColor);
                         currentOpenBankRow = null;
+                        currentOpenBankInfo = null;
+                        currentOpenBankDeltaRow = null;
+                        currentOpenBankRowColor = BG_DARK;
                     }
                     selectedBankItemName = null;
                     tabContentPanel.revalidate();
                     tabContentPanel.repaint();
                     return;
                 }
-
-                // Close previous
+// Close previous
                 if (currentOpenBankDetail != null)
                     currentOpenBankDetail.setVisible(false);
                 if (currentOpenBankRow != null)
                 {
-                    currentOpenBankRow.setBackground(BG_DARK);
+                    currentOpenBankRow.setBackground(currentOpenBankRowColor);
+                    if (currentOpenBankInfo != null) currentOpenBankInfo.setBackground(currentOpenBankRowColor);
+                    if (currentOpenBankDeltaRow != null) currentOpenBankDeltaRow.setBackground(currentOpenBankRowColor);
                     for (Component c : currentOpenBankRow.getComponents())
-                        if (c instanceof JPanel) c.setBackground(BG_DARK);
+                        if (c instanceof JPanel) c.setBackground(currentOpenBankRowColor);
                 }
 
                 // Open this one
                 selectedBankItemName = name;
                 currentOpenBankRow = row;
+                currentOpenBankRowColor = bgColor;
+                currentOpenBankInfo = info;
+                currentOpenBankDeltaRow = deltaRow;
                 currentOpenBankDetail = detailSlot;
 
                 detailSlot.removeAll();
@@ -1423,6 +1443,10 @@ public class GECompanionPanel extends PluginPanel
 
                 row.setBackground(BG_ROW_SELECTED);
                 info.setBackground(BG_ROW_SELECTED);
+                deltaRow.setBackground(BG_ROW_SELECTED);
+
+                tabContentPanel.revalidate();
+                tabContentPanel.repaint();
                 deltaRow.setBackground(BG_ROW_SELECTED);
 
                 tabContentPanel.revalidate();
@@ -1677,14 +1701,25 @@ public class GECompanionPanel extends PluginPanel
             return price;
         }
     }
-
+    private long parseGpChange(String gpChangeStr)
+    {
+        try
+        {
+            String clean = gpChangeStr.replace("+", "").replace(" gp", "").replace(",", "").trim();
+            if (clean.endsWith("B")) return (long)(Double.parseDouble(clean.replace("B", "")) * 1_000_000_000);
+            if (clean.endsWith("M")) return (long)(Double.parseDouble(clean.replace("M", "")) * 1_000_000);
+            if (clean.endsWith("K")) return (long)(Double.parseDouble(clean.replace("K", "")) * 1_000);
+            return Long.parseLong(clean);
+        }
+        catch (NumberFormatException e) { return 0; }
+    }
     private String formatPrice(String price)
     {
         try
         {
             long val = Long.parseLong(price.replace(",", ""));
             if (val >= 1_000_000_000) return String.format("%.3fB", val / 1_000_000_000.0);
-            if (val >= 1_000_000) return String.format("%.1fM", val / 1_000_000.0);
+            if (val >= 1_000_000) return String.format("%.3fM", val / 1_000_000.0);
             if (val >= 1_000) return String.format("%,d", val);
             return String.valueOf(val);
         }
