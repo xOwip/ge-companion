@@ -1819,7 +1819,7 @@ private String openBankItemName = null;
         {
             long val = Long.parseLong(price.replace(",", ""));
             if (val >= 1_000_000_000) return String.format("%.3fB", val / 1_000_000_000.0);
-            if (val >= 1_000_000) return String.format("%.3fM", val / 1_000_000.0);
+            if (val >= 1_000_000) return String.format("%.2fM", val / 1_000_000.0);
             if (val >= 1_000) return String.format("%,d", val);
             return String.valueOf(val);
         }
