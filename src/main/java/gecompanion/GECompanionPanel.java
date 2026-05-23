@@ -631,6 +631,13 @@ private String openBankItemName = null;
         searchResultsPanel.add(Box.createVerticalGlue());
         searchResultsPanel.revalidate();
         searchResultsPanel.repaint();
+        new Thread(() -> {
+            try { Thread.sleep(1000); } catch (InterruptedException e) { }
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                searchResultsPanel.revalidate();
+                searchResultsPanel.repaint();
+            });
+        }).start();
     }
 
     private JPanel buildSearchItemBlock(String[] item, int index)
@@ -662,11 +669,37 @@ private String openBankItemName = null;
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
         row.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-        JPanel iconPanel = new JPanel();
+        JPanel iconPanel = new JPanel(new java.awt.GridBagLayout());
         iconPanel.setPreferredSize(new Dimension(42, 42));
         iconPanel.setBackground(new Color(14, 12, 13));
-        iconPanel.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 40)));
-        row.add(iconPanel, BorderLayout.WEST);
+        iconPanel.setBorder(BorderFactory.createLineBorder(isUp ? new Color(0, 100, 0) : isDown ? new Color(100, 0, 0) : new Color(42, 37, 40)));
+
+        Integer itemId = nameToId.get(name.toLowerCase()
+            .replace('\u2019', '\'')
+            .replace('\u2018', '\''));
+        if (itemId == null) itemId = nameToId.get(name.toLowerCase());
+        if (itemId != null)
+        {
+            final int finalId = itemId;
+            new Thread(() -> {
+                java.awt.image.BufferedImage icon = plugin.getItemManager().getImage(finalId);
+                if (icon != null)
+                {
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        javax.swing.JLabel iconLabel = new javax.swing.JLabel(new javax.swing.ImageIcon(icon));
+                        iconPanel.add(iconLabel);
+                        iconPanel.revalidate();
+                        iconPanel.repaint();
+                        if (iconPanel.getParent() != null) iconPanel.getParent().repaint();
+                    });
+                }
+            }).start();
+        }
+
+        JPanel iconWrapper = new JPanel(new java.awt.GridBagLayout());
+        iconWrapper.setBackground(rowBg);
+        iconWrapper.add(iconPanel);
+        row.add(iconWrapper, BorderLayout.WEST);
 
         JPanel info = new JPanel();
         info.setLayout(new BoxLayout(info, BoxLayout.Y_AXIS));
@@ -881,6 +914,18 @@ private String openBankItemName = null;
 
         panel.add(buildTimeFrameBar(), BorderLayout.NORTH);
         panel.add(scrollPane, BorderLayout.CENTER);
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            listPanel.revalidate();
+            listPanel.repaint();
+        });
+        // Repaint again after icons have had time to load
+        new Thread(() -> {
+            try { Thread.sleep(1000); } catch (InterruptedException e) { }
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                listPanel.revalidate();
+                listPanel.repaint();
+            });
+        }).start();
         return panel;
     }
 
@@ -913,11 +958,37 @@ private String openBankItemName = null;
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
         row.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-        JPanel iconPanel = new JPanel();
+        JPanel iconPanel = new JPanel(new java.awt.GridBagLayout());
         iconPanel.setPreferredSize(new Dimension(42, 42));
         iconPanel.setBackground(new Color(14, 12, 13));
-        iconPanel.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 40)));
-        row.add(iconPanel, BorderLayout.WEST);
+        iconPanel.setBorder(BorderFactory.createLineBorder(isUp ? new Color(0, 100, 0) : isDown ? new Color(100, 0, 0) : new Color(42, 37, 40)));
+
+        Integer itemId = nameToId.get(name.toLowerCase()
+            .replace('\u2019', '\'')
+            .replace('\u2018', '\''));
+        if (itemId == null) itemId = nameToId.get(name.toLowerCase());
+        if (itemId != null)
+        {
+            final int finalId = itemId;
+            new Thread(() -> {
+                java.awt.image.BufferedImage icon = plugin.getItemManager().getImage(finalId);
+                if (icon != null)
+                {
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        javax.swing.JLabel iconLabel = new javax.swing.JLabel(new javax.swing.ImageIcon(icon));
+                        iconPanel.add(iconLabel);
+                        iconPanel.revalidate();
+                        iconPanel.repaint();
+                        if (iconPanel.getParent() != null) iconPanel.getParent().repaint();
+                    });
+                }
+            }).start();
+        }
+
+        JPanel iconWrapper = new JPanel(new java.awt.GridBagLayout());
+        iconWrapper.setBackground(rowBg);
+        iconWrapper.add(iconPanel);
+        row.add(iconWrapper, BorderLayout.WEST);
 
         JPanel info = new JPanel();
         info.setLayout(new BoxLayout(info, BoxLayout.Y_AXIS));
@@ -1343,12 +1414,15 @@ private String openBankItemName = null;
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 68));
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
         row.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-
         JPanel iconPanel = new JPanel();
         iconPanel.setPreferredSize(new Dimension(42, 42));
         iconPanel.setBackground(new Color(14, 12, 13));
         iconPanel.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 40)));
-        row.add(iconPanel, BorderLayout.WEST);
+
+        JPanel iconWrapper = new JPanel(new java.awt.GridBagLayout());
+        iconWrapper.setBackground(bgColor);
+        iconWrapper.add(iconPanel);
+        row.add(iconWrapper, BorderLayout.WEST);
 
         JPanel info = new JPanel();
         info.setLayout(new BoxLayout(info, BoxLayout.Y_AXIS));
@@ -1544,11 +1618,37 @@ private String openBankItemName = null;
         headerRow.setAlignmentX(Component.LEFT_ALIGNMENT);
         headerRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
 
-        JPanel iconBox = new JPanel();
+        JPanel iconBox = new JPanel(new java.awt.GridBagLayout());
         iconBox.setPreferredSize(new Dimension(42, 42));
         iconBox.setBackground(new Color(14, 12, 13));
         iconBox.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 40)));
-        headerRow.add(iconBox, BorderLayout.WEST);
+
+        Integer detailItemId = nameToId.get(name.toLowerCase()
+            .replace('\u2019', '\'')
+            .replace('\u2018', '\''));
+        if (detailItemId == null) detailItemId = nameToId.get(name.toLowerCase());
+        if (detailItemId != null)
+        {
+            final int finalDetailId = detailItemId;
+            new Thread(() -> {
+                java.awt.image.BufferedImage detailIcon = plugin.getItemManager().getImage(finalDetailId);
+                if (detailIcon != null)
+                {
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        javax.swing.JLabel iconLabel = new javax.swing.JLabel(new javax.swing.ImageIcon(detailIcon));
+                        iconBox.add(iconLabel);
+                        iconBox.revalidate();
+                        iconBox.repaint();
+                        if (iconBox.getParent() != null) iconBox.getParent().repaint();
+                    });
+                }
+            }).start();
+        }
+
+        JPanel detailIconWrapper = new JPanel(new java.awt.GridBagLayout());
+        detailIconWrapper.setBackground(BG_DETAIL);
+        detailIconWrapper.add(iconBox);
+        headerRow.add(detailIconWrapper, BorderLayout.WEST);
 
         JPanel namePrice = new JPanel();
         namePrice.setLayout(new BoxLayout(namePrice, BoxLayout.Y_AXIS));

@@ -71,6 +71,7 @@ public class GECompanionPlugin extends Plugin
 	@Inject
 	private net.runelite.client.game.ItemManager itemManager;
 
+	public net.runelite.client.game.ItemManager getItemManager() { return itemManager; }
 	private GECompanionPanel panel;
 	private NavigationButton navButton;
 	private ScheduledExecutorService scheduler;
