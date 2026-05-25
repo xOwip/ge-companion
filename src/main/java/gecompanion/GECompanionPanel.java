@@ -1274,6 +1274,9 @@ private String openBankItemName = null;
             bankSearchWrap.setBackground(new Color(28, 25, 26));
             bankSearchWrap.setBorder(new EmptyBorder(4, 6, 4, 6));
             bankSearchWrap.setAlignmentX(Component.LEFT_ALIGNMENT);
+            bankSearchWrap.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
+            bankSearchWrap.setMinimumSize(new Dimension(0, 34));
+            bankSearchWrap.setPreferredSize(new Dimension(214, 34));
 
             JTextField bankSearchField = new JTextField();
             bankSearchField.setBackground(new Color(14, 12, 13));
@@ -1291,6 +1294,8 @@ private String openBankItemName = null;
             bankResultsPanel.setLayout(new BoxLayout(bankResultsPanel, BoxLayout.Y_AXIS));
             bankResultsPanel.setBackground(BG_DARK);
             bankResultsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            bankResultsPanel.setMinimumSize(new java.awt.Dimension(0, 0));
+            bankResultsPanel.setMaximumSize(new java.awt.Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
 
             final java.util.List<String[]> finalBankItems = new java.util.ArrayList<>(allBankItems);
 
@@ -1412,24 +1417,25 @@ private String openBankItemName = null;
         boolean isUp = delta.startsWith("+");
         boolean isDown = delta.startsWith("-");
 
-        Color borderColor = colorCode && isUp ? new Color(0, 100, 0) : colorCode && isDown ? new Color(100, 0, 0) : new Color(80, 75, 70);
-        Color bgColor = colorCode && isUp ? new Color(10, 20, 10) : colorCode && isDown ? new Color(20, 10, 10) : (index % 2 == 0) ? BG_DARK : new Color(28, 25, 26);
+        Color borderColor = colorCode && isUp ? new Color(0, 180, 0) : colorCode && isDown ? new Color(200, 0, 0) : new Color(80, 75, 70);
+        Color bgColor = (index % 2 == 0) ? BG_DARK : new Color(28, 25, 26);
 
         JPanel block = new JPanel();
         block.setLayout(new BoxLayout(block, BoxLayout.Y_AXIS));
         block.setBackground(bgColor);
         block.setAlignmentX(Component.LEFT_ALIGNMENT);
+        block.setBorder(new MatteBorder(0, 0, 1, 0, new Color(40, 36, 34)));
 
         JPanel row = new JPanel(new BorderLayout());
         row.setBackground(bgColor);
-        row.setBorder(new MatteBorder(0, 3, 0, 0, borderColor));
+        row.setBorder(new MatteBorder(0, 4, 0, 0, borderColor));
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 68));
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
         row.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         JPanel iconPanel = new JPanel();
         iconPanel.setPreferredSize(new Dimension(42, 42));
         iconPanel.setBackground(new Color(14, 12, 13));
-        iconPanel.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 40)));
+        iconPanel.setBorder(BorderFactory.createLineBorder(colorCode && isUp ? new Color(0, 100, 0) : colorCode && isDown ? new Color(100, 0, 0) : new Color(42, 37, 40)));
 
         JPanel iconWrapper = new JPanel(new java.awt.GridBagLayout());
         iconWrapper.setBackground(bgColor);
