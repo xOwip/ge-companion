@@ -1287,6 +1287,9 @@ private String openBankItemName = null;
                     new EmptyBorder(3, 5, 3, 5)
             ));
             bankSearchField.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
+            bankSearchField.setPreferredSize(new Dimension(190, 24));
+            bankSearchField.setMaximumSize(new Dimension(190, 24));
+            bankSearchField.setMinimumSize(new Dimension(190, 24));
             bankSearchWrap.add(bankSearchField, BorderLayout.CENTER);
             listPanel.add(bankSearchWrap);
 
@@ -1333,7 +1336,7 @@ private String openBankItemName = null;
                 public void focusGained(FocusEvent e)
                 {
                     bankSearchField.setBorder(BorderFactory.createCompoundBorder(
-                            BorderFactory.createLineBorder(GOLD),
+                            new MatteBorder(1, 1, 1, 1, GOLD),
                             new EmptyBorder(3, 5, 3, 5)
                     ));
                 }
