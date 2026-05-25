@@ -661,11 +661,13 @@ private String openBankItemName = null;
         block.setLayout(new BoxLayout(block, BoxLayout.Y_AXIS));
         block.setBackground(rowBg);
         block.setAlignmentX(Component.LEFT_ALIGNMENT);
+        block.setBorder(javax.swing.BorderFactory.createEmptyBorder());
         block.setMaximumSize(new Dimension(Integer.MAX_VALUE, 800));
+        block.setBorder(javax.swing.BorderFactory.createEmptyBorder());
 
         JPanel row = new JPanel(new BorderLayout());
         row.setBackground(rowBg);
-        row.setBorder(new MatteBorder(0, 0, 1, 0, new Color(80, 75, 70)));
+        row.setBorder(javax.swing.BorderFactory.createEmptyBorder());
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 68));
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
         row.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -746,6 +748,7 @@ private String openBankItemName = null;
         // Inline detail panel for this row
         JPanel detailSlot = new JPanel(new BorderLayout());
         detailSlot.setBackground(BG_DARK);
+        detailSlot.setBorder(javax.swing.BorderFactory.createEmptyBorder());
         detailSlot.setVisible(false);
         detailSlot.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -864,6 +867,7 @@ private String openBankItemName = null;
         JPanel listPanel = new JPanel();
         listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
         listPanel.setBackground(new Color(26, 23, 24));
+        listPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder());
 
         JLabel pinnedLabel = new JLabel("Pinned Items");
         pinnedLabel.setForeground(TEXT_DIM);
@@ -954,14 +958,11 @@ private String openBankItemName = null;
         block.setLayout(new BoxLayout(block, BoxLayout.Y_AXIS));
         block.setBackground(rowBg);
         block.setAlignmentX(Component.LEFT_ALIGNMENT);
+        block.setBorder(javax.swing.BorderFactory.createEmptyBorder());
 
         JPanel row = new JPanel(new BorderLayout());
         row.setBackground(rowBg);
-        row.setBorder(new MatteBorder(0, 0, 1, 0, new Color(80, 75, 70)));
-        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 68));
-        row.setBackground(rowBg);
-        row.setBorder(new MatteBorder(0, 0, 1, 0, new Color(80, 75, 70)));
-        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 68));
+        row.setBorder(javax.swing.BorderFactory.createEmptyBorder());
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 68));
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
         row.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -1035,6 +1036,7 @@ private String openBankItemName = null;
         // Inline detail slot
         JPanel detailSlot = new JPanel(new BorderLayout());
         detailSlot.setBackground(BG_DARK);
+        detailSlot.setBorder(javax.swing.BorderFactory.createEmptyBorder());
         detailSlot.setVisible(false);
         detailSlot.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -1050,7 +1052,7 @@ private String openBankItemName = null;
                     if (currentOpenWatchlistRow != null)
                     {
                         currentOpenWatchlistRow.setBackground(BG_DARK);
-                        currentOpenWatchlistRow.setBorder(new MatteBorder(0, 0, 1, 0, new Color(80, 75, 70)));
+                        currentOpenWatchlistRow.setBorder(javax.swing.BorderFactory.createEmptyBorder());
                         for (Component c : currentOpenWatchlistRow.getComponents())
                         {
                             if (c instanceof JPanel)
@@ -1072,7 +1074,7 @@ private String openBankItemName = null;
                 if (currentOpenWatchlistRow != null)
                 {
                     currentOpenWatchlistRow.setBackground(currentOpenWatchlistRowColor);
-                    currentOpenWatchlistRow.setBorder(new MatteBorder(0, 0, 1, 0, new Color(80, 75, 70)));
+                    currentOpenWatchlistRow.setBorder(javax.swing.BorderFactory.createEmptyBorder());
                     for (Component c : currentOpenWatchlistRow.getComponents())
                         if (c instanceof JPanel) c.setBackground(currentOpenWatchlistRowColor);
                 }
@@ -1161,6 +1163,7 @@ private String openBankItemName = null;
         JPanel listPanel = new JPanel();
         listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
         listPanel.setBackground(BG_DARK);
+        listPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder());
 
         if (!bankItems.isEmpty())
         {
@@ -1233,7 +1236,7 @@ private String openBankItemName = null;
             // Top Gainers
             int gainersCount = Math.min(config.gainersCount(), gainers.size());
             for (int i = 0; i < gainersCount; i++)
-                listPanel.add(buildBankItemBlock(gainers.get(i), true));
+                listPanel.add(buildBankItemBlock(gainers.get(i), true, i));
 
             // Top Losers
             listPanel.add(new JSeparator());
@@ -1246,7 +1249,7 @@ private String openBankItemName = null;
 
             int losersCount = Math.min(config.losersCount(), losers.size());
             for (int i = 0; i < losersCount; i++)
-                listPanel.add(buildBankItemBlock(losers.get(i), true));
+                listPanel.add(buildBankItemBlock(losers.get(i), true, i));
 
 // All Items — collapsible
             JLabel allLabel = new JLabel((bankAllItemsCollapsed ? "≡ All Bank Items ▶" : "≡ All Bank Items ▼"));
@@ -1296,27 +1299,24 @@ private String openBankItemName = null;
                 String query = bankSearchField.getText().trim().toLowerCase();
                 boolean hasQuery = !query.isEmpty();
 
-                if (!bankAllItemsCollapsed || hasQuery)
-                {
+                if (!bankAllItemsCollapsed || hasQuery) {
                     java.util.List<String[]> filtered = hasQuery ?
                             finalBankItems.stream()
                             .filter(i -> i[0].toLowerCase().contains(query))
                             .collect(java.util.stream.Collectors.toList()) :
                             finalBankItems;
 
-                    if (filtered.isEmpty() && hasQuery)
-                    {
+                    if (filtered.isEmpty() && hasQuery) {
                         JLabel noResults = new JLabel("No items found in your bank");
                         noResults.setForeground(TEXT_DIM);
                         noResults.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
                         noResults.setBorder(new EmptyBorder(8, 7, 4, 7));
                         noResults.setAlignmentX(Component.LEFT_ALIGNMENT);
                         bankResultsPanel.add(noResults);
-                    }
-                    else
-                    {
+                    } else {
+                        int bankAllIndex = 0;
                         for (String[] i : filtered)
-                            bankResultsPanel.add(buildBankItemBlock(i, false));
+                            bankResultsPanel.add(buildBankItemBlock(i, false, bankAllIndex++));
                     }
                 }
                 bankResultsPanel.revalidate();
@@ -1402,7 +1402,7 @@ private String openBankItemName = null;
     }
 
 
-    private JPanel buildBankItemBlock(String[] item, boolean colorCode)
+    private JPanel buildBankItemBlock(String[] item, boolean colorCode, int index)
     {
         String name = item[0];
         String price = item[1];
@@ -1413,7 +1413,7 @@ private String openBankItemName = null;
         boolean isDown = delta.startsWith("-");
 
         Color borderColor = colorCode && isUp ? new Color(0, 100, 0) : colorCode && isDown ? new Color(100, 0, 0) : new Color(80, 75, 70);
-        Color bgColor = colorCode && isUp ? new Color(10, 20, 10) : colorCode && isDown ? new Color(20, 10, 10) : BG_DARK;
+        Color bgColor = colorCode && isUp ? new Color(10, 20, 10) : colorCode && isDown ? new Color(20, 10, 10) : (index % 2 == 0) ? BG_DARK : new Color(28, 25, 26);
 
         JPanel block = new JPanel();
         block.setLayout(new BoxLayout(block, BoxLayout.Y_AXIS));
@@ -1422,7 +1422,7 @@ private String openBankItemName = null;
 
         JPanel row = new JPanel(new BorderLayout());
         row.setBackground(bgColor);
-        row.setBorder(new MatteBorder(0, 3, 1, 0, borderColor));
+        row.setBorder(new MatteBorder(0, 3, 0, 0, borderColor));
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 68));
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
         row.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -1474,6 +1474,7 @@ private String openBankItemName = null;
         // Inline detail slot
         JPanel detailSlot = new JPanel(new BorderLayout());
         detailSlot.setBackground(BG_DARK);
+        detailSlot.setBorder(javax.swing.BorderFactory.createEmptyBorder());
         detailSlot.setVisible(false);
         detailSlot.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -1752,7 +1753,7 @@ private String openBankItemName = null;
     {
         JPanel row = new JPanel(new BorderLayout());
         row.setBackground(BG_DARK);
-        row.setBorder(new MatteBorder(0, 0, 1, 0, new Color(80, 75, 70)));
+        row.setBorder(javax.swing.BorderFactory.createEmptyBorder());
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 68));
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
         row.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
