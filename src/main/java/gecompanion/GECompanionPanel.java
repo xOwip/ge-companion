@@ -73,6 +73,7 @@ public class GECompanionPanel extends PluginPanel
     private java.util.Map<Integer, Long> avgPrice1h = new java.util.HashMap<>();
     private java.util.Map<Integer, Long> avgPrice6h = new java.util.HashMap<>();
     private java.util.Map<Integer, Integer> itemLimits = new java.util.HashMap<>();
+
     // Pinned/watched items
     private final java.util.List<String> pinnedItems = new java.util.ArrayList<>();
     private final java.util.List<String> bankItems = new java.util.ArrayList<>();
@@ -85,6 +86,8 @@ public class GECompanionPanel extends PluginPanel
     private JPanel currentOpenSearchRow = null;
     private JPanel currentOpenWatchlistRow = null;
     private JPanel currentOpenBankRow = null;
+    private Color currentOpenSearchRowColor = BG_DARK;
+    private Color currentOpenWatchlistRowColor = BG_DARK;
 private Color currentOpenBankRowColor = BG_DARK;
 private JPanel currentOpenBankInfo = null;
 private JPanel currentOpenBankDeltaRow = null;
@@ -696,7 +699,7 @@ private String openBankItemName = null;
             }).start();
         }
 
-        JPanel iconWrapper = new JPanel(new java.awt.GridBagLayout());
+        final JPanel iconWrapper = new JPanel(new java.awt.GridBagLayout());
         iconWrapper.setBackground(rowBg);
         iconWrapper.add(iconPanel);
         row.add(iconWrapper, BorderLayout.WEST);
@@ -727,7 +730,6 @@ private String openBankItemName = null;
         JLabel gpChangeLabel = new JLabel("(" + gpChange + ")");
         gpChangeLabel.setForeground(isUp ? GREEN_UP : isDown ? RED_DOWN : TAB_INACTIVE);
         gpChangeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
-        gpChangeLabel.setToolTipText(gpChange + " gp exact");
 
         JPanel deltaLimitRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         deltaLimitRow.setBackground(rowBg);
@@ -758,17 +760,19 @@ private String openBankItemName = null;
                     currentOpenSearchDetail = null;
                     if (currentOpenSearchRow != null)
                     {
-                        currentOpenSearchRow.setBackground(BG_DARK);
+                        currentOpenSearchRow.setBackground(currentOpenSearchRowColor);
                         currentOpenSearchRow.setBorder(new MatteBorder(0, 3, 0, 1, new Color(26, 24, 24)));
                         for (Component c : currentOpenSearchRow.getComponents())
                         {
                             if (c instanceof JPanel)
                             {
-                                c.setBackground(BG_DARK);
+                                c.setBackground(currentOpenSearchRowColor);
                                 for (Component cc : ((JPanel)c).getComponents())
-                                    if (cc instanceof JPanel) cc.setBackground(BG_DARK);
+                                    if (cc instanceof JPanel) cc.setBackground(currentOpenSearchRowColor);
                             }
                         }
+                        currentOpenSearchRow = null;
+                        currentOpenSearchRowColor = BG_DARK;
                         currentOpenSearchRow = null;
                     }
                     selectedItemName = null;
@@ -793,6 +797,7 @@ private String openBankItemName = null;
                 // Open this one
                 selectedItemName = name;
                 currentOpenSearchRow = row;
+                currentOpenSearchRowColor = rowBg;
                 currentOpenSearchDetail = detailSlot;
 
                 detailSlot.removeAll();
@@ -801,6 +806,7 @@ private String openBankItemName = null;
 
                 row.setBackground(BG_ROW_SELECTED);
                 info.setBackground(BG_ROW_SELECTED);
+                iconWrapper.setBackground(BG_ROW_SELECTED);
                 deltaLimitRow.setBackground(BG_ROW_SELECTED);
                 row.setBorder(BorderFactory.createCompoundBorder(
                     new MatteBorder(0, 3, 0, 0, GOLD),
@@ -828,6 +834,7 @@ private String openBankItemName = null;
                 {
                     row.setBackground(BG_ROW_HOVER);
                     info.setBackground(BG_ROW_HOVER);
+                    iconWrapper.setBackground(BG_ROW_HOVER);
                     deltaLimitRow.setBackground(BG_ROW_HOVER);
                 }
             }
@@ -837,6 +844,7 @@ private String openBankItemName = null;
                 {
                     row.setBackground(rowBg);
                     info.setBackground(rowBg);
+                    iconWrapper.setBackground(rowBg);
                     deltaLimitRow.setBackground(rowBg);
                 }
             }
@@ -985,7 +993,7 @@ private String openBankItemName = null;
             }).start();
         }
 
-        JPanel iconWrapper = new JPanel(new java.awt.GridBagLayout());
+        final JPanel iconWrapper = new JPanel(new java.awt.GridBagLayout());
         iconWrapper.setBackground(rowBg);
         iconWrapper.add(iconPanel);
         row.add(iconWrapper, BorderLayout.WEST);
@@ -1063,15 +1071,16 @@ private String openBankItemName = null;
                     currentOpenWatchlistDetail.setVisible(false);
                 if (currentOpenWatchlistRow != null)
                 {
-                    currentOpenWatchlistRow.setBackground(BG_DARK);
+                    currentOpenWatchlistRow.setBackground(currentOpenWatchlistRowColor);
                     currentOpenWatchlistRow.setBorder(new MatteBorder(0, 0, 1, 0, new Color(80, 75, 70)));
                     for (Component c : currentOpenWatchlistRow.getComponents())
-                        if (c instanceof JPanel) c.setBackground(BG_DARK);
+                        if (c instanceof JPanel) c.setBackground(currentOpenWatchlistRowColor);
                 }
 
                 // Open this one
                 selectedWatchlistItemName = name;
                 currentOpenWatchlistRow = row;
+                currentOpenWatchlistRowColor = rowBg;
                 currentOpenWatchlistDetail = detailSlot;
 
                 detailSlot.removeAll();
@@ -1080,6 +1089,7 @@ private String openBankItemName = null;
 
                 row.setBackground(BG_ROW_SELECTED);
                 info.setBackground(BG_ROW_SELECTED);
+                iconWrapper.setBackground(BG_ROW_SELECTED);
                 deltaLimitRow.setBackground(BG_ROW_SELECTED);
                 row.setBorder(BorderFactory.createEmptyBorder());
                 row.setBorder(new MatteBorder(0, 3, 0, 0, GOLD));
@@ -1092,6 +1102,7 @@ private String openBankItemName = null;
                 {
                     row.setBackground(BG_ROW_HOVER);
                     info.setBackground(BG_ROW_HOVER);
+                    iconWrapper.setBackground(BG_ROW_HOVER);
                     deltaLimitRow.setBackground(BG_ROW_HOVER);
                 }
             }
@@ -1101,6 +1112,7 @@ private String openBankItemName = null;
                 {
                     row.setBackground(rowBg);
                     info.setBackground(rowBg);
+                    iconWrapper.setBackground(rowBg);
                     deltaLimitRow.setBackground(rowBg);
                 }
             }
@@ -1517,6 +1529,7 @@ private String openBankItemName = null;
 
                 row.setBackground(BG_ROW_SELECTED);
                 info.setBackground(BG_ROW_SELECTED);
+                iconWrapper.setBackground(BG_ROW_SELECTED);
                 deltaRow.setBackground(BG_ROW_SELECTED);
 
                 tabContentPanel.revalidate();
@@ -1532,6 +1545,7 @@ private String openBankItemName = null;
                 {
                     row.setBackground(BG_ROW_HOVER);
                     info.setBackground(BG_ROW_HOVER);
+                    iconWrapper.setBackground(BG_ROW_HOVER);
                     deltaRow.setBackground(BG_ROW_HOVER);
                 }
             }
@@ -1542,6 +1556,7 @@ private String openBankItemName = null;
                     row.setBackground(bgColor);
                     info.setBackground(bgColor);
                     deltaRow.setBackground(bgColor);
+                    iconWrapper.setBackground(bgColor);
                 }
             }
         });
