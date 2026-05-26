@@ -1106,11 +1106,12 @@ private String openBankItemName = null;
         heroLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_SECTION));
         heroLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        String bankValueStr = bankItems.isEmpty() ? "─── No bank data ───" : formatFullPrice(String.valueOf(totalBankValue)) + " gp";
+        String bankValueStr = bankItems.isEmpty() ? "No bank data" : formatFullPrice(String.valueOf(totalBankValue)) + " gp";
         JLabel heroValue = new JLabel(bankValueStr);
         heroValue.setForeground(PRICE_GOLD);
-        heroValue.setFont(new Font("Monospaced", Font.BOLD, FONT_TITLE));
+        heroValue.setFont(new Font("Monospaced", Font.BOLD, 20));
         heroValue.setAlignmentX(Component.CENTER_ALIGNMENT);
+        if (!bankItems.isEmpty()) heroValue.setToolTipText(formatFullPrice(String.valueOf(totalBankValue)) + " gp");
 
         JPanel pillPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
         pillPanel.setBackground(new Color(26, 23, 24));
