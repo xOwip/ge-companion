@@ -693,21 +693,21 @@ private String openBankItemName = null;
         qtyLabel.setForeground(TAB_INACTIVE);
         qtyLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
 
-        JLabel deltaLabel = new JLabel(delta + "%");
+        JLabel deltaLabel = new JLabel("(" + delta + "%)");
         deltaLabel.setForeground(isUp ? GREEN_UP : isDown ? RED_DOWN : TAB_INACTIVE);
-        deltaLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_DELTA));
+        deltaLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
         deltaLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel gpChangeLabel = new JLabel("(" + gpChange + ")");
+        JLabel gpChangeLabel = new JLabel(gpChange);
         gpChangeLabel.setForeground(isUp ? GREEN_UP : isDown ? RED_DOWN : TAB_INACTIVE);
-        gpChangeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+        gpChangeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_DELTA));
 
         JPanel deltaLimitRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         deltaLimitRow.setBackground(rowBg);
         deltaLimitRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-        deltaLimitRow.add(deltaLabel);
-        deltaLimitRow.add(Box.createHorizontalStrut(4));
         deltaLimitRow.add(gpChangeLabel);
+        deltaLimitRow.add(Box.createHorizontalStrut(4));
+        deltaLimitRow.add(deltaLabel);
 
         info.add(nameLabel);
         info.add(priceLabel);
@@ -977,21 +977,21 @@ private String openBankItemName = null;
         priceLabel.setForeground(PRICE_GOLD);
         priceLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_PRICE));
 
-        JLabel deltaLabel = new JLabel(delta + "%");
+        JLabel deltaLabel = new JLabel("(" + delta + "%)");
         deltaLabel.setForeground(isUp ? GREEN_UP : isDown ? RED_DOWN : TEXT_PRIMARY);
-        deltaLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_DELTA));
+        deltaLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
         deltaLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel gpChangeLabel = new JLabel("(" + gpChange + ")");
+        JLabel gpChangeLabel = new JLabel(gpChange);
         gpChangeLabel.setForeground(isUp ? GREEN_UP : isDown ? RED_DOWN : TAB_INACTIVE);
-        gpChangeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+        gpChangeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_DELTA));
 
         JPanel deltaLimitRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         deltaLimitRow.setBackground(rowBg);
         deltaLimitRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-        deltaLimitRow.add(deltaLabel);
-        deltaLimitRow.add(Box.createHorizontalStrut(4));
         deltaLimitRow.add(gpChangeLabel);
+        deltaLimitRow.add(Box.createHorizontalStrut(4));
+        deltaLimitRow.add(deltaLabel);
 
         info.add(nameLabel);
         info.add(priceLabel);
@@ -1450,21 +1450,21 @@ private String openBankItemName = null;
         priceLabel.setForeground(PRICE_GOLD);
         priceLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_PRICE));
 
-        JLabel deltaLabel = new JLabel(delta + "%");
+        JLabel deltaLabel = new JLabel("(" + delta + "%)");
         deltaLabel.setForeground(isUp ? GREEN_UP : isDown ? RED_DOWN : TAB_INACTIVE);
-        deltaLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_DELTA));
+        deltaLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
         deltaLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel gpChangeLabel = new JLabel("(" + gpChange + ")");
+        JLabel gpChangeLabel = new JLabel(gpChange);
         gpChangeLabel.setForeground(isUp ? GREEN_UP : isDown ? RED_DOWN : TAB_INACTIVE);
-        gpChangeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+        gpChangeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_DELTA));
 
         JPanel deltaRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         deltaRow.setBackground(bgColor);
         deltaRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-        deltaRow.add(deltaLabel);
-        deltaRow.add(Box.createHorizontalStrut(4));
         deltaRow.add(gpChangeLabel);
+        deltaRow.add(Box.createHorizontalStrut(4));
+        deltaRow.add(deltaLabel);
 
         info.add(nameLabel);
         info.add(priceLabel);
