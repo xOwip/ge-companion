@@ -75,6 +75,7 @@ public class GECompanionPanel extends PluginPanel
     private java.util.Map<Integer, Integer> itemLimits = new java.util.HashMap<>();
 
     // Pinned/watched items
+    private final java.util.Map<Integer, javax.swing.ImageIcon> iconCache = new java.util.HashMap<>();
     private final java.util.List<String> pinnedItems = new java.util.ArrayList<>();
     private final java.util.List<String> bankItems = new java.util.ArrayList<>();
     private final java.util.Map<String, Integer> bankQuantities = new java.util.HashMap<>();
@@ -546,32 +547,26 @@ private String openBankItemName = null;
         tabContentPanel.repaint();
     }
 
-    private void updateSearchResults(String query)
-    {
+    private void updateSearchResults(String query) {
         searchResultsPanel.removeAll();
 
         List<String[]> results = new ArrayList<>();
 
-        if (!nameToId.isEmpty() && !priceCache.isEmpty())
-        {
+        if (!nameToId.isEmpty() && !priceCache.isEmpty()) {
             // Use live data
-            for (Map.Entry<String, Integer> entry : nameToId.entrySet())
-            {
-                if (entry.getKey().contains(query))
-                {
+            for (Map.Entry<String, Integer> entry : nameToId.entrySet()) {
+                if (entry.getKey().contains(query)) {
                     int id = entry.getValue();
                     PriceData pd = priceCache.get(id);
-                    if (pd != null && pd.getMid() > 0)
-                    {
+                    if (pd != null && pd.getMid() > 0) {
                         String name = entry.getKey();
                         // Capitalize first letter of each word
                         String[] words = name.split(" ");
                         StringBuilder sb = new StringBuilder();
-                        for (String word : words)
-                        {
+                        for (String word : words) {
                             if (word.length() > 0)
                                 sb.append(Character.toUpperCase(word.charAt(0)))
-                                  .append(word.substring(1)).append(" ");
+                                        .append(word.substring(1)).append(" ");
                         }
                         String displayName = sb.toString().trim();
                         String price = String.valueOf(pd.getMid());
@@ -580,9 +575,8 @@ private String openBankItemName = null;
                         if (activeTimeFrame.equals("1H")) avgCache = avgPrice1h;
                         else if (activeTimeFrame.equals("6H")) avgCache = avgPrice6h;
                         Long avg = avgCache.get(id);
-                        if (avg != null && avg > 0 && pd.getMid() > 0)
-                        {
-                            double pct = ((double)(pd.getMid() - avg) / avg) * 100.0;
+                        if (avg != null && avg > 0 && pd.getMid() > 0) {
+                            double pct = ((double) (pd.getMid() - avg) / avg) * 100.0;
                             delta = String.format("%+.2f", pct);
                         }
                         Integer limit = itemLimits.get(id);
@@ -598,9 +592,7 @@ private String openBankItemName = null;
             results.sort((a, b) -> a[0].compareTo(b[0]));
             // Limit to 50 results
             if (results.size() > 50) results = results.subList(0, 50);
-        }
-        else
-        {
+        } else {
             // Data still loading
             searchResultsPanel.removeAll();
             JLabel loading = new JLabel("⟳ Loading prices...");
@@ -614,33 +606,22 @@ private String openBankItemName = null;
             return;
         }
 
-        if (results.isEmpty())
-        {
+        if (results.isEmpty()) {
             JLabel noResults = new JLabel("No results found");
             noResults.setForeground(TEXT_DIM);
             noResults.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
             noResults.setBorder(new EmptyBorder(8, 7, 8, 7));
             noResults.setAlignmentX(Component.LEFT_ALIGNMENT);
             searchResultsPanel.add(noResults);
-        }
-        else
-        {
+        } else {
             int searchIndex = 0;
-            for (String[] item : results)
-            {
+            for (String[] item : results) {
                 searchResultsPanel.add(buildSearchItemBlock(item, searchIndex++));
             }
         }
         searchResultsPanel.add(Box.createVerticalGlue());
         searchResultsPanel.revalidate();
         searchResultsPanel.repaint();
-        new Thread(() -> {
-            try { Thread.sleep(1000); } catch (InterruptedException e) { }
-            javax.swing.SwingUtilities.invokeLater(() -> {
-                searchResultsPanel.revalidate();
-                searchResultsPanel.repaint();
-            });
-        }).start();
     }
 
     private JPanel buildSearchItemBlock(String[] item, int index)
@@ -680,25 +661,12 @@ private String openBankItemName = null;
         iconPanel.setBorder(BorderFactory.createLineBorder(isUp ? new Color(0, 100, 0) : isDown ? new Color(100, 0, 0) : new Color(42, 37, 40)));
 
         Integer itemId = nameToId.get(name.toLowerCase()
-            .replace('\u2019', '\'')
-            .replace('\u2018', '\''));
+                .replace('\u2019', '\'')
+                .replace('\u2018', '\''));
         if (itemId == null) itemId = nameToId.get(name.toLowerCase());
         if (itemId != null)
         {
-            final int finalId = itemId;
-            new Thread(() -> {
-                java.awt.image.BufferedImage icon = plugin.getItemManager().getImage(finalId);
-                if (icon != null)
-                {
-                    javax.swing.SwingUtilities.invokeLater(() -> {
-                        javax.swing.JLabel iconLabel = new javax.swing.JLabel(new javax.swing.ImageIcon(icon));
-                        iconPanel.add(iconLabel);
-                        iconPanel.revalidate();
-                        iconPanel.repaint();
-                        if (iconPanel.getParent() != null) iconPanel.getParent().repaint();
-                    });
-                }
-            }).start();
+            loadIconAsync(itemId, iconPanel, rowBg);
         }
 
         final JPanel iconWrapper = new JPanel(new java.awt.GridBagLayout());
@@ -879,6 +847,20 @@ private String openBankItemName = null;
         int watchlistIndex = 0;
         for (String pinnedName : pinnedItems)
         {
+            // Pre-warm icon cache for watchlist items
+            String normalizedName = pinnedName.toLowerCase()
+                    .replace('\u2019', '\'')
+                    .replace('\u2018', '\'');
+            Integer preWarmId = nameToId.get(normalizedName);
+            if (preWarmId == null) preWarmId = nameToId.get(pinnedName.toLowerCase());
+            if (preWarmId != null && !iconCache.containsKey(preWarmId))
+            {
+                final int fid = preWarmId;
+                new Thread(() -> {
+                    java.awt.image.BufferedImage img = plugin.getItemManager().getImage(fid);
+                    if (img != null) iconCache.put(fid, new ImageIcon(img));
+                }).start();
+            }
             String[] item = buildItemDataFromCache(pinnedName);
             if (item != null) listPanel.add(buildWatchlistItemBlock(item, watchlistIndex++));
         }
@@ -930,14 +912,6 @@ private String openBankItemName = null;
             listPanel.revalidate();
             listPanel.repaint();
         });
-        // Repaint again after icons have had time to load
-        new Thread(() -> {
-            try { Thread.sleep(1000); } catch (InterruptedException e) { }
-            javax.swing.SwingUtilities.invokeLater(() -> {
-                listPanel.revalidate();
-                listPanel.repaint();
-            });
-        }).start();
         return panel;
     }
 
@@ -973,25 +947,12 @@ private String openBankItemName = null;
         iconPanel.setBorder(BorderFactory.createLineBorder(isUp ? new Color(0, 100, 0) : isDown ? new Color(100, 0, 0) : new Color(42, 37, 40)));
 
         Integer itemId = nameToId.get(name.toLowerCase()
-            .replace('\u2019', '\'')
-            .replace('\u2018', '\''));
+                .replace('\u2019', '\'')
+                .replace('\u2018', '\''));
         if (itemId == null) itemId = nameToId.get(name.toLowerCase());
         if (itemId != null)
         {
-            final int finalId = itemId;
-            new Thread(() -> {
-                java.awt.image.BufferedImage icon = plugin.getItemManager().getImage(finalId);
-                if (icon != null)
-                {
-                    javax.swing.SwingUtilities.invokeLater(() -> {
-                        javax.swing.JLabel iconLabel = new javax.swing.JLabel(new javax.swing.ImageIcon(icon));
-                        iconPanel.add(iconLabel);
-                        iconPanel.revalidate();
-                        iconPanel.repaint();
-                        if (iconPanel.getParent() != null) iconPanel.getParent().repaint();
-                    });
-                }
-            }).start();
+            loadIconAsync(itemId, iconPanel, rowBg);
         }
 
         final JPanel iconWrapper = new JPanel(new java.awt.GridBagLayout());
@@ -1423,7 +1384,23 @@ private String openBankItemName = null;
         Color borderColor = colorCode && isUp ? new Color(0, 180, 0) : colorCode && isDown ? new Color(200, 0, 0) : new Color(80, 75, 70);
         Color bgColor = (index % 2 == 0) ? BG_DARK : new Color(28, 25, 26);
 
-        JPanel block = new JPanel();
+        JPanel block = new JPanel()
+        {
+            @Override
+            protected void paintComponent(Graphics g)
+            {
+                super.paintComponent(g);
+                if (colorCode && (isUp || isDown))
+                {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    Color gradColor = isUp ? new Color(0, 180, 0, 180) : new Color(200, 0, 0, 180);
+                    GradientPaint gp = new GradientPaint(0, 0, gradColor, getWidth() * 0.75f, 0, new Color(0, 0, 0, 0));
+                    g2.setPaint(gp);
+                    g2.fillRect(0, 0, getWidth(), getHeight());
+                    g2.dispose();
+                }
+            }
+        };
         block.setLayout(new BoxLayout(block, BoxLayout.Y_AXIS));
         block.setBackground(bgColor);
         block.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -1439,6 +1416,15 @@ private String openBankItemName = null;
         iconPanel.setPreferredSize(new Dimension(42, 42));
         iconPanel.setBackground(new Color(14, 12, 13));
         iconPanel.setBorder(BorderFactory.createLineBorder(colorCode && isUp ? new Color(0, 100, 0) : colorCode && isDown ? new Color(100, 0, 0) : new Color(42, 37, 40)));
+
+        Integer bankItemId = nameToId.get(name.toLowerCase()
+                .replace('\u2019', '\'')
+                .replace('\u2018', '\''));
+        if (bankItemId == null) bankItemId = nameToId.get(name.toLowerCase());
+        if (bankItemId != null)
+        {
+            loadIconAsync(bankItemId, iconPanel, bgColor);
+        }
 
         JPanel iconWrapper = new JPanel(new java.awt.GridBagLayout());
         iconWrapper.setBackground(bgColor);
@@ -1576,7 +1562,34 @@ private String openBankItemName = null;
         return block;
     }
 
-    private String[] buildItemDataFromCache(String name)
+    private void loadIconAsync(int itemId, JPanel iconPanel, Color rowBg)
+{
+    ImageIcon cached = iconCache.get(itemId);
+    if (cached != null)
+    {
+        JLabel iconLabel = new JLabel(cached);
+        iconPanel.add(iconLabel);
+        iconPanel.revalidate();
+        iconPanel.repaint();
+        return;
+    }
+    new Thread(() -> {
+        java.awt.image.BufferedImage img = plugin.getItemManager().getImage(itemId);
+        if (img != null)
+        {
+            ImageIcon icon = new ImageIcon(img);
+            iconCache.put(itemId, icon);
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                iconPanel.add(new JLabel(icon));
+                iconPanel.revalidate();
+                iconPanel.repaint();
+                if (iconPanel.getParent() != null) iconPanel.getParent().repaint();
+            });
+        }
+    }).start();
+}
+
+private String[] buildItemDataFromCache(String name)
     {
         String normalizedName = name.toLowerCase()
             .replace('\u2019', '\'')
