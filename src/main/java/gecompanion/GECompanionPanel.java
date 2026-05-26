@@ -622,6 +622,7 @@ private String openBankItemName = null;
         searchResultsPanel.add(Box.createVerticalGlue());
         searchResultsPanel.revalidate();
         searchResultsPanel.repaint();
+        scheduleRepaint(searchResultsPanel);
     }
 
     private JPanel buildSearchItemBlock(String[] item, int index)
@@ -774,6 +775,7 @@ private String openBankItemName = null;
                 detailSlot.removeAll();
                 detailSlot.add(buildInlineDetail(item, false), BorderLayout.CENTER);
                 detailSlot.setVisible(true);
+                scheduleRepaint(detailSlot);
 
                 row.setBackground(BG_ROW_SELECTED);
                 info.setBackground(BG_ROW_SELECTED);
@@ -912,6 +914,7 @@ private String openBankItemName = null;
             listPanel.revalidate();
             listPanel.repaint();
         });
+        scheduleRepaint(listPanel);
         return panel;
     }
 
@@ -1049,6 +1052,7 @@ private String openBankItemName = null;
                 detailSlot.removeAll();
                 detailSlot.add(buildInlineDetail(item, true), BorderLayout.CENTER);
                 detailSlot.setVisible(true);
+                scheduleRepaint(detailSlot);
 
                 row.setBackground(BG_ROW_SELECTED);
                 info.setBackground(BG_ROW_SELECTED);
@@ -1522,6 +1526,7 @@ private String openBankItemName = null;
                 detailSlot.removeAll();
                 detailSlot.add(buildInlineDetail(item, false), BorderLayout.CENTER);
                 detailSlot.setVisible(true);
+                scheduleRepaint(detailSlot);
 
                 row.setBackground(BG_ROW_SELECTED);
                 info.setBackground(BG_ROW_SELECTED);
@@ -1562,6 +1567,20 @@ private String openBankItemName = null;
         return block;
     }
 
+    private void scheduleRepaint(JPanel panel)
+    {
+        int[] delays = {300, 600, 1000};
+        for (int delay : delays)
+        {
+            javax.swing.Timer t = new javax.swing.Timer(delay, e -> {
+                panel.revalidate();
+                panel.repaint();
+            });
+            t.setRepeats(false);
+            t.start();
+        }
+    }
+
     private void loadIconAsync(int itemId, JPanel iconPanel, Color rowBg)
 {
     ImageIcon cached = iconCache.get(itemId);
@@ -1583,7 +1602,14 @@ private String openBankItemName = null;
                 iconPanel.add(new JLabel(icon));
                 iconPanel.revalidate();
                 iconPanel.repaint();
-                if (iconPanel.getParent() != null) iconPanel.getParent().repaint();
+                java.awt.Container parent = iconPanel.getParent();
+                while (parent != null)
+                {
+                    parent.revalidate();
+                    parent.repaint();
+                    if (parent instanceof JScrollPane) break;
+                    parent = parent.getParent();
+                }
             });
         }
     }).start();
