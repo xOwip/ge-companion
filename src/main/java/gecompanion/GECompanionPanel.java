@@ -1398,7 +1398,7 @@ private String openBankItemName = null;
                 if (colorCode && (isUp || isDown))
                 {
                     Graphics2D g2 = (Graphics2D) g.create();
-                    Color gradColor = isUp ? new Color(0, 180, 0, 180) : new Color(200, 0, 0, 180);
+                    Color gradColor = isUp ? new Color(0, 180, 0, 220) : new Color(200, 0, 0, 220);
                     GradientPaint gp = new GradientPaint(0, 0, gradColor, getWidth() * 0.75f, 0, new Color(0, 0, 0, 0));
                     g2.setPaint(gp);
                     g2.fillRect(0, 0, getWidth(), getHeight());
