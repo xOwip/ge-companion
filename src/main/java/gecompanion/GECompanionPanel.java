@@ -119,6 +119,7 @@ private String openBankItemName = null;
     {
         this.config = config;
         this.plugin = plugin;
+        loadBankData();
         loadBankValueLog();
         loadPinnedItems();
         startLiveTimer();
@@ -139,6 +140,7 @@ private String openBankItemName = null;
         this.bankQuantities.putAll(quantities);
         this.totalBankValue = bankValue;
         saveBankValueLog();
+        saveBankData();
         if (activeTab == 2) showTab(2);
     }
 
@@ -165,6 +167,21 @@ private String openBankItemName = null;
         selectedItemName = savedSearchItem;
         selectedWatchlistItemName = savedWatchlistItem;
         selectedBankItemName = savedBankItem;
+    }
+
+    private void loadBankData()
+    {
+        String savedValue = plugin.loadConfig("bankValue");
+        if (savedValue != null && !savedValue.trim().isEmpty())
+        {
+            try { totalBankValue = Long.parseLong(savedValue.trim()); }
+            catch (NumberFormatException e) { }
+        }
+    }
+
+    private void saveBankData()
+    {
+        plugin.saveConfig("bankValue", String.valueOf(totalBankValue));
     }
 
     private void loadBankValueLog()
@@ -1160,14 +1177,37 @@ private String openBankItemName = null;
         heroLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_SECTION));
         heroLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        String bankValueStr = bankItems.isEmpty() ? "No bank data" : formatFullPrice(String.valueOf(totalBankValue)) + " gp";
+// Calculate last updated time
+        long lastScanTime = 0;
+        for (long[] entry : bankValueLog)
+        {
+            if (entry[0] > lastScanTime) lastScanTime = entry[0];
+        }
+        long nowSeconds = System.currentTimeMillis() / 1000;
+        long secondsAgo = nowSeconds - lastScanTime;
+        String lastUpdatedStr;
+        if (lastScanTime == 0)
+            lastUpdatedStr = "Bank not yet scanned";
+        else if (secondsAgo < 60)
+            lastUpdatedStr = "Last updated just now";
+        else if (secondsAgo < 3600)
+            lastUpdatedStr = "Last updated " + (secondsAgo / 60) + "m ago";
+        else
+            lastUpdatedStr = "Last updated " + (secondsAgo / 3600) + "h ago";
+
+        JLabel lastUpdatedLabel = new JLabel(lastUpdatedStr);
+        lastUpdatedLabel.setForeground(TEXT_DIM);
+        lastUpdatedLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+        lastUpdatedLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        String bankValueStr = totalBankValue == 0 ? "No bank data" : formatFullPrice(String.valueOf(totalBankValue)) + " gp";
         JLabel heroValue = new JLabel(bankValueStr);
         heroValue.setForeground(PRICE_GOLD);
         heroValue.setFont(new Font("Monospaced", Font.BOLD, 20));
         heroValue.setAlignmentX(Component.CENTER_ALIGNMENT);
         if (!bankItems.isEmpty()) heroValue.setToolTipText(formatFullPrice(String.valueOf(totalBankValue)) + " gp");
 
-        long nowSeconds = System.currentTimeMillis() / 1000;
+        nowSeconds = System.currentTimeMillis() / 1000;
         long targetSeconds = nowSeconds;
         if (activeTimeFrame.equals("1H")) targetSeconds = nowSeconds - 3600;
         else if (activeTimeFrame.equals("6H")) targetSeconds = nowSeconds - 21600;
@@ -1231,6 +1271,7 @@ private String openBankItemName = null;
         pillPanel.setBackground(new Color(26, 23, 24));
 
         hero.add(heroLabel);
+        hero.add(lastUpdatedLabel);
         hero.add(Box.createVerticalStrut(2));
         hero.add(heroValue);
         hero.add(Box.createVerticalStrut(2));
