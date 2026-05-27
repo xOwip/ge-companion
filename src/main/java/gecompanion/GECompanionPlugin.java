@@ -84,6 +84,9 @@ public class GECompanionPlugin extends Plugin
 	private final Map<Integer, Long> avgPrice1h = new HashMap<>();
 	// 6h average prices — itemId -> avg price
 	private final Map<Integer, Long> avgPrice6h = new HashMap<>();
+	// 1h buy/sell volume — itemId -> volume
+	private final Map<Integer, Long> buyVolume1h = new HashMap<>();
+	private final Map<Integer, Long> sellVolume1h = new HashMap<>();
 	// Name -> itemId mapping
 	private final Map<String, Integer> nameToId = new HashMap<>();
 	// Item GE limits — itemId -> limit
@@ -181,7 +184,7 @@ public class GECompanionPlugin extends Plugin
 				fetchTimeframeAverages("6h", avgPrice6h);
 
 				// Update panel on EDT
-				javax.swing.SwingUtilities.invokeLater(() -> panel.onPricesUpdated(priceCache, nameToId, avgPrice24h, avgPrice1h, avgPrice6h, itemLimits));
+				javax.swing.SwingUtilities.invokeLater(() -> panel.onPricesUpdated(priceCache, nameToId, avgPrice24h, avgPrice1h, avgPrice6h, itemLimits, buyVolume1h, sellVolume1h));
 			}
 		}
 		catch (Exception e)
@@ -210,29 +213,38 @@ public class GECompanionPlugin extends Plugin
             cache.clear();
             for (String key : data.keySet())
             {
-                try
-                {
-                    int id = Integer.parseInt(key);
-                    JSONObject item = data.getJSONObject(key);
-                    long avgHigh = item.optLong("avgHighPrice", 0);
-                    long avgLow = item.optLong("avgLowPrice", 0);
-                    if (avgHigh > 0 && avgLow > 0)
-                        cache.put(id, (avgHigh + avgLow) / 2);
-                    else if (avgHigh > 0)
-                        cache.put(id, avgHigh);
-                    else if (avgLow > 0)
-                        cache.put(id, avgLow);
-                }
-                catch (NumberFormatException e) { }
-            }
-            log.debug("Fetched {} averages for {} items", interval, cache.size());
-        }
-    }
-    catch (Exception e)
-    {
-        log.warn("Error fetching {} averages", interval, e);
-    }
+				try
+				{
+					int id = Integer.parseInt(key);
+					JSONObject item = data.getJSONObject(key);
+					long avgHigh = item.optLong("avgHighPrice", 0);
+					long avgLow = item.optLong("avgLowPrice", 0);
+					if (avgHigh > 0 && avgLow > 0)
+						cache.put(id, (avgHigh + avgLow) / 2);
+					else if (avgHigh > 0)
+						cache.put(id, avgHigh);
+					else if (avgLow > 0)
+						cache.put(id, avgLow);
+					// Store buy/sell volume for 1h timeframe
+					if (interval.equals("1h"))
+					{
+						long buyVol = item.optLong("highPriceVolume", 0);
+						long sellVol = item.optLong("lowPriceVolume", 0);
+						if (buyVol > 0) buyVolume1h.put(id, buyVol);
+						if (sellVol > 0) sellVolume1h.put(id, sellVol);
+					}
+				}
+				catch (NumberFormatException e) { }
+			}
+			log.debug("Fetched {} averages for {} items", interval, cache.size());
+		}
+	}
+	catch (Exception e)
+	{
+		log.warn("Error fetching {} averages", interval, e);
+	}
 }
+
 
 private void fetch24hAverages()
 {

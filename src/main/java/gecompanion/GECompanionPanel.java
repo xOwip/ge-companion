@@ -73,6 +73,8 @@ public class GECompanionPanel extends PluginPanel
     private java.util.Map<Integer, Long> avgPrice1h = new java.util.HashMap<>();
     private java.util.Map<Integer, Long> avgPrice6h = new java.util.HashMap<>();
     private java.util.Map<Integer, Integer> itemLimits = new java.util.HashMap<>();
+    private java.util.Map<Integer, Long> buyVolume1h = new java.util.HashMap<>();
+    private java.util.Map<Integer, Long> sellVolume1h = new java.util.HashMap<>();
 
     // Pinned/watched items
     private final java.util.Map<Integer, javax.swing.ImageIcon> iconCache = new java.util.HashMap<>();
@@ -137,7 +139,7 @@ private String openBankItemName = null;
         if (activeTab == 2) showTab(2);
     }
 
-    public void onPricesUpdated(java.util.Map<Integer, PriceData> priceCache, java.util.Map<String, Integer> nameToId, java.util.Map<Integer, Long> avgPrice24h, java.util.Map<Integer, Long> avgPrice1h, java.util.Map<Integer, Long> avgPrice6h, java.util.Map<Integer, Integer> itemLimits)
+    public void onPricesUpdated(java.util.Map<Integer, PriceData> priceCache, java.util.Map<String, Integer> nameToId, java.util.Map<Integer, Long> avgPrice24h, java.util.Map<Integer, Long> avgPrice1h, java.util.Map<Integer, Long> avgPrice6h, java.util.Map<Integer, Integer> itemLimits, java.util.Map<Integer, Long> buyVolume1h, java.util.Map<Integer, Long> sellVolume1h)
     {
         this.priceCache = priceCache;
         this.nameToId = nameToId;
@@ -145,8 +147,21 @@ private String openBankItemName = null;
         this.avgPrice1h = avgPrice1h;
         this.avgPrice6h = avgPrice6h;
         this.itemLimits = itemLimits;
+        this.buyVolume1h = buyVolume1h;
+        this.sellVolume1h = sellVolume1h;
         secondsSinceRefresh = 0;
+
+        // Preserve open detail panel state before refresh
+        String savedSearchItem = selectedItemName;
+        String savedWatchlistItem = selectedWatchlistItemName;
+        String savedBankItem = selectedBankItemName;
+
         showTab(activeTab);
+
+        // Restore open detail panel state after refresh
+        selectedItemName = savedSearchItem;
+        selectedWatchlistItemName = savedWatchlistItem;
+        selectedBankItemName = savedBankItem;
     }
 
     private void loadPinnedItems()
@@ -360,10 +375,10 @@ private String openBankItemName = null;
         grid.setAlignmentX(Component.LEFT_ALIGNMENT);
         grid.setMaximumSize(new Dimension(225, 90));
 
-        grid.add(buildStatBox("Current Price", formatPrice(price), STAT_GOLD, formatFullPrice(price) + " gp"));
-        grid.add(buildStatBox("Profit w/ Tax", profit, isUp ? GREEN_UP : RED_DOWN, null));
-        grid.add(buildStatBox("Buy Qty / hr", buyQty, STAT_GOLD, null));
-        grid.add(buildStatBox("Sell Qty / hr", sellQty, STAT_GOLD, null));
+        grid.add(buildStatBox("Buy Price", item[2].equals("0") ? "?" : formatPrice(item[2]), STAT_GOLD, item[2].equals("0") ? null : formatFullPrice(item[2]) + " gp"));
+        grid.add(buildStatBox("Sell Price", item[3].equals("0") ? "?" : formatPrice(item[3]), STAT_GOLD, item[3].equals("0") ? null : formatFullPrice(item[3]) + " gp"));
+        grid.add(buildStatBox("Buy Qty/hr", item.length > 8 ? item[8] : "?", STAT_GOLD, null));
+        grid.add(buildStatBox("Sell Qty/hr", item.length > 9 ? item[9] : "?", STAT_GOLD, null));
 
         inner.add(grid);
         inner.add(Box.createVerticalStrut(6));
@@ -1643,7 +1658,11 @@ private String[] buildItemDataFromCache(String name)
                 gpChange < 0 ? "-" + formatPrice(String.valueOf(Math.abs(gpChange))) + " gp" : "0 gp";
         Integer limit = itemLimits.get(id);
         String limitStr = (limit != null && limit > 0) ? String.format("%,d", limit) : "?";
-        return new String[]{name, price, "0", "0", "0", delta, limitStr, gpChangeStr};
+        String buyPrice = pd.high > 0 ? String.valueOf(pd.high) : "0";
+        String sellPrice = pd.low > 0 ? String.valueOf(pd.low) : "0";
+        String buyQty = buyVolume1h.containsKey(id) ? String.valueOf(buyVolume1h.get(id)) : "?";
+        String sellQty = sellVolume1h.containsKey(id) ? String.valueOf(sellVolume1h.get(id)) : "?";
+        return new String[]{name, price, buyPrice, sellPrice, "0", delta, limitStr, gpChangeStr, buyQty, sellQty};
     }
 
 
