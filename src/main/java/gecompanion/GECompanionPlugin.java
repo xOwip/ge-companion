@@ -400,9 +400,14 @@ private void fetchMapping()
 		});
     }
 
-    public void saveConfig(String key, String value)
+	public void saveConfig(String key, String value)
 	{
 		configManager.setConfiguration("gecompanion", key, value);
+	}
+
+	public String loadConfig(String key)
+	{
+		return configManager.getConfiguration("gecompanion", key);
 	}
 
 	@Provides

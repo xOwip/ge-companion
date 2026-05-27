@@ -119,6 +119,7 @@ private String openBankItemName = null;
     {
         this.config = config;
         this.plugin = plugin;
+        loadBankValueLog();
         loadPinnedItems();
         startLiveTimer();
         setLayout(new BorderLayout());
@@ -128,6 +129,7 @@ private String openBankItemName = null;
     }
 
     private long totalBankValue = 0;
+    private java.util.List<long[]> bankValueLog = new java.util.ArrayList<>();
 
     public void updateBankItems(java.util.List<String> items, java.util.Map<String, Integer> quantities, long bankValue)
     {
@@ -136,6 +138,7 @@ private String openBankItemName = null;
         this.bankQuantities.clear();
         this.bankQuantities.putAll(quantities);
         this.totalBankValue = bankValue;
+        saveBankValueLog();
         if (activeTab == 2) showTab(2);
     }
 
@@ -162,6 +165,42 @@ private String openBankItemName = null;
         selectedItemName = savedSearchItem;
         selectedWatchlistItemName = savedWatchlistItem;
         selectedBankItemName = savedBankItem;
+    }
+
+    private void loadBankValueLog()
+    {
+        String raw = plugin.loadConfig("bankValueLog");
+        if (raw == null || raw.isEmpty()) return;
+        bankValueLog.clear();
+        for (String entry : raw.split(","))
+        {
+            String[] parts = entry.split(":");
+            if (parts.length == 2)
+            {
+                try
+                {
+                    long ts = Long.parseLong(parts[0]);
+                    long val = Long.parseLong(parts[1]);
+                    bankValueLog.add(new long[]{ts, val});
+                }
+                catch (NumberFormatException e) { }
+            }
+        }
+    }
+
+    private void saveBankValueLog()
+    {
+        long nowSeconds = System.currentTimeMillis() / 1000;
+        bankValueLog.add(new long[]{nowSeconds, totalBankValue});
+        long cutoff = nowSeconds - (48 * 3600);
+        bankValueLog.removeIf(e -> e[0] < cutoff);
+        StringBuilder sb = new StringBuilder();
+        for (long[] entry : bankValueLog)
+        {
+            if (sb.length() > 0) sb.append(",");
+            sb.append(entry[0]).append(":").append(entry[1]);
+        }
+        plugin.saveConfig("bankValueLog", sb.toString());
     }
 
     private void loadPinnedItems()
@@ -1128,12 +1167,75 @@ private String openBankItemName = null;
         heroValue.setAlignmentX(Component.CENTER_ALIGNMENT);
         if (!bankItems.isEmpty()) heroValue.setToolTipText(formatFullPrice(String.valueOf(totalBankValue)) + " gp");
 
+        long nowSeconds = System.currentTimeMillis() / 1000;
+        long targetSeconds = nowSeconds;
+        if (activeTimeFrame.equals("1H")) targetSeconds = nowSeconds - 3600;
+        else if (activeTimeFrame.equals("6H")) targetSeconds = nowSeconds - 21600;
+        else if (activeTimeFrame.equals("24H")) targetSeconds = nowSeconds - 86400;
+
+        long tolerance = 1800;
+        if (activeTimeFrame.equals("6H")) tolerance = 7200;
+        else if (activeTimeFrame.equals("24H")) tolerance = 14400;
+
+        long[] closestEntry = null;
+        long closestDiff = Long.MAX_VALUE;
+        for (long[] entry : bankValueLog)
+        {
+            long diff = Math.abs(entry[0] - targetSeconds);
+            if (diff < closestDiff && diff <= tolerance)
+            {
+                closestDiff = diff;
+                closestEntry = entry;
+            }
+        }
+
+        String bankChangeStr;
+        Color bankChangeColor;
+        String noDataMessage;
+        if (activeTimeFrame.equals("1H")) noDataMessage = "Open your bank again in ~1H";
+        else if (activeTimeFrame.equals("6H")) noDataMessage = "Open your bank again in ~6H";
+        else noDataMessage = "Open your bank again in ~24H";
+
+        if (closestEntry == null || bankItems.isEmpty())
+        {
+            bankChangeStr = "─ " + noDataMessage;
+            bankChangeColor = TEXT_DIM;
+        }
+        else
+        {
+            long historicalValue = closestEntry[1];
+            long bankGpChange = totalBankValue - historicalValue;
+            double bankPctChange = historicalValue > 0 ?
+                    ((double) bankGpChange / historicalValue) * 100.0 : 0;
+            String gpStr = bankGpChange >= 0 ?
+                    "+" + formatPrice(String.valueOf(Math.abs(bankGpChange))) + " gp" :
+                    "-" + formatPrice(String.valueOf(Math.abs(bankGpChange))) + " gp";
+            String pctStr = String.format("%+.2f%%", bankPctChange);
+            bankChangeStr = gpStr + "  (" + pctStr + ")";
+            bankChangeColor = bankGpChange > 0 ? GREEN_UP :
+                    bankGpChange < 0 ? RED_DOWN : TEXT_DIM;
+        }
+
+        JLabel bankChangeContextLabel = new JLabel("VALUE CHANGE (" + activeTimeFrame + ")");
+        bankChangeContextLabel.setForeground(TEXT_DIM);
+        bankChangeContextLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+        bankChangeContextLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel bankChangeLabel = new JLabel(bankChangeStr);
+        bankChangeLabel.setForeground(bankChangeColor);
+        bankChangeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
+        bankChangeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        bankChangeLabel.setToolTipText("How much your total bank value has changed over the selected timeframe based on actual bank scans. Open your bank regularly for more accurate data.");
+
         JPanel pillPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
         pillPanel.setBackground(new Color(26, 23, 24));
 
         hero.add(heroLabel);
         hero.add(Box.createVerticalStrut(2));
         hero.add(heroValue);
+        hero.add(Box.createVerticalStrut(2));
+        hero.add(bankChangeContextLabel);
+        hero.add(bankChangeLabel);
         hero.add(Box.createVerticalStrut(4));
         hero.add(pillPanel);
 
