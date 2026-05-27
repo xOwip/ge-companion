@@ -1195,11 +1195,6 @@ private String openBankItemName = null;
         else
             lastUpdatedStr = "Last updated " + (secondsAgo / 3600) + "h ago";
 
-        JLabel lastUpdatedLabel = new JLabel(lastUpdatedStr);
-        lastUpdatedLabel.setForeground(TEXT_DIM);
-        lastUpdatedLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
-        lastUpdatedLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
         String bankValueStr = totalBankValue == 0 ? "No bank data" : formatFullPrice(String.valueOf(totalBankValue)) + " gp";
         JLabel heroValue = new JLabel(bankValueStr);
         heroValue.setForeground(PRICE_GOLD);
@@ -1256,27 +1251,26 @@ private String openBankItemName = null;
                     bankGpChange < 0 ? RED_DOWN : TEXT_DIM;
         }
 
-        JLabel bankChangeContextLabel = new JLabel("VALUE CHANGE (" + activeTimeFrame + ")");
-        bankChangeContextLabel.setForeground(TEXT_DIM);
-        bankChangeContextLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
-        bankChangeContextLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JLabel bankChangeLabel = new JLabel(bankChangeStr);
+        JLabel bankChangeLabel = new JLabel(bankItems.isEmpty() ? "" : bankChangeStr);
         bankChangeLabel.setForeground(bankChangeColor);
         bankChangeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
         bankChangeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         bankChangeLabel.setToolTipText("Bank value change based on actual scans. Open your bank regularly for accurate data.");
 
+        JLabel contextLabel = new JLabel("· " + activeTimeFrame + " · " + lastUpdatedStr);
+        contextLabel.setForeground(TEXT_DIM);
+        contextLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+        contextLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         JPanel pillPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
         pillPanel.setBackground(new Color(26, 23, 24));
 
         hero.add(heroLabel);
-        hero.add(lastUpdatedLabel);
         hero.add(Box.createVerticalStrut(2));
         hero.add(heroValue);
         hero.add(Box.createVerticalStrut(2));
-        hero.add(bankChangeContextLabel);
         hero.add(bankChangeLabel);
+        hero.add(contextLabel);
         hero.add(Box.createVerticalStrut(4));
         hero.add(pillPanel);
 
