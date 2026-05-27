@@ -1265,7 +1265,7 @@ private String openBankItemName = null;
         bankChangeLabel.setForeground(bankChangeColor);
         bankChangeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
         bankChangeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        bankChangeLabel.setToolTipText("How much your total bank value has changed over the selected timeframe based on actual bank scans. Open your bank regularly for more accurate data.");
+        bankChangeLabel.setToolTipText("Bank value change based on actual scans. Open your bank regularly for accurate data.");
 
         JPanel pillPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
         pillPanel.setBackground(new Color(26, 23, 24));
@@ -1529,7 +1529,7 @@ private String openBankItemName = null;
         });
 
         panel.add(scrollPane, BorderLayout.CENTER);
-
+        scheduleRepaint(listPanel);
         return panel;
     }
 
