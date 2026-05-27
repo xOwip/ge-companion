@@ -1285,12 +1285,16 @@ private String openBankItemName = null;
 
         if (!bankItems.isEmpty())
         {
+            JPanel gainersHeader = new JPanel(new BorderLayout());
+            gainersHeader.setBackground(new Color(20, 18, 18));
+            gainersHeader.setAlignmentX(Component.LEFT_ALIGNMENT);
+            gainersHeader.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
             JLabel gainersLabel = new JLabel("▲ Top Gainers (by " + config.sortMode().getLabel() + ")");
             gainersLabel.setForeground(GREEN_UP);
             gainersLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_SECTION));
             gainersLabel.setBorder(new EmptyBorder(6, 7, 2, 7));
-            gainersLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-            listPanel.add(gainersLabel);
+            gainersHeader.add(gainersLabel, BorderLayout.WEST);
+            listPanel.add(gainersHeader);
         }
         if (bankItems.isEmpty())
         {
@@ -1358,12 +1362,16 @@ private String openBankItemName = null;
 
             // Top Losers
             listPanel.add(new JSeparator());
+            JPanel losersHeader = new JPanel(new BorderLayout());
+            losersHeader.setBackground(new Color(20, 18, 18));
+            losersHeader.setAlignmentX(Component.LEFT_ALIGNMENT);
+            losersHeader.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
             JLabel losersLabel = new JLabel("▼ Top Losers (by " + config.sortMode().getLabel() + ")");
             losersLabel.setForeground(RED_DOWN);
             losersLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_SECTION));
             losersLabel.setBorder(new EmptyBorder(6, 7, 2, 7));
-            losersLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-            listPanel.add(losersLabel);
+            losersHeader.add(losersLabel, BorderLayout.WEST);
+            listPanel.add(losersHeader);
 
             int losersCount = Math.min(config.losersCount(), losers.size());
             for (int i = 0; i < losersCount; i++)
