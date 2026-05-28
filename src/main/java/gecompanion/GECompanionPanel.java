@@ -62,6 +62,10 @@ public class GECompanionPanel extends PluginPanel
     // Search state
     private JPanel searchResultsPanel;
     private JPanel recentSearchesPanel;
+    private JTextField searchField = new JTextField();
+    private JLabel searchClearBtn;
+    private boolean suppressSearchChange = false;
+    private java.util.List<String> recentSearches = new java.util.ArrayList<>();
     private String selectedItemName = null;
     private String selectedWatchlistItemName = null;
     private String selectedBankItemName = null;
@@ -125,6 +129,25 @@ private String openBankItemName = null;
         loadBankData();
         loadBankValueLog();
         loadPinnedItems();
+        loadRecentSearches();
+        searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener()
+        {
+            public void insertUpdate(javax.swing.event.DocumentEvent e)
+            {
+                onSearchChanged(searchField.getText());
+                if (searchClearBtn != null) searchClearBtn.setVisible(!searchField.getText().isEmpty());
+            }
+            public void removeUpdate(javax.swing.event.DocumentEvent e)
+            {
+                onSearchChanged(searchField.getText());
+                if (searchClearBtn != null) searchClearBtn.setVisible(!searchField.getText().isEmpty());
+            }
+            public void changedUpdate(javax.swing.event.DocumentEvent e)
+            {
+                onSearchChanged(searchField.getText());
+                if (searchClearBtn != null) searchClearBtn.setVisible(!searchField.getText().isEmpty());
+            }
+        });
         startLiveTimer();
 
         setLayout(new BorderLayout());
@@ -222,6 +245,25 @@ private String openBankItemName = null;
             sb.append(entry[0]).append(":").append(entry[1]);
         }
         plugin.saveConfig("bankValueLog", sb.toString());
+    }
+
+    private void loadRecentSearches()
+    {
+        String saved = plugin.loadConfig("recentSearches");
+        recentSearches.clear();
+        if (saved != null && !saved.trim().isEmpty())
+        {
+            for (String item : saved.split("\\|"))
+            {
+                String trimmed = item.trim();
+                if (!trimmed.isEmpty()) recentSearches.add(trimmed);
+            }
+        }
+    }
+
+    private void saveRecentSearches()
+    {
+        plugin.saveConfig("recentSearches", String.join("|", recentSearches));
     }
 
     private void loadPinnedItems()
@@ -507,7 +549,6 @@ private String openBankItemName = null;
         searchWrap.setBackground(new Color(28, 25, 26));
         searchWrap.setBorder(new EmptyBorder(4, 6, 4, 6));
 
-        JTextField searchField = new JTextField();
         searchField.setBackground(new Color(14, 12, 13));
         searchField.setForeground(TEXT_PRIMARY);
         searchField.setCaretColor(TEXT_PRIMARY);
@@ -516,7 +557,22 @@ private String openBankItemName = null;
                 new EmptyBorder(3, 5, 3, 5)
         ));
         searchField.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
+
+        searchClearBtn = new JLabel("✕");
+        searchClearBtn.setForeground(TEXT_DIM);
+        searchClearBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+        searchClearBtn.setBorder(new EmptyBorder(0, 4, 0, 4));
+        searchClearBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        searchClearBtn.setVisible(!searchField.getText().isEmpty());
+        searchClearBtn.addMouseListener(new MouseAdapter()
+        {
+            public void mouseClicked(MouseEvent e) { searchField.setText(""); }
+            public void mouseEntered(MouseEvent e) { searchClearBtn.setForeground(TEXT_PRIMARY); }
+            public void mouseExited(MouseEvent e) { searchClearBtn.setForeground(TEXT_DIM); }
+        });
+
         searchWrap.add(searchField, BorderLayout.CENTER);
+        searchWrap.add(searchClearBtn, BorderLayout.EAST);
         JPanel topBar = new JPanel(new BorderLayout());
         topBar.setBackground(BG_DARK);
         topBar.add(buildTimeFrameBar(), BorderLayout.NORTH);
@@ -527,18 +583,60 @@ private String openBankItemName = null;
         recentSearchesPanel.setLayout(new BoxLayout(recentSearchesPanel, BoxLayout.Y_AXIS));
         recentSearchesPanel.setBackground(BG_DARK);
 
-        JLabel recentLabel = new JLabel("Recent Searches");
-        recentLabel.setForeground(TEXT_DIM);
-        recentLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_SECTION));
-        recentLabel.setBorder(new EmptyBorder(4, 7, 2, 7));
-        recentLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        recentSearchesPanel.add(recentLabel);
+        recentSearchesPanel.setBackground(BG_DARK);
 
-        String[] recentItems = {"Twisted bow", "Runite bar", "Saradomin brew(4)"};
-        String[] recentPrices = {"1.585B · 2m ago", "12,387 · 14m ago", "8,189 · 1h ago"};
-        for (int i = 0; i < recentItems.length; i++)
+        if (!recentSearches.isEmpty())
         {
-            recentSearchesPanel.add(buildRecentRow(recentItems[i], recentPrices[i]));
+            JLabel recentLabel = new JLabel("Recent Searches");
+            recentLabel.setForeground(TEXT_DIM);
+            recentLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_SECTION));
+            recentLabel.setBorder(new EmptyBorder(4, 7, 2, 7));
+            recentLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            recentSearchesPanel.add(recentLabel);
+
+            for (String recentItem : recentSearches)
+            {
+                JPanel chipRow = new JPanel(new BorderLayout());
+                chipRow.setBackground(BG_DARK);
+                chipRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+                chipRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 28));
+
+                JLabel chip = new JLabel("⟳ " + recentItem);
+                chip.setForeground(TAB_INACTIVE);
+                chip.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
+                chip.setBorder(new EmptyBorder(3, 7, 3, 7));
+                chip.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+                JLabel removeBtn = new JLabel("✕");
+                removeBtn.setForeground(TEXT_DIM);
+                removeBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+                removeBtn.setBorder(new EmptyBorder(3, 0, 3, 7));
+                removeBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+                chipRow.add(chip, BorderLayout.CENTER);
+                chipRow.add(removeBtn, BorderLayout.EAST);
+
+                chip.addMouseListener(new MouseAdapter()
+                {
+                    public void mouseClicked(MouseEvent e) { searchField.setText(recentItem); }
+                    public void mouseEntered(MouseEvent e) { chip.setForeground(TEXT_PRIMARY); chipRow.setBackground(BG_ROW_HOVER); }
+                    public void mouseExited(MouseEvent e) { chip.setForeground(TAB_INACTIVE); chipRow.setBackground(BG_DARK); }
+                });
+
+                removeBtn.addMouseListener(new MouseAdapter()
+                {
+                    public void mouseClicked(MouseEvent e)
+                    {
+                        recentSearches.remove(recentItem);
+                        saveRecentSearches();
+                        showTab(activeTab);
+                    }
+                    public void mouseEntered(MouseEvent e) { removeBtn.setForeground(TEXT_PRIMARY); }
+                    public void mouseExited(MouseEvent e) { removeBtn.setForeground(TEXT_DIM); }
+                });
+
+                recentSearchesPanel.add(chipRow);
+            }
         }
 
         searchResultsPanel = new JPanel();
@@ -597,18 +695,12 @@ private String openBankItemName = null;
             }
         });
 
-        searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener()
-        {
-            public void insertUpdate(javax.swing.event.DocumentEvent e) { onSearchChanged(searchField.getText()); }
-            public void removeUpdate(javax.swing.event.DocumentEvent e) { onSearchChanged(searchField.getText()); }
-            public void changedUpdate(javax.swing.event.DocumentEvent e) { onSearchChanged(searchField.getText()); }
-        });
-
         return panel;
     }
 
     private void onSearchChanged(String query)
     {
+        if (suppressSearchChange) return;
         // Close any open detail when search changes
         if (currentOpenSearchDetail != null)
         {
@@ -624,6 +716,56 @@ private String openBankItemName = null;
 
         if (query.trim().isEmpty())
         {
+            // Rebuild recent searches panel dynamically
+            recentSearchesPanel.removeAll();
+            if (!recentSearches.isEmpty())
+            {
+                JLabel recentLabel = new JLabel("Recent Searches");
+                recentLabel.setForeground(TEXT_DIM);
+                recentLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_SECTION));
+                recentLabel.setBorder(new EmptyBorder(4, 7, 2, 7));
+                recentLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+                recentSearchesPanel.add(recentLabel);
+                for (String recentItem : recentSearches)
+                {
+                    JPanel chipRow = new JPanel(new BorderLayout());
+                    chipRow.setBackground(BG_DARK);
+                    chipRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+                    chipRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 28));
+                    JLabel chip = new JLabel("⟳ " + recentItem);
+                    chip.setForeground(TAB_INACTIVE);
+                    chip.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
+                    chip.setBorder(new EmptyBorder(3, 7, 3, 7));
+                    chip.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                    JLabel removeBtn = new JLabel("✕");
+                    removeBtn.setForeground(TEXT_DIM);
+                    removeBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+                    removeBtn.setBorder(new EmptyBorder(3, 0, 3, 7));
+                    removeBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                    chipRow.add(chip, BorderLayout.CENTER);
+                    chipRow.add(removeBtn, BorderLayout.EAST);
+                    chip.addMouseListener(new MouseAdapter()
+                    {
+                        public void mouseClicked(MouseEvent e) { searchField.setText(recentItem); }
+                        public void mouseEntered(MouseEvent e) { chip.setForeground(TEXT_PRIMARY); chipRow.setBackground(BG_ROW_HOVER); }
+                        public void mouseExited(MouseEvent e) { chip.setForeground(TAB_INACTIVE); chipRow.setBackground(BG_DARK); }
+                    });
+                    removeBtn.addMouseListener(new MouseAdapter()
+                    {
+                        public void mouseClicked(MouseEvent e)
+                        {
+                            recentSearches.remove(recentItem);
+                            saveRecentSearches();
+                            onSearchChanged("");
+                        }
+                        public void mouseEntered(MouseEvent e) { removeBtn.setForeground(TEXT_PRIMARY); }
+                        public void mouseExited(MouseEvent e) { removeBtn.setForeground(TEXT_DIM); }
+                    });
+                    recentSearchesPanel.add(chipRow);
+                }
+            }
+            recentSearchesPanel.revalidate();
+            recentSearchesPanel.repaint();
             recentSearchesPanel.setVisible(true);
             searchResultsPanel.setVisible(false);
         }
@@ -861,11 +1003,21 @@ private String openBankItemName = null;
                         if (c instanceof JPanel) c.setBackground(BG_DARK);
                 }
 
-                // Open this one
+// Open this one
                 selectedItemName = name;
+// Add to recent searches and auto-fill search field
+                String lowerName = name.toLowerCase();
+                recentSearches.remove(lowerName);
+                recentSearches.add(0, lowerName);
+                if (recentSearches.size() > 5) recentSearches = new java.util.ArrayList<>(recentSearches.subList(0, 5));
+                javax.swing.SwingUtilities.invokeLater(() -> saveRecentSearches());
                 currentOpenSearchRow = row;
                 currentOpenSearchRowColor = rowBg;
                 currentOpenSearchDetail = detailSlot;
+                suppressSearchChange = true;
+                searchField.setText(name);
+                searchField.selectAll();
+                suppressSearchChange = false;
 
                 detailSlot.removeAll();
                 detailSlot.add(buildInlineDetail(item, false), BorderLayout.CENTER);
