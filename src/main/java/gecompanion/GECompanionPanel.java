@@ -281,7 +281,22 @@ private String openBankItemName = null;
         activeTab = 1;
         wrapper.add(tabContentPanel, BorderLayout.CENTER);
 
+
+        JPanel footer = new JPanel();
+        footer.setBackground(BG_DARK);
+        footer.setLayout(new BoxLayout(footer, BoxLayout.Y_AXIS));
+        footer.setBorder(new EmptyBorder(4, 0, 4, 0));
+        JSeparator footerSeparator = new JSeparator();
+        footerSeparator.setForeground(new Color(50, 45, 42));
+        footerSeparator.setBackground(BG_DARK);
+        JLabel footerLabel = new JLabel("prices.runescape.wiki");
+        footerLabel.setForeground(TEXT_DIM);
+        footerLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+        footerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        footer.add(footerSeparator);
+        footer.add(footerLabel);
         add(wrapper, BorderLayout.CENTER);
+        add(footer, BorderLayout.SOUTH);
     }
 
     private JPanel buildHeader()
