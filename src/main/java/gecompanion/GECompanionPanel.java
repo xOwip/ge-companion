@@ -797,7 +797,7 @@ private String openBankItemName = null;
                     PriceData pd = priceCache.get(id);
                     if (pd != null && pd.getMid() > 0) {
                         String name = entry.getKey();
-                        // Capitalize first letter of each word
+// Capitalize first letter of each word
                         String[] words = name.split(" ");
                         StringBuilder sb = new StringBuilder();
                         for (String word : words) {
@@ -806,25 +806,12 @@ private String openBankItemName = null;
                                         .append(word.substring(1)).append(" ");
                         }
                         String displayName = sb.toString().trim();
-                        String price = String.valueOf(pd.getMid());
-                        String delta = "0.00";
-                        java.util.Map<Integer, Long> avgCache = avgPrice24h;
-                        if (activeTimeFrame.equals("1H")) avgCache = avgPrice1h;
-                        else if (activeTimeFrame.equals("6H")) avgCache = avgPrice6h;
-                        Long avg = avgCache.get(id);
-                        if (avg != null && avg > 0 && pd.getMid() > 0) {
-                            double pct = ((double) (pd.getMid() - avg) / avg) * 100.0;
-                            delta = String.format("%+.2f", pct);
-                        }
-                        Integer limit = itemLimits.get(id);
-                        String limitStr = (limit != null && limit > 0) ? String.format("%,d", limit) : "?";
-                        long gpChange = (avg != null && avg > 0) ? (pd.getMid() - avg) : 0;
-                        String gpChangeStr = gpChange > 0 ? "+" + formatPrice(String.valueOf(Math.abs(gpChange))) + " gp" :
-                                gpChange < 0 ? "-" + formatPrice(String.valueOf(Math.abs(gpChange))) + " gp" : "0 gp";
-                        results.add(new String[]{displayName, price, "0", "0", "0", delta, limitStr, gpChangeStr});
+                        String[] fullItem = buildItemDataFromCache(displayName);
+                        if (fullItem != null) results.add(fullItem);
                     }
                 }
             }
+
             // Sort alphabetically
             results.sort((a, b) -> a[0].compareTo(b[0]));
             // Limit to 50 results
