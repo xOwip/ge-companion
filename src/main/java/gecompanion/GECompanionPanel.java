@@ -50,6 +50,9 @@ public class GECompanionPanel extends PluginPanel
     public int getActiveTab() { return activeTab; }
     private String activeTimeFrame = "24H";
     private boolean bankAllItemsCollapsed = true;
+    private JScrollPane searchScrollPane;
+    private JScrollPane watchlistScrollPane;
+    private JScrollPane bankScrollPane;
     private JPanel tabContentPanel;
     private JLabel[] tabLabels = new JLabel[3];
     private JLabel timerLabel;
@@ -123,6 +126,7 @@ private String openBankItemName = null;
         loadBankValueLog();
         loadPinnedItems();
         startLiveTimer();
+
         setLayout(new BorderLayout());
         setBackground(BG_DARK);
         setBorder(new EmptyBorder(0, 0, 0, 0));
@@ -139,7 +143,7 @@ private String openBankItemName = null;
         this.bankQuantities.clear();
         this.bankQuantities.putAll(quantities);
         this.totalBankValue = bankValue;
-        saveBankValueLog();
+        if (config.showBankValueChange()) saveBankValueLog();
         saveBankData();
         if (activeTab == 2) showTab(2);
     }
@@ -542,10 +546,15 @@ private String openBankItemName = null;
         listWrapper.add(recentSearchesPanel, BorderLayout.NORTH);
         listWrapper.add(searchResultsPanel, BorderLayout.CENTER);
 
-        JScrollPane scrollPane = new JScrollPane(listWrapper);
+        searchScrollPane = new JScrollPane(listWrapper);
+        JScrollPane scrollPane = searchScrollPane;
         scrollPane.setBorder(null);
         scrollPane.setBackground(BG_DARK);
         scrollPane.getViewport().setBackground(BG_DARK);
+        scrollPane.getViewport().addMouseWheelListener(e -> {
+            javax.swing.JScrollBar bar = scrollPane.getVerticalScrollBar();
+            bar.setValue(bar.getValue() + (int)(e.getUnitsToScroll() * 8));
+        });
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(0, 0));
         scrollPane.addMouseWheelListener(e -> scrollPane.getVerticalScrollBar().setValue(
@@ -968,10 +977,15 @@ private String openBankItemName = null;
         noBankItems.setAlignmentX(Component.LEFT_ALIGNMENT);
         listPanel.add(noBankItems);
 
-        JScrollPane scrollPane = new JScrollPane(listPanel);
+        watchlistScrollPane = new JScrollPane(listPanel);
+        JScrollPane scrollPane = watchlistScrollPane;
         scrollPane.setBorder(null);
         scrollPane.setBackground(BG_DARK);
         scrollPane.getViewport().setBackground(BG_DARK);
+        scrollPane.getViewport().addMouseWheelListener(e -> {
+            javax.swing.JScrollBar bar = scrollPane.getVerticalScrollBar();
+            bar.setValue(bar.getValue() + (int)(e.getUnitsToScroll() * 8));
+        });
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(0, 0));
         scrollPane.addMouseWheelListener(e -> scrollPane.getVerticalScrollBar().setValue(
@@ -1251,29 +1265,35 @@ private String openBankItemName = null;
                     bankGpChange < 0 ? RED_DOWN : TEXT_DIM;
         }
 
-        JLabel bankChangeLabel = new JLabel(bankItems.isEmpty() ? "" : bankChangeStr);
-        bankChangeLabel.setForeground(bankChangeColor);
-        bankChangeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
-        bankChangeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        bankChangeLabel.setToolTipText("Bank value change based on actual scans. Open your bank regularly for accurate data.");
+        if (config.showBankValueChange())
+        {
+            JLabel bankChangeLabel = new JLabel(bankItems.isEmpty() ? "" : bankChangeStr);
+            bankChangeLabel.setForeground(bankChangeColor);
+            bankChangeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
+            bankChangeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            bankChangeLabel.setToolTipText("Bank value change based on actual scans. Open your bank regularly for accurate data.");
 
-        JLabel contextLabel = new JLabel("· " + activeTimeFrame + " · " + lastUpdatedStr);
-        contextLabel.setForeground(TEXT_DIM);
-        contextLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
-        contextLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            JLabel contextLabel = new JLabel("· " + activeTimeFrame + " · " + lastUpdatedStr);
+            contextLabel.setForeground(TEXT_DIM);
+            contextLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+            contextLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+            hero.add(heroValue);
+            hero.add(Box.createVerticalStrut(2));
+            hero.add(bankChangeLabel);
+            hero.add(contextLabel);
+            hero.add(Box.createVerticalStrut(4));
+        }
+        else
+        {
+            hero.add(heroValue);
+            hero.add(Box.createVerticalStrut(4));
+        }
 
         JPanel pillPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
         pillPanel.setBackground(new Color(26, 23, 24));
 
-        hero.add(heroLabel);
-        hero.add(Box.createVerticalStrut(2));
-        hero.add(heroValue);
-        hero.add(Box.createVerticalStrut(2));
-        hero.add(bankChangeLabel);
-        hero.add(contextLabel);
-        hero.add(Box.createVerticalStrut(4));
         hero.add(pillPanel);
-
         hero.add(Box.createVerticalStrut(4));
         hero.add(buildTimeFrameBar());
         panel.add(hero, BorderLayout.NORTH);
@@ -1486,10 +1506,15 @@ private String openBankItemName = null;
             listPanel.add(bankResultsPanel);
         }
 
-        JScrollPane scrollPane = new JScrollPane(listPanel);
+        bankScrollPane = new JScrollPane(listPanel);
+        JScrollPane scrollPane = bankScrollPane;
         scrollPane.setBorder(null);
         scrollPane.setBackground(BG_DARK);
         scrollPane.getViewport().setBackground(BG_DARK);
+        scrollPane.getViewport().addMouseWheelListener(e -> {
+            javax.swing.JScrollBar bar = scrollPane.getVerticalScrollBar();
+            bar.setValue(bar.getValue() + (int)(e.getUnitsToScroll() * 8));
+        });
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(0, 0));
         scrollPane.addMouseWheelListener(e -> scrollPane.getVerticalScrollBar().setValue(
@@ -1728,6 +1753,14 @@ private String openBankItemName = null;
         return block;
     }
 
+    private void addScrollForwarding(JComponent component, JScrollPane scrollPane)
+    {
+        component.addMouseWheelListener(e -> {
+            javax.swing.JScrollBar bar = scrollPane.getVerticalScrollBar();
+            bar.setValue(bar.getValue() + (int)(e.getUnitsToScroll() * 8));
+        });
+    }
+
     private void scheduleRepaint(JPanel panel)
     {
         int[] delays = {300, 600, 1000};
@@ -1803,8 +1836,8 @@ private String[] buildItemDataFromCache(String name)
                 gpChange < 0 ? "-" + formatPrice(String.valueOf(Math.abs(gpChange))) + " gp" : "0 gp";
         Integer limit = itemLimits.get(id);
         String limitStr = (limit != null && limit > 0) ? String.format("%,d", limit) : "?";
-        String buyPrice = pd.high > 0 ? String.valueOf(pd.high) : "0";
-        String sellPrice = pd.low > 0 ? String.valueOf(pd.low) : "0";
+        String buyPrice = pd.high > 0 ? String.valueOf(pd.high) : pd.getMid() > 0 ? String.valueOf(pd.getMid()) : "0";
+        String sellPrice = pd.low > 0 ? String.valueOf(pd.low) : pd.getMid() > 0 ? String.valueOf(pd.getMid()) : "0";
         String buyQty = buyVolume1h.containsKey(id) ? String.valueOf(buyVolume1h.get(id)) : "?";
         String sellQty = sellVolume1h.containsKey(id) ? String.valueOf(sellVolume1h.get(id)) : "?";
         return new String[]{name, price, buyPrice, sellPrice, "0", delta, limitStr, gpChangeStr, buyQty, sellQty};

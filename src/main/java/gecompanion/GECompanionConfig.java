@@ -99,7 +99,16 @@ public interface GECompanionConfig extends Config
 	)
 	default SortMode sortMode() { return SortMode.GP_CHANGE; }
 
-    // ── DISPLAY ──
+	@ConfigItem(
+			keyName = "showBankValueChange",
+			name = "Show bank value change",
+			description = "Show how much your bank value has changed over time in the bank tab",
+			section = bankSection,
+			position = 5
+	)
+	default boolean showBankValueChange() { return true; }
+
+	// ── DISPLAY ──
     @ConfigSection(
           name = "Display",
           description = "Display settings",
