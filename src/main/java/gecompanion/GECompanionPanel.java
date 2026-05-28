@@ -978,20 +978,6 @@ private String openBankItemName = null;
             listPanel.add(emptyLabel2);
         }
 
-        JLabel bankLabel = new JLabel("Bank Items");
-        bankLabel.setForeground(TEXT_DIM);
-        bankLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_SECTION));
-        bankLabel.setBorder(new EmptyBorder(6, 7, 2, 7));
-        bankLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        listPanel.add(bankLabel);
-
-        JLabel noBankItems = new JLabel("Scan your bank to see items here");
-        noBankItems.setForeground(TEXT_DIM);
-        noBankItems.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
-        noBankItems.setBorder(new EmptyBorder(4, 7, 4, 7));
-        noBankItems.setAlignmentX(Component.LEFT_ALIGNMENT);
-        listPanel.add(noBankItems);
-
         watchlistScrollPane = new JScrollPane(listPanel);
         JScrollPane scrollPane = watchlistScrollPane;
         scrollPane.setBorder(null);
