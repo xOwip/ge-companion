@@ -6,7 +6,7 @@
  * ╚██████╔╝███████╗    ╚██████╗╚██████╔╝██║ ╚═╝ ██║██║
  *  ╚═════╝ ╚══════╝     ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚═╝
  *
- *  Built by Owip | github.com/Owhip
+ *  Built by Owip | github.com/xOwip
  *  Live GE prices, bank value tracker, and item search.
  */
 
