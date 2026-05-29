@@ -9,23 +9,6 @@ import net.runelite.client.config.Range;
 @ConfigGroup("gecompanion")
 public interface GECompanionConfig extends Config
 {
-	// ── DATA ──
-	@ConfigSection(
-			name = "Data",
-			description = "Price data settings",
-			position = 0
-	)
-	String dataSection = "data";
-
-	@ConfigItem(
-			keyName = "refreshInterval",
-			name = "Refresh interval (seconds)",
-			description = "How often to fetch new prices from the OSRS Wiki API",
-			section = dataSection,
-			position = 0
-	)
-	@Range(min = 30, max = 300)
-	default int refreshInterval() { return 60; }
 
 	// ── BANK ──
 	@ConfigSection(

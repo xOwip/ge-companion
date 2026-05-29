@@ -111,7 +111,7 @@ public class GECompanionPlugin extends Plugin
 
 		// Start price refresh scheduler
 		scheduler = Executors.newSingleThreadScheduledExecutor();
-		scheduler.scheduleAtFixedRate(this::fetchPrices, 0, config.refreshInterval(), TimeUnit.SECONDS);
+		scheduler.scheduleAtFixedRate(this::fetchPrices, 0, 60, TimeUnit.SECONDS);
 
 		log.debug("GE Companion started!");
 	}

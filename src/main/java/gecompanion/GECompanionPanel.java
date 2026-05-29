@@ -563,8 +563,24 @@ private String openBankItemName = null;
             watchBtn.setForeground(nowWatched || isWatchlist ? GOLD : TAB_INACTIVE);
         });
         footer.add(watchBtn);
-        footer.add(buildFooterBtn("Tracker ↗", false));
-        footer.add(buildFooterBtn("Wiki ↗", false));
+
+        JButton trackerBtn = buildFooterBtn("Tracker ↗", false);
+        trackerBtn.addActionListener(e -> {
+            try {
+                String urlName = name.toLowerCase().replace(" ", "-").replace("(", "").replace(")", "").replace("--", "-");
+                java.awt.Desktop.getDesktop().browse(new java.net.URI("https://www.ge-tracker.com/item/" + urlName));
+            } catch (Exception ex) { }
+        });
+        footer.add(trackerBtn);
+
+        JButton wikiBtn = buildFooterBtn("Wiki ↗", false);
+        wikiBtn.addActionListener(e -> {
+            try {
+                String wikiName = name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase().replace(" ", "_");
+                java.awt.Desktop.getDesktop().browse(new java.net.URI("https://oldschool.runescape.wiki/w/" + wikiName));
+            } catch (Exception ex) { }
+        });
+        footer.add(wikiBtn);
 
         inner.add(footer);
         det.add(inner, BorderLayout.CENTER);
