@@ -639,7 +639,7 @@ private String openBankItemName = null;
         JButton trackerBtn = buildFooterBtn("Tracker ↗", false);
         trackerBtn.addActionListener(e -> {
             try {
-                String urlName = name.toLowerCase().replace("'", "-").replace(" ", "-").replace("(", "").replace(")", "").replace("--", "-");
+                String urlName = name.toLowerCase().replace("'", "-").replace(" ", "-").replace("(", "-").replace(")", "").replace("--", "-");
                 java.awt.Desktop.getDesktop().browse(new java.net.URI("https://www.ge-tracker.com/item/" + urlName));
             } catch (Exception ex) { }
         });
@@ -761,7 +761,7 @@ private String openBankItemName = null;
 
         searchResultsPanel = new JPanel();
         searchResultsPanel.setLayout(new BoxLayout(searchResultsPanel, BoxLayout.Y_AXIS));
-        searchResultsPanel.setBackground(BG_DARK);
+        searchResultsPanel.setBackground(new Color(20, 18, 19));
         searchResultsPanel.setVisible(false);
         searchResultsPanel.setAlignmentY(Component.TOP_ALIGNMENT);
 
@@ -1246,7 +1246,7 @@ private String openBankItemName = null;
         JPanel listPanel = new JPanel();
         watchlistListPanel = listPanel;
         listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
-        listPanel.setBackground(new Color(26, 23, 24));
+        listPanel.setBackground(new Color(20, 18, 19));
         listPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder());
 
         JLabel pinnedLabel = new JLabel("Pinned Items");
@@ -1654,7 +1654,7 @@ private String openBankItemName = null;
         JPanel listPanel = new JPanel();
         bankListPanel = listPanel;
         listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
-        listPanel.setBackground(BG_DARK);
+        listPanel.setBackground(new Color(20, 18, 19));
         listPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder());
 
         if (!bankItems.isEmpty())
