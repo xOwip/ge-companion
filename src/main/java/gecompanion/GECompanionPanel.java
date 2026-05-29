@@ -104,7 +104,8 @@ public class GECompanionPanel extends PluginPanel
     private JPanel currentOpenBankRow = null;
     private Color currentOpenSearchRowColor = BG_DARK;
     private Color currentOpenWatchlistRowColor = BG_DARK;
-private Color currentOpenBankRowColor = BG_DARK;
+    private Color currentOpenBankRowColor = BG_DARK;
+    private Color currentOpenBankBorderColor = null;
 private JPanel currentOpenBankInfo = null;
 private JPanel currentOpenBankDeltaRow = null;
 private String openBankItemName = null;
@@ -2049,6 +2050,8 @@ private String openBankItemName = null;
                 if (currentOpenBankRow != null)
                 {
                     currentOpenBankRow.setBackground(currentOpenBankRowColor);
+                    currentOpenBankRow.setBorder(new MatteBorder(0, 4, 0, 0, currentOpenBankBorderColor != null ? currentOpenBankBorderColor : borderColor));
+                    currentOpenBankBorderColor = null;
                     if (currentOpenBankInfo != null) currentOpenBankInfo.setBackground(currentOpenBankRowColor);
                     if (currentOpenBankDeltaRow != null) currentOpenBankDeltaRow.setBackground(currentOpenBankRowColor);
                     for (Component c : currentOpenBankRow.getComponents())
@@ -2062,6 +2065,7 @@ private String openBankItemName = null;
                 currentOpenBankInfo = info;
                 currentOpenBankDeltaRow = deltaRow;
                 currentOpenBankDetail = detailSlot;
+                currentOpenBankBorderColor = borderColor;
                 row.setBorder(new MatteBorder(0, 4, 0, 0, GOLD));
 
                 detailSlot.removeAll();
