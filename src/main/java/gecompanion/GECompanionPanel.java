@@ -443,6 +443,9 @@ private String openBankItemName = null;
 
     public void showTab(int index)
     {
+        // Save search text before rebuild
+        String savedSearch = (searchField != null && index == 1) ? searchField.getText() : "";
+
         tabContentPanel.removeAll();
         currentOpenSearchDetail = null;
         currentOpenWatchlistDetail = null;
@@ -461,6 +464,15 @@ private String openBankItemName = null;
         }
         tabContentPanel.revalidate();
         tabContentPanel.repaint();
+
+        // Restore search text after rebuild
+        if (!savedSearch.isEmpty() && searchField != null && index == 1)
+        {
+            suppressSearchChange = true;
+            searchField.setText(savedSearch);
+            suppressSearchChange = false;
+            onSearchChanged(savedSearch);
+        }
     }
 
     // ── SHARED DETAIL PANEL BUILDER ──
