@@ -538,7 +538,19 @@ private String openBankItemName = null;
         det.setBorder(new MatteBorder(0, 2, 0, 0, GOLD));
         det.setMaximumSize(new Dimension(230, Integer.MAX_VALUE));
 
-        JPanel inner = new JPanel();
+        JPanel inner = new JPanel()
+        {
+            @Override
+            protected void paintComponent(Graphics g)
+            {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g.create();
+                GradientPaint gp = new GradientPaint(0, 0, new Color(212, 175, 55, 180), getWidth(), 0, new Color(0, 0, 0, 0));
+                g2.setPaint(gp);
+                g2.fillRect(0, getHeight() - 3, getWidth(), 3);
+                g2.dispose();
+            }
+        };
         inner.setLayout(new BoxLayout(inner, BoxLayout.Y_AXIS));
         inner.setBackground(BG_DETAIL);
         inner.setBorder(new EmptyBorder(6, 7, 6, 7));
@@ -978,7 +990,22 @@ private String openBankItemName = null;
         block.setMaximumSize(new Dimension(Integer.MAX_VALUE, 800));
         block.setBorder(javax.swing.BorderFactory.createEmptyBorder());
 
-        JPanel row = new JPanel(new BorderLayout());
+        JPanel row = new JPanel(new BorderLayout())
+        {
+            @Override
+            protected void paintComponent(Graphics g)
+            {
+                super.paintComponent(g);
+                if (name.equals(selectedItemName))
+                {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    GradientPaint gp = new GradientPaint(0, 0, new Color(212, 175, 55, 180), getWidth(), 0, new Color(0, 0, 0, 0));
+                    g2.setPaint(gp);
+                    g2.fillRect(0, 0, getWidth(), 3);
+                    g2.dispose();
+                }
+            }
+        };
         row.setBackground(rowBg);
         row.setBorder(javax.swing.BorderFactory.createEmptyBorder());
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 68));
