@@ -202,41 +202,9 @@ private String openBankItemName = null;
         selectedBankItemName = savedBankItem;
 
 // Reopen detail panel for Search tab
-        if (!isRefreshing && savedSearchItem != null && activeTab == 1)
+        if (!isRefreshing && savedSearchItem != null && activeTab == 1 && searchReopenAction != null)
         {
-            javax.swing.Timer reopenTimer = new javax.swing.Timer(50, e2 -> {
-                for (java.awt.Component c : searchResultsPanel.getComponents())
-                {
-                    if (!(c instanceof JPanel)) continue;
-                    JPanel block = (JPanel) c;
-                    for (java.awt.Component child : block.getComponents())
-                    {
-                        if (!(child instanceof JPanel)) continue;
-                        JPanel row = (JPanel) child;
-                        for (java.awt.Component rowChild : row.getComponents())
-                        {
-                            if (!(rowChild instanceof JPanel)) continue;
-                            JPanel info = (JPanel) rowChild;
-                            for (java.awt.Component infoChild : info.getComponents())
-                            {
-                                if (!(infoChild instanceof JLabel)) continue;
-                                JLabel label = (JLabel) infoChild;
-                                if (savedSearchItem.equalsIgnoreCase(label.getText()))
-                                {
-                                    java.awt.event.MouseEvent clickEvent = new java.awt.event.MouseEvent(
-                                            row, java.awt.event.MouseEvent.MOUSE_CLICKED,
-                                            System.currentTimeMillis(), 0, 1, 1, 1, false);
-                                    for (java.awt.event.MouseListener ml : row.getMouseListeners())
-                                    {
-                                        ml.mouseClicked(clickEvent);
-                                    }
-                                    return;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
+            javax.swing.Timer reopenTimer = new javax.swing.Timer(50, e2 -> searchReopenAction.run());
             reopenTimer.setRepeats(false);
             reopenTimer.start();
         }
@@ -1090,6 +1058,7 @@ private String openBankItemName = null;
                         currentOpenSearchRow = null;
                     }
                     selectedItemName = null;
+                    searchReopenAction = null;
                     searchResultsPanel.revalidate();
                     searchResultsPanel.repaint();
                     return;
@@ -1128,6 +1097,40 @@ private String openBankItemName = null;
                 detailSlot.add(buildInlineDetail(item, false), BorderLayout.CENTER);
                 detailSlot.setVisible(true);
                 scheduleRepaint(detailSlot);
+                final String[] itemData = item;
+                searchReopenAction = () -> {
+                    for (java.awt.Component c : searchResultsPanel.getComponents())
+                    {
+                        if (!(c instanceof JPanel)) continue;
+                        JPanel block = (JPanel) c;
+                        if (block.getComponentCount() < 2) continue;
+                        java.awt.Component second = block.getComponent(1);
+                        if (!(second instanceof JPanel)) continue;
+                        JPanel newDetailSlot = (JPanel) second;
+                        java.awt.Component first = block.getComponent(0);
+                        if (!(first instanceof JPanel)) continue;
+                        JPanel newRow = (JPanel) first;
+                        for (java.awt.Component child : newRow.getComponents())
+                        {
+                            if (!(child instanceof JPanel)) continue;
+                            for (java.awt.Component rowChild : ((JPanel)child).getComponents())
+                            {
+                                if (!(rowChild instanceof JLabel)) continue;
+                                JLabel label = (JLabel) rowChild;
+                                if (itemData[0].equalsIgnoreCase(label.getText()))
+                                {
+                                    newDetailSlot.removeAll();
+                                    newDetailSlot.add(buildInlineDetail(itemData, false), BorderLayout.CENTER);
+                                    newDetailSlot.setVisible(true);
+                                    scheduleRepaint(newDetailSlot);
+                                    currentOpenSearchDetail = newDetailSlot;
+                                    selectedItemName = itemData[0];
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                };
 
                 row.setBackground(BG_ROW_SELECTED);
                 info.setBackground(BG_ROW_SELECTED);
@@ -2162,7 +2165,21 @@ private String[] buildItemDataFromCache(String name)
             btn.addActionListener(e -> {
                 if (!isDisabled) {
                     activeTimeFrame = frame;
+                    isRefreshing = true;
                     showTab(activeTab);
+                    isRefreshing = false;
+                    if (searchReopenAction != null && activeTab == 1)
+                    {
+                        javax.swing.Timer t = new javax.swing.Timer(50, e2 -> searchReopenAction.run());
+                        t.setRepeats(false);
+                        t.start();
+                    }
+                    if (watchlistReopenAction != null && activeTab == 0)
+                    {
+                        javax.swing.Timer t = new javax.swing.Timer(150, e2 -> watchlistReopenAction.run());
+                        t.setRepeats(false);
+                        t.start();
+                    }
                 }
             });
             bar.add(btn);
