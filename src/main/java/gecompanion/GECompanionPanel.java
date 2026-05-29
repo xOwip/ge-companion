@@ -1173,6 +1173,11 @@ private String openBankItemName = null;
                                     scheduleRepaint(newDetailSlot);
                                     currentOpenSearchDetail = newDetailSlot;
                                     selectedItemName = itemData[0];
+                                    newRow.setBorder(BorderFactory.createCompoundBorder(
+                                            new MatteBorder(0, 3, 0, 0, GOLD),
+                                            new MatteBorder(0, 0, 1, 0, new Color(26, 24, 24))
+                                    ));
+                                    currentOpenSearchRow = newRow;
                                     return;
                                 }
                             }
@@ -1477,6 +1482,8 @@ private String openBankItemName = null;
                                     scheduleRepaint(newDetailSlot);
                                     currentOpenWatchlistDetail = newDetailSlot;
                                     selectedWatchlistItemName = itemData[0];
+                                    newRow.setBorder(new MatteBorder(0, 3, 0, 0, GOLD));
+                                    currentOpenWatchlistRow = newRow;
                                     return;
                                 }
                             }
@@ -2089,6 +2096,8 @@ private String openBankItemName = null;
                                     scheduleRepaint(newDetailSlot);
                                     currentOpenBankDetail = newDetailSlot;
                                     selectedBankItemName = itemData[0];
+                                    newRow.setBorder(new MatteBorder(0, 4, 0, 0, GOLD));
+                                    currentOpenBankRow = newRow;
                                     return;
                                 }
                             }
