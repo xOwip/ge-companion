@@ -61,10 +61,14 @@ public class GECompanionPanel extends PluginPanel
 
     // Search state
     private JPanel searchResultsPanel;
+    private JPanel watchlistListPanel;
     private JPanel recentSearchesPanel;
     private JTextField searchField = new JTextField();
     private JLabel searchClearBtn;
     private boolean suppressSearchChange = false;
+    private boolean isRefreshing = false;
+    private Runnable watchlistReopenAction = null;
+    private Runnable searchReopenAction = null;
     private java.util.List<String> recentSearches = new java.util.ArrayList<>();
     private String selectedItemName = null;
     private String selectedWatchlistItemName = null;
@@ -188,14 +192,65 @@ private String openBankItemName = null;
         String savedWatchlistItem = selectedWatchlistItemName;
         String savedBankItem = selectedBankItemName;
 
+        isRefreshing = true;
         showTab(activeTab);
+        isRefreshing = false;
 
-        // Restore open detail panel state after refresh
+// Restore open detail panel state after refresh
         selectedItemName = savedSearchItem;
         selectedWatchlistItemName = savedWatchlistItem;
         selectedBankItemName = savedBankItem;
-    }
 
+// Reopen detail panel for Search tab
+        if (!isRefreshing && savedSearchItem != null && activeTab == 1)
+        {
+            javax.swing.Timer reopenTimer = new javax.swing.Timer(50, e2 -> {
+                for (java.awt.Component c : searchResultsPanel.getComponents())
+                {
+                    if (!(c instanceof JPanel)) continue;
+                    JPanel block = (JPanel) c;
+                    for (java.awt.Component child : block.getComponents())
+                    {
+                        if (!(child instanceof JPanel)) continue;
+                        JPanel row = (JPanel) child;
+                        for (java.awt.Component rowChild : row.getComponents())
+                        {
+                            if (!(rowChild instanceof JPanel)) continue;
+                            JPanel info = (JPanel) rowChild;
+                            for (java.awt.Component infoChild : info.getComponents())
+                            {
+                                if (!(infoChild instanceof JLabel)) continue;
+                                JLabel label = (JLabel) infoChild;
+                                if (savedSearchItem.equalsIgnoreCase(label.getText()))
+                                {
+                                    java.awt.event.MouseEvent clickEvent = new java.awt.event.MouseEvent(
+                                            row, java.awt.event.MouseEvent.MOUSE_CLICKED,
+                                            System.currentTimeMillis(), 0, 1, 1, 1, false);
+                                    for (java.awt.event.MouseListener ml : row.getMouseListeners())
+                                    {
+                                        ml.mouseClicked(clickEvent);
+                                    }
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            reopenTimer.setRepeats(false);
+            reopenTimer.start();
+        }
+
+        // Reopen detail panel for Watchlist tab
+        if (!isRefreshing && savedWatchlistItem != null && activeTab == 0 && watchlistReopenAction != null)
+        {
+            javax.swing.Timer reopenTimer = new javax.swing.Timer(150, e2 -> {
+                watchlistReopenAction.run();
+            });
+            reopenTimer.setRepeats(false);
+            reopenTimer.start();
+        }
+    }
     private void loadBankData()
     {
         String savedValue = plugin.loadConfig("bankValue");
@@ -447,15 +502,18 @@ private String openBankItemName = null;
         String savedSearch = (searchField != null && index == 1) ? searchField.getText() : "";
 
         tabContentPanel.removeAll();
-        currentOpenSearchDetail = null;
-        currentOpenWatchlistDetail = null;
-        currentOpenBankDetail = null;
-        currentOpenSearchRow = null;
-        currentOpenWatchlistRow = null;
-        currentOpenBankRow = null;
-        selectedItemName = null;
-        selectedWatchlistItemName = null;
-        selectedBankItemName = null;
+        if (!isRefreshing)
+        {
+            currentOpenSearchDetail = null;
+            currentOpenWatchlistDetail = null;
+            currentOpenBankDetail = null;
+            currentOpenSearchRow = null;
+            currentOpenWatchlistRow = null;
+            currentOpenBankRow = null;
+            selectedItemName = null;
+            selectedWatchlistItemName = null;
+            selectedBankItemName = null;
+        }
         switch (index)
         {
             case 0: tabContentPanel.add(buildWatchlistTab(), BorderLayout.CENTER); break;
@@ -1129,6 +1187,7 @@ private String openBankItemName = null;
         panel.setBackground(BG_DARK);
 
         JPanel listPanel = new JPanel();
+        watchlistListPanel = listPanel;
         listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
         listPanel.setBackground(new Color(26, 23, 24));
         listPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder());
@@ -1314,6 +1373,7 @@ private String openBankItemName = null;
                         currentOpenWatchlistRow = null;
                     }
                     selectedWatchlistItemName = null;
+                    watchlistReopenAction = null;
                     return;
                 }
 
@@ -1338,6 +1398,40 @@ private String openBankItemName = null;
                 detailSlot.add(buildInlineDetail(item, true), BorderLayout.CENTER);
                 detailSlot.setVisible(true);
                 scheduleRepaint(detailSlot);
+                final String[] itemData = item;
+                watchlistReopenAction = () -> {
+                    for (java.awt.Component c : watchlistListPanel.getComponents())
+                    {
+                        if (!(c instanceof JPanel)) continue;
+                        JPanel block = (JPanel) c;
+                        if (block.getComponentCount() < 2) continue;
+                        java.awt.Component second = block.getComponent(1);
+                        if (!(second instanceof JPanel)) continue;
+                        JPanel newDetailSlot = (JPanel) second;
+                        java.awt.Component first = block.getComponent(0);
+                        if (!(first instanceof JPanel)) continue;
+                        JPanel newRow = (JPanel) first;
+                        for (java.awt.Component child : newRow.getComponents())
+                        {
+                            if (!(child instanceof JPanel)) continue;
+                            for (java.awt.Component rowChild : ((JPanel)child).getComponents())
+                            {
+                                if (!(rowChild instanceof JLabel)) continue;
+                                JLabel label = (JLabel) rowChild;
+                                if (itemData[0].equalsIgnoreCase(label.getText()))
+                                {
+                                    newDetailSlot.removeAll();
+                                    newDetailSlot.add(buildInlineDetail(itemData, true), BorderLayout.CENTER);
+                                    newDetailSlot.setVisible(true);
+                                    scheduleRepaint(newDetailSlot);
+                                    currentOpenWatchlistDetail = newDetailSlot;
+                                    selectedWatchlistItemName = itemData[0];
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                };
 
                 row.setBackground(BG_ROW_SELECTED);
                 info.setBackground(BG_ROW_SELECTED);
