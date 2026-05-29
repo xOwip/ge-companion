@@ -639,7 +639,7 @@ private String openBankItemName = null;
         JButton trackerBtn = buildFooterBtn("Tracker ↗", false);
         trackerBtn.addActionListener(e -> {
             try {
-                String urlName = name.toLowerCase().replace(" ", "-").replace("(", "").replace(")", "").replace("--", "-");
+                String urlName = name.toLowerCase().replace("'", "-").replace(" ", "-").replace("(", "").replace(")", "").replace("--", "-");
                 java.awt.Desktop.getDesktop().browse(new java.net.URI("https://www.ge-tracker.com/item/" + urlName));
             } catch (Exception ex) { }
         });
