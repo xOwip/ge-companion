@@ -2013,7 +2013,6 @@ private String openBankItemName = null;
         {
             public void mouseClicked(MouseEvent e)
             {
-                // Toggle
                 if (name.equals(selectedBankItemName) && currentOpenBankDetail != null)
                 {
                     currentOpenBankDetail.setVisible(false);
@@ -2021,6 +2020,7 @@ private String openBankItemName = null;
                     if (currentOpenBankRow != null)
                     {
                         currentOpenBankRow.setBackground(bgColor);
+                        currentOpenBankRow.setBorder(new MatteBorder(0, 4, 0, 0, borderColor));
                         info.setBackground(bgColor);
                         deltaRow.setBackground(bgColor);
                         for (Component c : currentOpenBankRow.getComponents())
@@ -2055,6 +2055,7 @@ private String openBankItemName = null;
                 currentOpenBankInfo = info;
                 currentOpenBankDeltaRow = deltaRow;
                 currentOpenBankDetail = detailSlot;
+                row.setBorder(new MatteBorder(0, 4, 0, 0, GOLD));
 
                 detailSlot.removeAll();
                 detailSlot.add(buildInlineDetail(item, false), BorderLayout.CENTER);
