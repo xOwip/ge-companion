@@ -69,6 +69,8 @@ public class GECompanionPanel extends PluginPanel
     private boolean isRefreshing = false;
     private Runnable watchlistReopenAction = null;
     private Runnable searchReopenAction = null;
+    private Runnable bankReopenAction = null;
+    private JPanel bankListPanel;
     private java.util.List<String> recentSearches = new java.util.ArrayList<>();
     private String selectedItemName = null;
     private String selectedWatchlistItemName = null;
@@ -172,7 +174,18 @@ private String openBankItemName = null;
         this.totalBankValue = bankValue;
         if (config.showBankValueChange()) saveBankValueLog();
         saveBankData();
-        if (activeTab == 2) showTab(2);
+        if (activeTab == 2)
+        {
+            isRefreshing = true;
+            showTab(2);
+            isRefreshing = false;
+            if (bankReopenAction != null)
+            {
+                javax.swing.Timer t = new javax.swing.Timer(150, e2 -> bankReopenAction.run());
+                t.setRepeats(false);
+                t.start();
+            }
+        }
     }
 
     public void onPricesUpdated(java.util.Map<Integer, PriceData> priceCache, java.util.Map<String, Integer> nameToId, java.util.Map<Integer, Long> avgPrice24h, java.util.Map<Integer, Long> avgPrice1h, java.util.Map<Integer, Long> avgPrice6h, java.util.Map<Integer, Integer> itemLimits, java.util.Map<Integer, Long> buyVolume1h, java.util.Map<Integer, Long> sellVolume1h)
@@ -215,6 +228,14 @@ private String openBankItemName = null;
             javax.swing.Timer reopenTimer = new javax.swing.Timer(150, e2 -> {
                 watchlistReopenAction.run();
             });
+            reopenTimer.setRepeats(false);
+            reopenTimer.start();
+        }
+
+        // Reopen detail panel for Bank tab
+        if (!isRefreshing && savedBankItem != null && activeTab == 2 && bankReopenAction != null)
+        {
+            javax.swing.Timer reopenTimer = new javax.swing.Timer(150, e2 -> bankReopenAction.run());
             reopenTimer.setRepeats(false);
             reopenTimer.start();
         }
@@ -1596,6 +1617,7 @@ private String openBankItemName = null;
         panel.add(hero, BorderLayout.NORTH);
 
         JPanel listPanel = new JPanel();
+        bankListPanel = listPanel;
         listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
         listPanel.setBackground(BG_DARK);
         listPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder());
@@ -1982,6 +2004,7 @@ private String openBankItemName = null;
                         currentOpenBankRowColor = BG_DARK;
                     }
                     selectedBankItemName = null;
+                    bankReopenAction = null;
                     tabContentPanel.revalidate();
                     tabContentPanel.repaint();
                     return;
@@ -2010,14 +2033,44 @@ private String openBankItemName = null;
                 detailSlot.add(buildInlineDetail(item, false), BorderLayout.CENTER);
                 detailSlot.setVisible(true);
                 scheduleRepaint(detailSlot);
+                final String[] itemData = item;
+                bankReopenAction = () -> {
+                    for (java.awt.Component c : bankListPanel.getComponents())
+                    {
+                        if (!(c instanceof JPanel)) continue;
+                        JPanel block = (JPanel) c;
+                        if (block.getComponentCount() < 2) continue;
+                        java.awt.Component second = block.getComponent(1);
+                        if (!(second instanceof JPanel)) continue;
+                        JPanel newDetailSlot = (JPanel) second;
+                        java.awt.Component first = block.getComponent(0);
+                        if (!(first instanceof JPanel)) continue;
+                        JPanel newRow = (JPanel) first;
+                        for (java.awt.Component child : newRow.getComponents())
+                        {
+                            if (!(child instanceof JPanel)) continue;
+                            for (java.awt.Component rowChild : ((JPanel)child).getComponents())
+                            {
+                                if (!(rowChild instanceof JLabel)) continue;
+                                JLabel label = (JLabel) rowChild;
+                                if (itemData[0].equalsIgnoreCase(label.getText()))
+                                {
+                                    newDetailSlot.removeAll();
+                                    newDetailSlot.add(buildInlineDetail(itemData, false), BorderLayout.CENTER);
+                                    newDetailSlot.setVisible(true);
+                                    scheduleRepaint(newDetailSlot);
+                                    currentOpenBankDetail = newDetailSlot;
+                                    selectedBankItemName = itemData[0];
+                                    return;
+                                }
+                            }
+                        }
+                    }
+                };
 
                 row.setBackground(BG_ROW_SELECTED);
                 info.setBackground(BG_ROW_SELECTED);
                 iconWrapper.setBackground(BG_ROW_SELECTED);
-                deltaRow.setBackground(BG_ROW_SELECTED);
-
-                tabContentPanel.revalidate();
-                tabContentPanel.repaint();
                 deltaRow.setBackground(BG_ROW_SELECTED);
 
                 tabContentPanel.revalidate();
