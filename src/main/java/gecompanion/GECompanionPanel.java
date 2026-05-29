@@ -487,6 +487,38 @@ private String openBankItemName = null;
         inner.add(buildDetailHeader(name, price, item.length > 6 ? item[6] : "?"));
         inner.add(Box.createVerticalStrut(6));
 
+// Full width Last Traded stat box
+        String lastTradedPrice = item.length > 10 ? item[10] : "0";
+        String lastTradedTime = item.length > 11 ? item[11] : "";
+        String lastTradedLabel = "LAST TRADED" + (lastTradedTime.isEmpty() || lastTradedTime.equals("unknown") ? "" : "  ·  " + lastTradedTime);
+        String lastTradedDisplay = lastTradedPrice.equals("0") ? "?" : formatFullPrice(lastTradedPrice) + " gp";
+
+        JPanel lastTradedBox = new JPanel();
+        lastTradedBox.setLayout(new BoxLayout(lastTradedBox, BoxLayout.Y_AXIS));
+        lastTradedBox.setBackground(new Color(14, 12, 13));
+        lastTradedBox.setBorder(new EmptyBorder(6, 5, 6, 5));
+        lastTradedBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        lastTradedBox.setMaximumSize(new Dimension(225, 52));
+        lastTradedBox.setMinimumSize(new Dimension(225, 52));
+        lastTradedBox.setPreferredSize(new Dimension(225, 52));
+
+        JLabel lastTradedLabelComp = new JLabel(lastTradedLabel, SwingConstants.CENTER);
+        lastTradedLabelComp.setForeground(TEXT_DIM);
+        lastTradedLabelComp.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+        lastTradedLabelComp.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lastTradedLabelComp.setMaximumSize(new Dimension(Integer.MAX_VALUE, 16));
+
+        JLabel lastTradedValueComp = new JLabel(lastTradedDisplay, SwingConstants.CENTER);
+        lastTradedValueComp.setForeground(STAT_GOLD);
+        lastTradedValueComp.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_VALUE));
+        lastTradedValueComp.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lastTradedValueComp.setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
+
+        lastTradedBox.add(lastTradedLabelComp);
+        lastTradedBox.add(lastTradedValueComp);
+        inner.add(lastTradedBox);
+        inner.add(Box.createVerticalStrut(4));
+
         JPanel grid = new JPanel(new GridLayout(2, 2, 2, 2));
         grid.setBackground(BG_DETAIL);
         grid.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -1980,7 +2012,10 @@ private String[] buildItemDataFromCache(String name)
         String sellPrice = pd.low > 0 ? String.valueOf(pd.low) : pd.getMid() > 0 ? String.valueOf(pd.getMid()) : "0";
         String buyQty = buyVolume1h.containsKey(id) ? String.valueOf(buyVolume1h.get(id)) : "?";
         String sellQty = sellVolume1h.containsKey(id) ? String.valueOf(sellVolume1h.get(id)) : "?";
-        return new String[]{name, price, buyPrice, sellPrice, "0", delta, limitStr, gpChangeStr, buyQty, sellQty};
+        long lastTraded = (pd.highTime >= pd.lowTime) ? pd.high : pd.low;
+        String lastTradedStr = lastTraded > 0 ? String.valueOf(lastTraded) : "0";
+        String lastTradedTime = pd.getTimeSince();
+        return new String[]{name, price, buyPrice, sellPrice, "0", delta, limitStr, gpChangeStr, buyQty, sellQty, lastTradedStr, lastTradedTime};
     }
 
 
