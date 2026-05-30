@@ -1624,16 +1624,12 @@ private String openBankItemName = null;
                 }
             });
 
-            JPanel changeRow = new JPanel(new BorderLayout());
+            JPanel changeRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 0));
             changeRow.setBackground(new Color(26, 23, 24));
             changeRow.setAlignmentX(Component.CENTER_ALIGNMENT);
-            changeRow.setMaximumSize(new Dimension(214, 22));
-            infoIcon.setBorder(new EmptyBorder(0, 0, 0, 4));
-            resetBtn.setBorder(new EmptyBorder(0, 4, 0, 0));
-            bankChangeLabel.setHorizontalAlignment(SwingConstants.CENTER);
-            changeRow.add(infoIcon, BorderLayout.WEST);
-            changeRow.add(bankChangeLabel, BorderLayout.CENTER);
-            changeRow.add(resetBtn, BorderLayout.EAST);
+            changeRow.add(infoIcon);
+            changeRow.add(bankChangeLabel);
+            changeRow.add(resetBtn);
             JLabel contextLabel = new JLabel("· " + activeTimeFrame + " · " + lastUpdatedStr);
             contextLabel.setForeground(TEXT_DIM);
             contextLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
