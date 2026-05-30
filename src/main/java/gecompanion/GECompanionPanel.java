@@ -48,6 +48,16 @@ public class GECompanionPanel extends PluginPanel
 
     private int activeTab = 1;
     public int getActiveTab() { return activeTab; }
+    public javax.swing.JScrollPane getActiveScrollPane()
+    {
+        switch (activeTab)
+        {
+            case 0: return watchlistScrollPane;
+            case 1: return searchScrollPane;
+            case 2: return bankScrollPane;
+            default: return null;
+        }
+    }
     private String activeTimeFrame = "24H";
     private boolean bankAllItemsCollapsed = true;
     private JScrollPane searchScrollPane;
@@ -365,9 +375,16 @@ private String openBankItemName = null;
 
         tabContentPanel = new JPanel(new BorderLayout());
         tabContentPanel.setBackground(BG_DARK);
-        showTab(config.defaultTab().ordinal());
-        activeTab = config.defaultTab().ordinal();
         wrapper.add(tabContentPanel, BorderLayout.CENTER);
+        int defaultTabIndex = 1;
+        switch (config.defaultTab())
+        {
+            case SEARCH: defaultTabIndex = 1; break;
+            case WATCHLIST: defaultTabIndex = 0; break;
+            case BANK: defaultTabIndex = 2; break;
+        }
+        showTab(defaultTabIndex);
+        activeTab = defaultTabIndex;
 
         JPanel footer = new JPanel();
         footer.setBackground(BG_DARK);
@@ -779,24 +796,7 @@ private String openBankItemName = null;
         listWrapper.add(recentSearchesPanel, BorderLayout.NORTH);
         listWrapper.add(searchResultsPanel, BorderLayout.CENTER);
 
-        searchScrollPane = new JScrollPane(listWrapper);
-        JScrollPane scrollPane = searchScrollPane;
-        scrollPane.setBorder(null);
-        scrollPane.setBackground(BG_DARK);
-        scrollPane.getViewport().setBackground(BG_DARK);
-        scrollPane.getViewport().addMouseWheelListener(e -> {
-            javax.swing.JScrollBar bar = scrollPane.getVerticalScrollBar();
-            bar.setValue(bar.getValue() + (int)(e.getUnitsToScroll() * 8));
-        });
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(0, 0));
-        scrollPane.addMouseWheelListener(e -> scrollPane.getVerticalScrollBar().setValue(
-            scrollPane.getVerticalScrollBar().getValue() + (int)(e.getUnitsToScroll() * 8)));
-        scrollPane.getViewport().addMouseWheelListener(e -> scrollPane.getVerticalScrollBar().setValue(
-            scrollPane.getVerticalScrollBar().getValue() + (int)(e.getUnitsToScroll() * 8)));
-
-        panel.add(scrollPane, BorderLayout.CENTER);
-
+        panel.add(listWrapper, BorderLayout.CENTER);
         searchField.addFocusListener(new FocusAdapter()
         {
             public void focusGained(FocusEvent e)

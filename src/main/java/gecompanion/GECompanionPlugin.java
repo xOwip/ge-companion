@@ -28,6 +28,9 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.util.ImageUtil;
+import net.runelite.client.input.MouseManager;
+import net.runelite.client.input.MouseWheelListener;
+import java.awt.event.MouseWheelEvent;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -45,7 +48,7 @@ import java.util.concurrent.TimeUnit;
 		description = "Live GE prices, bank value tracker, and item search — without tabbing out",
 		tags = {"ge", "grand exchange", "price", "bank", "flipping", "merching", "ge tracker"}
 )
-public class GECompanionPlugin extends Plugin
+public class GECompanionPlugin extends Plugin implements MouseWheelListener
 {
 	private static final String PRICES_URL = "https://prices.runescape.wiki/api/v1/osrs/latest";
 	private static final String MAPPING_URL = "https://prices.runescape.wiki/api/v1/osrs/mapping";
@@ -72,6 +75,8 @@ public class GECompanionPlugin extends Plugin
 	private net.runelite.client.game.ItemManager itemManager;
 
 	public net.runelite.client.game.ItemManager getItemManager() { return itemManager; }
+	@Inject
+	private MouseManager mouseManager;
 	private GECompanionPanel panel;
 	private NavigationButton navButton;
 	private ScheduledExecutorService scheduler;
@@ -107,7 +112,8 @@ public class GECompanionPlugin extends Plugin
 				.build();
 
 		clientToolbar.addNavigation(navButton);
-        eventBus.register(this);
+		eventBus.register(this);
+		mouseManager.registerMouseWheelListener(this);
 
 		// Start price refresh scheduler
 		scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -120,12 +126,28 @@ public class GECompanionPlugin extends Plugin
 	protected void shutDown() throws Exception
 	{
 		clientToolbar.removeNavigation(navButton);
-        eventBus.unregister(this);
+		eventBus.unregister(this);
+		mouseManager.unregisterMouseWheelListener(this);
 		if (scheduler != null)
 		{
 			scheduler.shutdown();
 		}
 		log.debug("GE Companion stopped!");
+	}
+
+	@Override
+	public MouseWheelEvent mouseWheelMoved(MouseWheelEvent e)
+	{
+		log.debug("mouseWheelMoved called, panel showing: " + (panel != null && panel.isShowing()) + ", scrollPane: " + panel.getActiveScrollPane());
+		if (panel == null || !panel.isShowing()) return e;
+		javax.swing.JScrollPane activeScrollPane = panel.getActiveScrollPane();
+		if (activeScrollPane != null && activeScrollPane.isShowing())
+		{
+			javax.swing.JScrollBar bar = activeScrollPane.getVerticalScrollBar();
+			bar.setValue(bar.getValue() + (int)(e.getWheelRotation() * bar.getUnitIncrement() * 3));
+			e.consume();
+		}
+		return e;
 	}
 
 	public void fetchPrices()
