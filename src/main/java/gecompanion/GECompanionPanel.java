@@ -48,21 +48,8 @@ public class GECompanionPanel extends PluginPanel
 
     private int activeTab = 1;
     public int getActiveTab() { return activeTab; }
-    public javax.swing.JScrollPane getActiveScrollPane()
-    {
-        switch (activeTab)
-        {
-            case 0: return watchlistScrollPane;
-            case 1: return searchScrollPane;
-            case 2: return bankScrollPane;
-            default: return null;
-        }
-    }
     private String activeTimeFrame = "24H";
     private boolean bankAllItemsCollapsed = true;
-    private JScrollPane searchScrollPane;
-    private JScrollPane watchlistScrollPane;
-    private JScrollPane bankScrollPane;
     private JPanel tabContentPanel;
     private JLabel[] tabLabels = new JLabel[3];
     private JLabel timerLabel;
