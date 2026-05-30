@@ -364,10 +364,9 @@ private String openBankItemName = null;
 
         tabContentPanel = new JPanel(new BorderLayout());
         tabContentPanel.setBackground(BG_DARK);
-        showTab(1);
-        activeTab = 1;
+        showTab(config.defaultTab().ordinal());
+        activeTab = config.defaultTab().ordinal();
         wrapper.add(tabContentPanel, BorderLayout.CENTER);
-
 
         JPanel footer = new JPanel();
         footer.setBackground(BG_DARK);

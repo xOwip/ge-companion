@@ -56,6 +56,14 @@ public interface GECompanionConfig extends Config
 	String watchlistSection = "watchlist";
 
 	@ConfigItem(
+			keyName = "defaultTab",
+			name = "Default tab",
+			description = "Which tab opens when the plugin loads",
+			position = 0
+	)
+	default DefaultTab defaultTab() { return DefaultTab.SEARCH; }
+
+	@ConfigItem(
 			keyName = "defaultChartRange",
 			name = "Default chart range",
 			description = "Which time range the price chart opens on",
