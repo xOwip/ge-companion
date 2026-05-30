@@ -1293,24 +1293,8 @@ private String openBankItemName = null;
             listPanel.add(emptyLabel2);
         }
 
-        watchlistScrollPane = new JScrollPane(listPanel);
-        JScrollPane scrollPane = watchlistScrollPane;
-        scrollPane.setBorder(null);
-        scrollPane.setBackground(BG_DARK);
-        scrollPane.getViewport().setBackground(BG_DARK);
-        scrollPane.getViewport().addMouseWheelListener(e -> {
-            javax.swing.JScrollBar bar = scrollPane.getVerticalScrollBar();
-            bar.setValue(bar.getValue() + (int)(e.getUnitsToScroll() * 8));
-        });
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(0, 0));
-        scrollPane.addMouseWheelListener(e -> scrollPane.getVerticalScrollBar().setValue(
-            scrollPane.getVerticalScrollBar().getValue() + (int)(e.getUnitsToScroll() * 8)));
-        scrollPane.getViewport().addMouseWheelListener(e -> scrollPane.getVerticalScrollBar().setValue(
-            scrollPane.getVerticalScrollBar().getValue() + (int)(e.getUnitsToScroll() * 8)));
-
         panel.add(buildTimeFrameBar(), BorderLayout.NORTH);
-        panel.add(scrollPane, BorderLayout.CENTER);
+        panel.add(listPanel, BorderLayout.CENTER);
         javax.swing.SwingUtilities.invokeLater(() -> {
             listPanel.revalidate();
             listPanel.repaint();
@@ -1900,60 +1884,10 @@ private String openBankItemName = null;
             listPanel.add(bankResultsPanel);
         }
 
-        bankScrollPane = new JScrollPane(listPanel);
-        JScrollPane scrollPane = bankScrollPane;
-        scrollPane.setBorder(null);
-        scrollPane.setBackground(BG_DARK);
-        scrollPane.getViewport().setBackground(BG_DARK);
-        scrollPane.getViewport().addMouseWheelListener(e -> {
-            javax.swing.JScrollBar bar = scrollPane.getVerticalScrollBar();
-            bar.setValue(bar.getValue() + (int)(e.getUnitsToScroll() * 8));
-        });
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(0, 0));
-        scrollPane.addMouseWheelListener(e -> scrollPane.getVerticalScrollBar().setValue(
-            scrollPane.getVerticalScrollBar().getValue() + (int)(e.getUnitsToScroll() * 8)));
-        scrollPane.getViewport().addMouseWheelListener(e -> scrollPane.getVerticalScrollBar().setValue(
-            scrollPane.getVerticalScrollBar().getValue() + (int)(e.getUnitsToScroll() * 8)));
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        scrollPane.setWheelScrollingEnabled(true);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        JPanel searchBar = new JPanel(new BorderLayout());
-        searchBar.setBackground(new Color(28, 25, 26));
-        searchBar.setBorder(new EmptyBorder(4, 6, 4, 6));
-
-        JTextField bankSearch = new JTextField();
-        bankSearch.setBackground(new Color(14, 12, 13));
-        bankSearch.setForeground(TEXT_PRIMARY);
-        bankSearch.setCaretColor(TEXT_PRIMARY);
-        bankSearch.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(58, 53, 48)),
-                new EmptyBorder(3, 5, 3, 5)
-        ));
-        bankSearch.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
-        bankSearch.addFocusListener(new FocusAdapter()
-        {
-            public void focusGained(FocusEvent e)
-            {
-                bankSearch.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(GOLD),
-                        new EmptyBorder(3, 5, 3, 5)
-                ));
-            }
-            public void focusLost(FocusEvent e)
-            {
-                bankSearch.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(new Color(58, 53, 48)),
-                        new EmptyBorder(3, 5, 3, 5)
-                ));
-            }
-        });
-
-        panel.add(scrollPane, BorderLayout.CENTER);
+        panel.add(listPanel, BorderLayout.CENTER);
         scheduleRepaint(listPanel);
         return panel;
     }
-
 
     private JPanel buildBankItemBlock(String[] item, boolean colorCode, int index)
     {
