@@ -1624,8 +1624,45 @@ private String openBankItemName = null;
             bankChangeLabel.setForeground(bankChangeColor);
             bankChangeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
             bankChangeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-            bankChangeLabel.setToolTipText("Bank value change based on actual scans. Open your bank regularly for accurate data.");
 
+            JLabel infoIcon = new JLabel("ⓘ");
+            infoIcon.setForeground(TEXT_DIM);
+            infoIcon.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
+            infoIcon.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            infoIcon.setToolTipText("<html>Bank value change is estimated from your last bank scan.<br><br>This may show incorrect data if items were recently<br>moved from your inventory or equipment into<br>your bank after the log was cleared.<br><br>Click ↺ to reset ALL timeframe history.<br>Your next bank scan will create a fresh<br>starting point for all timeframes (1H, 6H, 24H).</html>");
+            infoIcon.addMouseListener(new MouseAdapter()
+            {
+                public void mouseEntered(MouseEvent e) { infoIcon.setForeground(TEXT_PRIMARY); }
+                public void mouseExited(MouseEvent e) { infoIcon.setForeground(TEXT_DIM); }
+            });
+
+            JLabel resetBtn = new JLabel("↺");
+            resetBtn.setForeground(TEXT_DIM);
+            resetBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_REFRESH));
+            resetBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            resetBtn.setToolTipText("<html>Reset all bank value history.<br>Use this if your bank change data<br>looks incorrect. Your next bank scan<br>will start fresh for all timeframes.</html>");
+            resetBtn.addMouseListener(new MouseAdapter()
+            {
+                public void mouseEntered(MouseEvent e) { resetBtn.setForeground(TEXT_PRIMARY); }
+                public void mouseExited(MouseEvent e) { resetBtn.setForeground(TEXT_DIM); }
+                public void mouseClicked(MouseEvent e)
+                {
+                    bankValueLog.clear();
+                    saveBankValueLog();
+                    showTab(activeTab);
+                }
+            });
+
+            JPanel changeRow = new JPanel(new BorderLayout());
+            changeRow.setBackground(new Color(26, 23, 24));
+            changeRow.setAlignmentX(Component.CENTER_ALIGNMENT);
+            changeRow.setMaximumSize(new Dimension(214, 22));
+            infoIcon.setBorder(new EmptyBorder(0, 0, 0, 4));
+            resetBtn.setBorder(new EmptyBorder(0, 4, 0, 0));
+            bankChangeLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            changeRow.add(infoIcon, BorderLayout.WEST);
+            changeRow.add(bankChangeLabel, BorderLayout.CENTER);
+            changeRow.add(resetBtn, BorderLayout.EAST);
             JLabel contextLabel = new JLabel("· " + activeTimeFrame + " · " + lastUpdatedStr);
             contextLabel.setForeground(TEXT_DIM);
             contextLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
@@ -1633,7 +1670,10 @@ private String openBankItemName = null;
 
             hero.add(heroValue);
             hero.add(Box.createVerticalStrut(2));
-            hero.add(bankChangeLabel);
+            if (bankChangeStr.startsWith("─"))
+                hero.add(bankChangeLabel);
+            else
+                hero.add(changeRow);
             hero.add(contextLabel);
             hero.add(Box.createVerticalStrut(4));
         }
