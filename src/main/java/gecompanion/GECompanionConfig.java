@@ -72,6 +72,15 @@ public interface GECompanionConfig extends Config
 	)
 	default ChartRange defaultChartRange() { return ChartRange.MONTH; }
 
+	@ConfigItem(
+			keyName = "defaultTimeFrame",
+			name = "Default timeframe",
+			description = "Which timeframe the price display opens on",
+			section = watchlistSection,
+			position = 1
+	)
+	default DefaultTimeFrame defaultTimeFrame() { return DefaultTimeFrame.TWENTY_FOUR_HOUR; }
+
     @ConfigItem(
           keyName = "minBankItemValue",
           name = "Min bank item value (gp)",

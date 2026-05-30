@@ -134,6 +134,7 @@ private String openBankItemName = null;
         this.config = config;
         this.plugin = plugin;
         loadBankData();
+        activeTimeFrame = config.defaultTimeFrame().getValue();
         loadBankValueLog();
         loadPinnedItems();
         loadRecentSearches();
