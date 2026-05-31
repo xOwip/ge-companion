@@ -1598,17 +1598,6 @@ private String openBankItemName = null;
             bankChangeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
             bankChangeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-            JLabel infoIcon = new JLabel("ⓘ");
-            infoIcon.setForeground(TEXT_DIM);
-            infoIcon.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
-            infoIcon.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            infoIcon.setToolTipText("<html>Bank value change is estimated from your last bank scan.<br><br>This may show incorrect data if items were recently<br>moved from your inventory or equipment into<br>your bank after the log was cleared.<br><br>Click ↺ to reset ALL timeframe history.<br>Your next bank scan will create a fresh<br>starting point for all timeframes (1H, 6H, 24H).</html>");
-            infoIcon.addMouseListener(new MouseAdapter()
-            {
-                public void mouseEntered(MouseEvent e) { infoIcon.setForeground(TEXT_PRIMARY); }
-                public void mouseExited(MouseEvent e) { infoIcon.setForeground(TEXT_DIM); }
-            });
-
             JLabel resetBtn = new JLabel("↺");
             resetBtn.setForeground(TEXT_DIM);
             resetBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_REFRESH));
@@ -1629,7 +1618,6 @@ private String openBankItemName = null;
             JPanel changeRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 0));
             changeRow.setBackground(new Color(26, 23, 24));
             changeRow.setAlignmentX(Component.CENTER_ALIGNMENT);
-            changeRow.add(infoIcon);
             changeRow.add(bankChangeLabel);
             changeRow.add(resetBtn);
             JLabel contextLabel = new JLabel("· " + activeTimeFrame + " · " + lastUpdatedStr);
