@@ -372,6 +372,8 @@ private String openBankItemName = null;
         }
         showTab(defaultTabIndex);
         activeTab = defaultTabIndex;
+        for (int j = 0; j < 3; j++)
+            updateTabStyle(tabLabels[j], j == defaultTabIndex);
 
         JPanel footer = new JPanel();
         footer.setBackground(BG_DARK);
