@@ -1021,6 +1021,7 @@ private String openBankItemName = null;
         final JPanel iconWrapper = new JPanel(new java.awt.GridBagLayout());
         iconWrapper.setBackground(rowBg);
         iconWrapper.add(iconPanel);
+        iconWrapper.setToolTipText(name);
         row.add(iconWrapper, BorderLayout.WEST);
 
         JPanel info = new JPanel();
@@ -1335,6 +1336,7 @@ private String openBankItemName = null;
         final JPanel iconWrapper = new JPanel(new java.awt.GridBagLayout());
         iconWrapper.setBackground(rowBg);
         iconWrapper.add(iconPanel);
+        iconWrapper.setToolTipText(name);
         row.add(iconWrapper, BorderLayout.WEST);
 
         JPanel info = new JPanel();
@@ -1920,6 +1922,7 @@ private String openBankItemName = null;
         JPanel iconWrapper = new JPanel(new java.awt.GridBagLayout());
         iconWrapper.setBackground(bgColor);
         iconWrapper.add(iconPanel);
+        iconWrapper.setToolTipText(name);
         row.add(iconWrapper, BorderLayout.WEST);
 
         JPanel info = new JPanel();
