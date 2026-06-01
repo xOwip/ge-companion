@@ -672,7 +672,7 @@ private String openBankItemName = null;
         panel.setBackground(BG_DARK);
 
         JPanel searchWrap = new JPanel(new BorderLayout());
-        searchWrap.setBackground(new Color(28, 25, 26));
+        searchWrap.setBackground(new Color(20, 18, 19));
         searchWrap.setBorder(new EmptyBorder(4, 6, 4, 6));
 
         searchField.setBackground(new Color(14, 12, 13));
@@ -970,7 +970,7 @@ private String openBankItemName = null;
 
         boolean isUp = delta.startsWith("+");
         boolean isDown = delta.startsWith("-");
-        Color rowBg = (index % 2 == 0) ? BG_DARK : new Color(28, 25, 26);
+        Color rowBg = (index % 2 == 0) ? BG_DARK : new Color(20, 18, 19);
 
         JPanel block = new JPanel();
         block.setLayout(new BoxLayout(block, BoxLayout.Y_AXIS));
@@ -1304,7 +1304,7 @@ private String openBankItemName = null;
         boolean isUp = delta.startsWith("+");
         boolean isDown = delta.startsWith("-");
 
-        Color rowBg = (index % 2 == 0) ? BG_DARK : new Color(28, 25, 26);
+        Color rowBg = (index % 2 == 0) ? BG_DARK : new Color(20, 18, 19);
 
         JPanel block = new JPanel();
         block.setLayout(new BoxLayout(block, BoxLayout.Y_AXIS));
@@ -1659,15 +1659,21 @@ private String openBankItemName = null;
         if (!bankItems.isEmpty())
         {
             JPanel gainersHeader = new JPanel(new BorderLayout());
-            gainersHeader.setBackground(new Color(20, 18, 18));
+            gainersHeader.setBackground(new Color(28, 28, 28));
             gainersHeader.setAlignmentX(Component.LEFT_ALIGNMENT);
-            gainersHeader.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+            gainersHeader.setMaximumSize(new Dimension(Integer.MAX_VALUE, 28));
             JLabel gainersLabel = new JLabel("▲ Top Gainers (by " + config.sortMode().getLabel() + ")");
             gainersLabel.setForeground(GREEN_UP);
             gainersLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_SECTION));
             gainersLabel.setBorder(new EmptyBorder(6, 7, 2, 7));
             gainersHeader.add(gainersLabel, BorderLayout.WEST);
             listPanel.add(gainersHeader);
+            JPanel gainersAccent = new JPanel();
+            gainersAccent.setBackground(new Color(47, 95, 47));
+            gainersAccent.setPreferredSize(new Dimension(0, 2));
+            gainersAccent.setMaximumSize(new Dimension(Integer.MAX_VALUE, 2));
+            gainersAccent.setAlignmentX(Component.LEFT_ALIGNMENT);
+            listPanel.add(gainersAccent);
         }
         if (bankItems.isEmpty())
         {
@@ -1734,17 +1740,22 @@ private String openBankItemName = null;
                 listPanel.add(buildBankItemBlock(gainers.get(i), true, i));
 
             // Top Losers
-            listPanel.add(new JSeparator());
             JPanel losersHeader = new JPanel(new BorderLayout());
-            losersHeader.setBackground(new Color(20, 18, 18));
+            losersHeader.setBackground(new Color(28, 28, 28));
             losersHeader.setAlignmentX(Component.LEFT_ALIGNMENT);
-            losersHeader.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+            losersHeader.setMaximumSize(new Dimension(Integer.MAX_VALUE, 28));
             JLabel losersLabel = new JLabel("▼ Top Losers (by " + config.sortMode().getLabel() + ")");
             losersLabel.setForeground(RED_DOWN);
             losersLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_SECTION));
             losersLabel.setBorder(new EmptyBorder(6, 7, 2, 7));
             losersHeader.add(losersLabel, BorderLayout.WEST);
             listPanel.add(losersHeader);
+            JPanel losersAccent = new JPanel();
+            losersAccent.setBackground(new Color(95, 47, 47));
+            losersAccent.setPreferredSize(new Dimension(0, 2));
+            losersAccent.setMaximumSize(new Dimension(Integer.MAX_VALUE, 2));
+            losersAccent.setAlignmentX(Component.LEFT_ALIGNMENT);
+            listPanel.add(losersAccent);
 
             int losersCount = Math.min(config.losersCount(), losers.size());
             for (int i = 0; i < losersCount; i++)
@@ -1770,7 +1781,7 @@ private String openBankItemName = null;
             listPanel.add(allLabel);
 // Bank search bar — always visible
             JPanel bankSearchWrap = new JPanel(new BorderLayout());
-            bankSearchWrap.setBackground(new Color(28, 25, 26));
+            bankSearchWrap.setBackground(new Color(20, 18, 19));
             bankSearchWrap.setBorder(new EmptyBorder(4, 6, 4, 6));
             bankSearchWrap.setAlignmentX(Component.LEFT_ALIGNMENT);
             bankSearchWrap.setMaximumSize(new Dimension(Integer.MAX_VALUE, 34));
@@ -1875,7 +1886,7 @@ private String openBankItemName = null;
         boolean isDown = delta.startsWith("-");
 
         Color borderColor = colorCode && isUp ? new Color(0, 180, 0) : colorCode && isDown ? new Color(200, 0, 0) : new Color(80, 75, 70);
-        Color bgColor = (index % 2 == 0) ? BG_DARK : new Color(28, 25, 26);
+        Color bgColor = (index % 2 == 0) ? BG_DARK : new Color(20, 18, 19);
 
         JPanel block = new JPanel()
         {
