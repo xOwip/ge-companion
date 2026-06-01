@@ -35,7 +35,7 @@ public interface GECompanionConfig extends Config
 			position = 1
 	)
 	@Range(min = 1, max = 10)
-	default int gainersCount() { return 3; }
+	default int gainersCount() { return 5; }
 
 	@ConfigItem(
 			keyName = "losersCount",
@@ -45,7 +45,7 @@ public interface GECompanionConfig extends Config
 			position = 2
 	)
 	@Range(min = 1, max = 10)
-	default int losersCount() { return 3; }
+	default int losersCount() { return 5; }
 
 	// ── WATCHLIST ──
 	@ConfigSection(
