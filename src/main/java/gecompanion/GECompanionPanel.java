@@ -1007,6 +1007,7 @@ private String openBankItemName = null;
         JPanel iconPanel = new JPanel(new java.awt.GridBagLayout());
         iconPanel.setPreferredSize(new Dimension(42, 42));
         iconPanel.setBackground(new Color(14, 12, 13));
+        iconPanel.setOpaque(true);
         iconPanel.setBorder(BorderFactory.createLineBorder(isUp ? new Color(0, 100, 0) : isDown ? new Color(100, 0, 0) : new Color(42, 37, 40)));
 
         Integer itemId = nameToId.get(name.toLowerCase()
@@ -1087,9 +1088,14 @@ private String openBankItemName = null;
                         {
                             if (c instanceof JPanel)
                             {
+                                if (((JPanel)c).getComponentCount() > 0 && ((JPanel)c).getComponent(0) instanceof JPanel && ((JPanel)c).getComponent(0).getPreferredSize().width == 42)
+                                {
+                                    c.setBackground(currentOpenSearchRowColor);
+                                    continue;
+                                }
                                 c.setBackground(currentOpenSearchRowColor);
                                 for (Component cc : ((JPanel)c).getComponents())
-                                    if (cc instanceof JPanel) cc.setBackground(currentOpenSearchRowColor);
+                                    if (cc instanceof JPanel && cc.getPreferredSize().width != 42) cc.setBackground(currentOpenSearchRowColor);
                             }
                         }
                         currentOpenSearchRow = null;
@@ -1113,7 +1119,17 @@ private String openBankItemName = null;
                     currentOpenSearchRow.setBackground(BG_DARK);
                     currentOpenSearchRow.setBorder(new MatteBorder(0, 3, 0, 1, new Color(26, 24, 24)));
                     for (Component c : currentOpenSearchRow.getComponents())
-                        if (c instanceof JPanel) c.setBackground(BG_DARK);
+                    {
+                        if (c instanceof JPanel)
+                        {
+                            if (((JPanel)c).getComponentCount() > 0 && ((JPanel)c).getComponent(0) instanceof JPanel && ((JPanel)c).getComponent(0).getPreferredSize().width == 42)
+                            {
+                                c.setBackground(BG_DARK);
+                                continue;
+                            }
+                            c.setBackground(BG_DARK);
+                        }
+                    }
                 }
 
 // Open this one
@@ -1322,6 +1338,7 @@ private String openBankItemName = null;
         JPanel iconPanel = new JPanel(new java.awt.GridBagLayout());
         iconPanel.setPreferredSize(new Dimension(42, 42));
         iconPanel.setBackground(new Color(14, 12, 13));
+        iconPanel.setOpaque(true);
         iconPanel.setBorder(BorderFactory.createLineBorder(isUp ? new Color(0, 100, 0) : isDown ? new Color(100, 0, 0) : new Color(42, 37, 40)));
 
         Integer itemId = nameToId.get(name.toLowerCase()
@@ -1397,9 +1414,14 @@ private String openBankItemName = null;
                         {
                             if (c instanceof JPanel)
                             {
+                                if (((JPanel)c).getComponentCount() > 0 && ((JPanel)c).getComponent(0) instanceof JPanel && ((JPanel)c).getComponent(0).getPreferredSize().width == 42)
+                                {
+                                    c.setBackground(BG_DARK);
+                                    continue;
+                                }
                                 c.setBackground(BG_DARK);
                                 for (Component cc : ((JPanel)c).getComponents())
-                                    if (cc instanceof JPanel) cc.setBackground(BG_DARK);
+                                    if (cc instanceof JPanel && cc.getPreferredSize().width != 42) cc.setBackground(BG_DARK);
                             }
                         }
                         currentOpenWatchlistRow = null;
@@ -1417,7 +1439,17 @@ private String openBankItemName = null;
                     currentOpenWatchlistRow.setBackground(currentOpenWatchlistRowColor);
                     currentOpenWatchlistRow.setBorder(javax.swing.BorderFactory.createEmptyBorder());
                     for (Component c : currentOpenWatchlistRow.getComponents())
-                        if (c instanceof JPanel) c.setBackground(currentOpenWatchlistRowColor);
+                    {
+                        if (c instanceof JPanel)
+                        {
+                            if (((JPanel)c).getComponentCount() > 0 && ((JPanel)c).getComponent(0) instanceof JPanel && ((JPanel)c).getComponent(0).getPreferredSize().width == 42)
+                            {
+                                c.setBackground(currentOpenWatchlistRowColor);
+                                continue;
+                            }
+                            c.setBackground(currentOpenWatchlistRowColor);
+                        }
+                    }
                 }
 
                 // Open this one
@@ -2050,6 +2082,7 @@ private String openBankItemName = null;
         JPanel iconPanel = new JPanel();
         iconPanel.setPreferredSize(new Dimension(42, 42));
         iconPanel.setBackground(new Color(14, 12, 13));
+        iconPanel.setOpaque(true);
         iconPanel.setBorder(BorderFactory.createLineBorder(colorCode && isUp ? new Color(0, 100, 0) : colorCode && isDown ? new Color(100, 0, 0) : new Color(42, 37, 40)));
 
         Integer bankItemId = nameToId.get(name.toLowerCase()
@@ -2507,6 +2540,7 @@ private String[] buildItemDataFromCache(String name)
         JPanel iconPanel = new JPanel();
         iconPanel.setPreferredSize(new Dimension(42, 42));
         iconPanel.setBackground(new Color(14, 12, 13));
+        iconPanel.setOpaque(true);
         iconPanel.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 40)));
         row.add(iconPanel, BorderLayout.WEST);
 
