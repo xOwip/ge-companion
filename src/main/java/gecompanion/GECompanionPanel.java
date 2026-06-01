@@ -1682,8 +1682,63 @@ private String openBankItemName = null;
             JLabel gainersLabel = new JLabel("▲ Top Gainers (by " + config.sortMode().getLabel() + ")");
             gainersLabel.setForeground(GREEN_UP);
             gainersLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_SECTION));
-            gainersLabel.setBorder(new EmptyBorder(6, 7, 2, 7));
             gainersHeader.add(gainersLabel, BorderLayout.WEST);
+            JLabel gCountLabel = new JLabel(String.valueOf(config.gainersCount()));
+            gCountLabel.setForeground(TEXT_DIM);
+            gCountLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+            JLabel gMinusBtn = new JLabel("[-]");
+            gMinusBtn.setForeground(TEXT_DIM);
+            gMinusBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+            gMinusBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            gMinusBtn.addMouseListener(new MouseAdapter()
+            {
+                public void mouseEntered(MouseEvent e) { gMinusBtn.setForeground(TEXT_PRIMARY); }
+                public void mouseExited(MouseEvent e) { gMinusBtn.setForeground(TEXT_DIM); }
+                public void mouseClicked(MouseEvent e)
+                {
+                    if (config.gainersCount() > 1)
+                        {
+                            int newCount = config.gainersCount() - 1;
+                            plugin.saveConfig("gainersCount", String.valueOf(newCount));
+                            gCountLabel.setText(String.valueOf(newCount));
+                        }
+                }
+            });
+            JLabel gPlusBtn = new JLabel("[+]");
+            gPlusBtn.setForeground(TEXT_DIM);
+            gPlusBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+            gPlusBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            gPlusBtn.addMouseListener(new MouseAdapter()
+            {
+                public void mouseEntered(MouseEvent e) { gPlusBtn.setForeground(TEXT_PRIMARY); }
+                public void mouseExited(MouseEvent e) { gPlusBtn.setForeground(TEXT_DIM); }
+                public void mouseClicked(MouseEvent e)
+                {
+                    if (config.gainersCount() < 10)
+                    {
+                        int newCount = config.gainersCount() + 1;
+                        plugin.saveConfig("gainersCount", String.valueOf(newCount));
+                        gCountLabel.setText(String.valueOf(newCount));
+                    }
+                }
+            });
+            JPanel gBtnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 2, 0));
+            gBtnPanel.setBackground(new Color(28, 28, 28));
+            gBtnPanel.setVisible(false);
+            gBtnPanel.add(gMinusBtn);
+            gBtnPanel.add(gCountLabel);
+            gBtnPanel.add(gPlusBtn);
+            gainersHeader.add(gBtnPanel, BorderLayout.EAST);
+            MouseAdapter gHoverListener = new MouseAdapter()
+            {
+                public void mouseEntered(MouseEvent e) { gBtnPanel.setVisible(true); }
+                public void mouseExited(MouseEvent e) { gBtnPanel.setVisible(false); }
+            };
+            gainersHeader.addMouseListener(gHoverListener);
+            gBtnPanel.addMouseListener(gHoverListener);
+            gMinusBtn.addMouseListener(gHoverListener);
+            gCountLabel.addMouseListener(gHoverListener);
+            gPlusBtn.addMouseListener(gHoverListener);
             listPanel.add(gainersHeader);
             JPanel gainersAccent = new JPanel();
             gainersAccent.setBackground(new Color(47, 95, 47));
@@ -1764,8 +1819,63 @@ private String openBankItemName = null;
             JLabel losersLabel = new JLabel("▼ Top Losers (by " + config.sortMode().getLabel() + ")");
             losersLabel.setForeground(RED_DOWN);
             losersLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_SECTION));
-            losersLabel.setBorder(new EmptyBorder(6, 7, 2, 7));
             losersHeader.add(losersLabel, BorderLayout.WEST);
+            JLabel lCountLabel = new JLabel(String.valueOf(config.losersCount()));
+            lCountLabel.setForeground(TEXT_DIM);
+            lCountLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+            JLabel lMinusBtn = new JLabel("[-]");
+            lMinusBtn.setForeground(TEXT_DIM);
+            lMinusBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+            lMinusBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            lMinusBtn.addMouseListener(new MouseAdapter()
+            {
+                public void mouseEntered(MouseEvent e) { lMinusBtn.setForeground(TEXT_PRIMARY); }
+                public void mouseExited(MouseEvent e) { lMinusBtn.setForeground(TEXT_DIM); }
+                public void mouseClicked(MouseEvent e)
+                {
+                    if (config.losersCount() > 1)
+                        {
+                            int newCount = config.losersCount() - 1;
+                            plugin.saveConfig("losersCount", String.valueOf(newCount));
+                            lCountLabel.setText(String.valueOf(newCount));
+                        }
+                }
+            });
+            JLabel lPlusBtn = new JLabel("[+]");
+            lPlusBtn.setForeground(TEXT_DIM);
+            lPlusBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+            lPlusBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            lPlusBtn.addMouseListener(new MouseAdapter()
+            {
+                public void mouseEntered(MouseEvent e) { lPlusBtn.setForeground(TEXT_PRIMARY); }
+                public void mouseExited(MouseEvent e) { lPlusBtn.setForeground(TEXT_DIM); }
+                public void mouseClicked(MouseEvent e)
+                {
+                    if (config.losersCount() < 10)
+                    {
+                        int newCount = config.losersCount() + 1;
+                        plugin.saveConfig("losersCount", String.valueOf(newCount));
+                        lCountLabel.setText(String.valueOf(newCount));
+                    }
+                }
+            });
+            JPanel lBtnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 2, 0));
+            lBtnPanel.setBackground(new Color(28, 28, 28));
+            lBtnPanel.setVisible(false);
+            lBtnPanel.add(lMinusBtn);
+            lBtnPanel.add(lCountLabel);
+            lBtnPanel.add(lPlusBtn);
+            losersHeader.add(lBtnPanel, BorderLayout.EAST);
+            MouseAdapter lHoverListener = new MouseAdapter()
+            {
+                public void mouseEntered(MouseEvent e) { lBtnPanel.setVisible(true); }
+                public void mouseExited(MouseEvent e) { lBtnPanel.setVisible(false); }
+            };
+            losersHeader.addMouseListener(lHoverListener);
+            lBtnPanel.addMouseListener(lHoverListener);
+            lMinusBtn.addMouseListener(lHoverListener);
+            lCountLabel.addMouseListener(lHoverListener);
+            lPlusBtn.addMouseListener(lHoverListener);
             listPanel.add(losersHeader);
             JPanel losersAccent = new JPanel();
             losersAccent.setBackground(new Color(95, 47, 47));
