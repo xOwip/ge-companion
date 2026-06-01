@@ -545,12 +545,23 @@ private String openBankItemName = null;
         det.setBorder(new MatteBorder(0, 2, 0, 0, GOLD));
         det.setMaximumSize(new Dimension(230, Integer.MAX_VALUE));
 
-        JPanel inner = new JPanel();
+        JPanel inner = new JPanel()
+        {
+            @Override
+            protected void paintComponent(Graphics g)
+            {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g.create();
+                GradientPaint gp = new GradientPaint(0, 0, new Color(212, 175, 55, 180), getWidth(), 0, new Color(0, 0, 0, 0));
+                g2.setPaint(gp);
+                g2.fillRect(0, getHeight() - 3, getWidth(), 3);
+                g2.dispose();
+            }
+        };
         inner.setLayout(new BoxLayout(inner, BoxLayout.Y_AXIS));
         inner.setBackground(BG_DETAIL);
-        inner.setBorder(new javax.swing.border.CompoundBorder(
-                new MatteBorder(0, 0, 2, 0, GOLD),
-                new EmptyBorder(6, 7, 6, 7)));
+        inner.setBorder(new EmptyBorder(6, 7, 6, 7));
+
         inner.add(buildDetailHeader(name, price, item.length > 6 ? item[6] : "?"));
         inner.add(Box.createVerticalStrut(6));
 
