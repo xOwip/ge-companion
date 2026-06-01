@@ -341,7 +341,7 @@ private void fetchMapping()
 	@Subscribe
 	public void onConfigChanged(net.runelite.client.events.ConfigChanged event)
 	{
-		if (event.getGroup().equals("gecompanion") && !event.getKey().equals("recentSearches") && !event.getKey().equals("bankValueLog") && !event.getKey().equals("bankValue"))
+		if (event.getGroup().equals("gecompanion") && !event.getKey().equals("recentSearches") && !event.getKey().equals("bankValueLog") && !event.getKey().equals("bankValue") && !event.getKey().equals("bankValueHidden"))
 		{
 			javax.swing.SwingUtilities.invokeLater(() -> panel.showTab(panel.getActiveTab()));
 		}
@@ -410,6 +410,16 @@ private void fetchMapping()
 		return configManager.getConfiguration("gecompanion", key);
 	}
 
+	public boolean isBankValueHidden()
+	{
+		String val = loadConfig("bankValueHidden");
+		return "true".equals(val);
+	}
+
+	public void setBankValueHidden(boolean hidden)
+	{
+		saveConfig("bankValueHidden", String.valueOf(hidden));
+	}
 	@Provides
 	GECompanionConfig provideConfig(ConfigManager configManager)
 	{

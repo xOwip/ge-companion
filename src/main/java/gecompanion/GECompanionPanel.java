@@ -1538,13 +1538,30 @@ private String openBankItemName = null;
             lastUpdatedStr = "Last updated " + (secondsAgo / 3600) + "h ago";
 
         String bankValueStr = totalBankValue == 0 ? "No bank data" : formatFullPrice(String.valueOf(totalBankValue)) + " gp";
-        JLabel heroValue = new JLabel(bankValueStr);
-        heroValue.setForeground(PRICE_GOLD);
+        boolean bankHidden = plugin.isBankValueHidden();
+        String heroText = bankHidden ? "Click to reveal" : bankValueStr;
+        JLabel heroValue = new JLabel(heroText);
+        heroValue.setForeground(bankHidden ? TEXT_DIM : PRICE_GOLD);
         heroValue.setFont(new Font("Monospaced", Font.BOLD, 20));
         heroValue.setAlignmentX(Component.CENTER_ALIGNMENT);
-        if (!bankItems.isEmpty()) heroValue.setToolTipText(formatFullPrice(String.valueOf(totalBankValue)) + " gp");
-
-        nowSeconds = System.currentTimeMillis() / 1000;
+        heroValue.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        heroValue.setToolTipText(bankHidden ? "Click to reveal bank value" : "Click to hide bank value");
+        heroValue.addMouseListener(new MouseAdapter()
+        {
+            public void mouseClicked(MouseEvent e)
+            {
+                plugin.setBankValueHidden(!plugin.isBankValueHidden());
+                showTab(activeTab);
+            }
+            public void mouseEntered(MouseEvent e)
+            {
+                heroValue.setForeground(TEXT_PRIMARY);
+            }
+            public void mouseExited(MouseEvent e)
+            {
+                heroValue.setForeground(bankHidden ? TEXT_DIM : PRICE_GOLD);
+            }
+        });
         long targetSeconds = nowSeconds;
         if (activeTimeFrame.equals("1H")) targetSeconds = nowSeconds - 3600;
         else if (activeTimeFrame.equals("6H")) targetSeconds = nowSeconds - 21600;
@@ -1593,7 +1610,7 @@ private String openBankItemName = null;
                     bankGpChange < 0 ? RED_DOWN : TEXT_DIM;
         }
 
-        if (config.showBankValueChange())
+        if (config.showBankValueChange() && !bankHidden)
         {
             JLabel bankChangeLabel = new JLabel(bankItems.isEmpty() ? "" : bankChangeStr);
             bankChangeLabel.setForeground(bankChangeColor);
