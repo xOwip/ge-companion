@@ -1701,6 +1701,7 @@ private String openBankItemName = null;
                             int newCount = config.gainersCount() - 1;
                             plugin.saveConfig("gainersCount", String.valueOf(newCount));
                             gCountLabel.setText(String.valueOf(newCount));
+                            showTab(activeTab);
                         }
                 }
             });
@@ -1719,6 +1720,7 @@ private String openBankItemName = null;
                         int newCount = config.gainersCount() + 1;
                         plugin.saveConfig("gainersCount", String.valueOf(newCount));
                         gCountLabel.setText(String.valueOf(newCount));
+                        showTab(activeTab);
                     }
                 }
             });
@@ -1838,6 +1840,7 @@ private String openBankItemName = null;
                             int newCount = config.losersCount() - 1;
                             plugin.saveConfig("losersCount", String.valueOf(newCount));
                             lCountLabel.setText(String.valueOf(newCount));
+                            showTab(activeTab);
                         }
                 }
             });
@@ -1856,6 +1859,7 @@ private String openBankItemName = null;
                         int newCount = config.losersCount() + 1;
                         plugin.saveConfig("losersCount", String.valueOf(newCount));
                         lCountLabel.setText(String.valueOf(newCount));
+                        showTab(activeTab);
                     }
                 }
             });
