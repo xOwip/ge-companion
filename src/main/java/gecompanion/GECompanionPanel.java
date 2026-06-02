@@ -1087,6 +1087,8 @@ private String openBankItemName = null;
                         if (curH2[0] <= 0)
                         {
                             if (closingVP != null) { closingVP.setVisible(false); closingVP.setPreferredSize(null); }
+                            searchResultsPanel.revalidate();
+                            searchResultsPanel.repaint();
                             closeTimer.stop();
                         }
                     });
@@ -1139,6 +1141,8 @@ private String openBankItemName = null;
                         if (curH3[0] <= 0)
                         {
                             if (closingVP2 != null) { closingVP2.setVisible(false); closingVP2.setPreferredSize(null); }
+                            searchResultsPanel.revalidate();
+                            searchResultsPanel.repaint();
                             closeTimer2.stop();
                         }
                     });
@@ -1480,6 +1484,8 @@ private String openBankItemName = null;
                         if (curH2[0] <= 0)
                         {
                             if (closingVP != null) { closingVP.setVisible(false); closingVP.setPreferredSize(null); }
+                            watchlistListPanel.revalidate();
+                            watchlistListPanel.repaint();
                             closeTimer.stop();
                         }
                     });
@@ -1528,6 +1534,8 @@ private String openBankItemName = null;
                         if (curH3[0] <= 0)
                         {
                             if (closingVP2 != null) { closingVP2.setVisible(false); closingVP2.setPreferredSize(null); }
+                            watchlistListPanel.revalidate();
+                            watchlistListPanel.repaint();
                             closeTimer2.stop();
                         }
                     });
@@ -2264,8 +2272,12 @@ private String openBankItemName = null;
         JPanel detailSlot = new JPanel(new BorderLayout());
         detailSlot.setBackground(BG_DARK);
         detailSlot.setBorder(javax.swing.BorderFactory.createEmptyBorder());
-        detailSlot.setVisible(false);
         detailSlot.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        javax.swing.JViewport detailViewport = new javax.swing.JViewport();
+        detailViewport.setView(detailSlot);
+        detailViewport.setVisible(false);
+        detailViewport.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         row.addMouseListener(new MouseAdapter()
         {
@@ -2273,8 +2285,26 @@ private String openBankItemName = null;
             {
                 if (name.equals(selectedBankItemName) && currentOpenBankDetail != null)
                 {
-                    currentOpenBankDetail.setVisible(false);
+                    final JPanel closingDetail = currentOpenBankDetail;
                     currentOpenBankDetail = null;
+                    final javax.swing.JViewport closingVP = (javax.swing.JViewport) closingDetail.getParent();
+                    final int fullH = closingVP != null ? closingVP.getHeight() : 0;
+                    int[] curH2 = {fullH};
+                    javax.swing.Timer closeTimer = new javax.swing.Timer(16, null);
+                    closeTimer.addActionListener(ev -> {
+                        curH2[0] = Math.max(curH2[0] - 30, 0);
+                        if (closingVP != null) {
+                            closingVP.setPreferredSize(new Dimension(230, curH2[0]));
+                            closingVP.setViewPosition(new java.awt.Point(0, fullH - curH2[0]));
+                            closingVP.revalidate();
+                        }
+                        if (curH2[0] <= 0)
+                        {
+                            if (closingVP != null) { closingVP.setVisible(false); closingVP.setPreferredSize(null); }
+                            closeTimer.stop();
+                        }
+                    });
+                    closeTimer.start();
                     if (currentOpenBankRow != null)
                     {
                         currentOpenBankRow.setBackground(bgColor);
@@ -2296,7 +2326,28 @@ private String openBankItemName = null;
                 }
 // Close previous
                 if (currentOpenBankDetail != null)
-                    currentOpenBankDetail.setVisible(false);
+                {
+                    final JPanel closingDetail2 = currentOpenBankDetail;
+                    currentOpenBankDetail = null;
+                    final javax.swing.JViewport closingVP2 = (javax.swing.JViewport) closingDetail2.getParent();
+                    final int fullH2 = closingVP2 != null ? closingVP2.getHeight() : 0;
+                    int[] curH3 = {fullH2};
+                    javax.swing.Timer closeTimer2 = new javax.swing.Timer(16, null);
+                    closeTimer2.addActionListener(ev -> {
+                        curH3[0] = Math.max(curH3[0] - 30, 0);
+                        if (closingVP2 != null) {
+                            closingVP2.setPreferredSize(new Dimension(230, curH3[0]));
+                            closingVP2.setViewPosition(new java.awt.Point(0, fullH2 - curH3[0]));
+                            closingVP2.revalidate();
+                        }
+                        if (curH3[0] <= 0)
+                        {
+                            if (closingVP2 != null) { closingVP2.setVisible(false); closingVP2.setPreferredSize(null); }
+                            closeTimer2.stop();
+                        }
+                    });
+                    closeTimer2.start();
+                }
                 if (currentOpenBankRow != null)
                 {
                     currentOpenBankRow.setBackground(currentOpenBankRowColor);
@@ -2320,7 +2371,31 @@ private String openBankItemName = null;
 
                 detailSlot.removeAll();
                 detailSlot.add(buildInlineDetail(item, false), BorderLayout.CENTER);
-                detailSlot.setVisible(true);
+                detailSlot.revalidate();
+                javax.swing.SwingUtilities.invokeLater(() -> {
+                    int fullHeight = detailSlot.getPreferredSize().height;
+                    if (fullHeight <= 0) fullHeight = 150;
+                    final int targetFinal = fullHeight;
+                    detailViewport.setPreferredSize(new Dimension(230, 0));
+                    detailViewport.setViewPosition(new java.awt.Point(0, targetFinal));
+                    detailViewport.setVisible(true);
+                    detailViewport.revalidate();
+                    int[] curH = {0};
+                    javax.swing.Timer openTimer = new javax.swing.Timer(16, null);
+                    openTimer.addActionListener(ev -> {
+                        curH[0] = Math.min(curH[0] + 30, targetFinal);
+                        detailViewport.setPreferredSize(new Dimension(230, curH[0]));
+                        detailViewport.setViewPosition(new java.awt.Point(0, targetFinal - curH[0]));
+                        detailViewport.revalidate();
+                        if (curH[0] >= targetFinal)
+                        {
+                            detailViewport.setPreferredSize(null);
+                            detailViewport.setViewPosition(new java.awt.Point(0, 0));
+                            openTimer.stop();
+                        }
+                    });
+                    openTimer.start();
+                });
                 scheduleRepaint(detailSlot);
                 final String[] itemData = item;
                 bankReopenAction = () -> {
@@ -2330,8 +2405,10 @@ private String openBankItemName = null;
                         JPanel block = (JPanel) c;
                         if (block.getComponentCount() < 2) continue;
                         java.awt.Component second = block.getComponent(1);
-                        if (!(second instanceof JPanel)) continue;
-                        JPanel newDetailSlot = (JPanel) second;
+                        if (!(second instanceof javax.swing.JViewport)) continue;
+                        javax.swing.JViewport newViewport = (javax.swing.JViewport) second;
+                        if (!(newViewport.getView() instanceof JPanel)) continue;
+                        JPanel newDetailSlot = (JPanel) newViewport.getView();
                         java.awt.Component first = block.getComponent(0);
                         if (!(first instanceof JPanel)) continue;
                         JPanel newRow = (JPanel) first;
@@ -2346,7 +2423,7 @@ private String openBankItemName = null;
                                 {
                                     newDetailSlot.removeAll();
                                     newDetailSlot.add(buildInlineDetail(itemData, false), BorderLayout.CENTER);
-                                    newDetailSlot.setVisible(true);
+                                    newViewport.setVisible(true);                                    ;
                                     scheduleRepaint(newDetailSlot);
                                     currentOpenBankDetail = newDetailSlot;
                                     selectedBankItemName = itemData[0];
@@ -2390,7 +2467,7 @@ private String openBankItemName = null;
         });
 
         block.add(row);
-        block.add(detailSlot);
+        block.add(detailViewport);
         return block;
     }
 
