@@ -1078,7 +1078,7 @@ private String openBankItemName = null;
                     int[] curH2 = {fullH};
                     javax.swing.Timer closeTimer = new javax.swing.Timer(16, null);
                     closeTimer.addActionListener(ev -> {
-                        curH2[0] = Math.max(curH2[0] - 20, 0);
+                        curH2[0] = Math.max(curH2[0] - 30, 0);
                         if (closingVP != null) {
                             closingVP.setPreferredSize(new Dimension(230, curH2[0]));
                             closingVP.setViewPosition(new java.awt.Point(0, fullH - curH2[0]));
@@ -1130,7 +1130,7 @@ private String openBankItemName = null;
                     int[] curH3 = {fullH2};
                     javax.swing.Timer closeTimer2 = new javax.swing.Timer(16, null);
                     closeTimer2.addActionListener(ev -> {
-                        curH3[0] = Math.max(curH3[0] - 20, 0);
+                        curH3[0] = Math.max(curH3[0] - 30, 0);
                         if (closingVP2 != null) {
                             closingVP2.setPreferredSize(new Dimension(230, curH3[0]));
                             closingVP2.setViewPosition(new java.awt.Point(0, fullH2 - curH3[0]));
@@ -1192,7 +1192,7 @@ private String openBankItemName = null;
                     int[] curH = {0};
                     javax.swing.Timer openTimer = new javax.swing.Timer(16, null);
                     openTimer.addActionListener(ev -> {
-                        curH[0] = Math.min(curH[0] + 20, targetFinal);
+                        curH[0] = Math.min(curH[0] + 30, targetFinal);
                         detailViewport.setPreferredSize(new Dimension(230, curH[0]));
                         detailViewport.setViewPosition(new java.awt.Point(0, targetFinal - curH[0]));
                         detailViewport.revalidate();
