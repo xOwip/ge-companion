@@ -548,9 +548,7 @@ private String openBankItemName = null;
         JPanel inner = new JPanel();
         inner.setLayout(new BoxLayout(inner, BoxLayout.Y_AXIS));
         inner.setBackground(BG_DETAIL);
-        inner.setBorder(new javax.swing.border.CompoundBorder(
-                new MatteBorder(0, 0, 2, 0, GOLD),
-                new EmptyBorder(6, 7, 6, 7)));
+        inner.setBorder(new EmptyBorder(6, 7, 6, 7));
         inner.add(buildDetailHeader(name, price, item.length > 6 ? item[6] : "?"));
         inner.add(Box.createVerticalStrut(6));
 
@@ -1057,20 +1055,35 @@ private String openBankItemName = null;
         JPanel detailSlot = new JPanel(new BorderLayout());
         detailSlot.setBackground(BG_DARK);
         detailSlot.setBorder(javax.swing.BorderFactory.createEmptyBorder());
-        detailSlot.setVisible(false);
         detailSlot.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        detailSlot.setVisible(false);
 
         row.addMouseListener(new MouseAdapter()
         {
+            // Toggle — click same item to close
             public void mouseClicked(MouseEvent e)
             {
-                // Toggle — click same item to close
                 if (name.equals(selectedItemName) && currentOpenSearchDetail != null)
                 {
-                    currentOpenSearchDetail.setVisible(false);
-                    currentOpenSearchDetail = null;
-                    if (currentOpenSearchRow != null)
-                    {
+                        final JPanel closingDetail = currentOpenSearchDetail;
+                        currentOpenSearchDetail = null;
+                        int[] curH2 = {closingDetail.getHeight()};
+                        javax.swing.Timer closeTimer = new javax.swing.Timer(16, null);
+                        closeTimer.addActionListener(ev -> {
+                            curH2[0] = Math.max(curH2[0] - 12, 0);
+                            closingDetail.setPreferredSize(new Dimension(230, curH2[0]));
+                            closingDetail.revalidate();
+                            if (curH2[0] <= 0)
+                            {
+                                closingDetail.setVisible(false);
+                                closingDetail.setPreferredSize(null);
+                                closeTimer.stop();
+                            }
+                        });
+                        closeTimer.start();
+                        if (currentOpenSearchRow != null)
+                        {
                         currentOpenSearchRow.setBackground(currentOpenSearchRowColor);
                         currentOpenSearchRow.setBorder(new MatteBorder(0, 3, 0, 1, new Color(26, 24, 24)));
                         for (Component c : currentOpenSearchRow.getComponents())
@@ -1101,7 +1114,22 @@ private String openBankItemName = null;
                 // Close previous
                 if (currentOpenSearchDetail != null)
                 {
-                    currentOpenSearchDetail.setVisible(false);
+                    final JPanel closingDetail2 = currentOpenSearchDetail;
+                    currentOpenSearchDetail = null;
+                    int[] curH3 = {closingDetail2.getHeight()};
+                    javax.swing.Timer closeTimer2 = new javax.swing.Timer(16, null);
+                    closeTimer2.addActionListener(ev -> {
+                        curH3[0] = Math.max(curH3[0] - 12, 0);
+                        closingDetail2.setPreferredSize(new Dimension(230, curH3[0]));
+                        closingDetail2.revalidate();
+                        if (curH3[0] <= 0)
+                        {
+                            closingDetail2.setVisible(false);
+                            closingDetail2.setPreferredSize(null);
+                            closeTimer2.stop();
+                        }
+                    });
+                    closeTimer2.start();
                 }
                 if (currentOpenSearchRow != null)
                 {
@@ -1139,7 +1167,28 @@ private String openBankItemName = null;
 
                 detailSlot.removeAll();
                 detailSlot.add(buildInlineDetail(item, false), BorderLayout.CENTER);
+                detailSlot.revalidate();
                 detailSlot.setVisible(true);
+                javax.swing.SwingUtilities.invokeLater(() -> {
+                    int target = detailSlot.getPreferredSize().height;
+                    if (target <= 0) target = 150;
+                    final int targetFinal = target;
+                    detailSlot.setPreferredSize(new Dimension(230, 0));
+                    detailSlot.revalidate();
+                    int[] curH = {0};
+                    javax.swing.Timer openTimer = new javax.swing.Timer(16, null);
+                    openTimer.addActionListener(ev -> {
+                        curH[0] = Math.min(curH[0] + 20, targetFinal);
+                        detailSlot.setPreferredSize(new Dimension(230, curH[0]));
+                        detailSlot.revalidate();
+                        if (curH[0] >= targetFinal)
+                        {
+                            detailSlot.setPreferredSize(null);
+                            openTimer.stop();
+                        }
+                    });
+                    openTimer.start();
+                });
                 scheduleRepaint(detailSlot);
                 final String[] itemData = item;
                 searchReopenAction = () -> {
