@@ -97,7 +97,13 @@ public class GECompanionPanel extends PluginPanel
     private JPanel currentOpenWatchlistDetail = null;
     private JPanel currentOpenBankDetail = null;
     private JPanel currentOpenSearchRow = null;
+    private JPanel currentOpenSearchInfo = null;
+    private JPanel currentOpenSearchIconWrapper = null;
+    private JPanel currentOpenSearchDeltaRow = null;
     private JPanel currentOpenWatchlistRow = null;
+    private JPanel currentOpenWatchlistInfo = null;
+    private JPanel currentOpenWatchlistIconWrapper = null;
+    private JPanel currentOpenWatchlistDeltaRow = null;
     private JPanel currentOpenBankRow = null;
     private Color currentOpenSearchRowColor = BG_DARK;
     private Color currentOpenWatchlistRowColor = BG_DARK;
@@ -1087,6 +1093,10 @@ private String openBankItemName = null;
                         if (curH2[0] <= 0)
                         {
                             if (closingVP != null) { closingVP.setVisible(false); closingVP.setPreferredSize(null); }
+                            if (currentOpenSearchRow != null) { currentOpenSearchRow.setBackground(currentOpenSearchRowColor); }
+                            if (currentOpenSearchInfo != null) { currentOpenSearchInfo.setBackground(currentOpenSearchRowColor); currentOpenSearchInfo = null; }
+                            if (currentOpenSearchIconWrapper != null) { currentOpenSearchIconWrapper.setBackground(currentOpenSearchRowColor); currentOpenSearchIconWrapper = null; }
+                            if (currentOpenSearchDeltaRow != null) { currentOpenSearchDeltaRow.setBackground(currentOpenSearchRowColor); currentOpenSearchDeltaRow = null; }
                             searchResultsPanel.revalidate();
                             searchResultsPanel.repaint();
                             closeTimer.stop();
@@ -1141,6 +1151,10 @@ private String openBankItemName = null;
                         if (curH3[0] <= 0)
                         {
                             if (closingVP2 != null) { closingVP2.setVisible(false); closingVP2.setPreferredSize(null); }
+                            if (currentOpenSearchRow != null) { currentOpenSearchRow.setBackground(currentOpenSearchRowColor); }
+                            if (currentOpenSearchInfo != null) { currentOpenSearchInfo.setBackground(currentOpenSearchRowColor); currentOpenSearchInfo = null; }
+                            if (currentOpenSearchIconWrapper != null) { currentOpenSearchIconWrapper.setBackground(currentOpenSearchRowColor); currentOpenSearchIconWrapper = null; }
+                            if (currentOpenSearchDeltaRow != null) { currentOpenSearchDeltaRow.setBackground(currentOpenSearchRowColor); currentOpenSearchDeltaRow = null; }
                             searchResultsPanel.revalidate();
                             searchResultsPanel.repaint();
                             closeTimer2.stop();
@@ -1177,6 +1191,9 @@ private String openBankItemName = null;
                 currentOpenSearchRow = row;
                 currentOpenSearchRowColor = rowBg;
                 currentOpenSearchDetail = detailSlot;
+                currentOpenSearchInfo = info;
+                currentOpenSearchIconWrapper = iconWrapper;
+                currentOpenSearchDeltaRow = deltaLimitRow;
                 suppressSearchChange = true;
                 searchField.setText(name);
                 searchField.selectAll();
@@ -1484,6 +1501,10 @@ private String openBankItemName = null;
                         if (curH2[0] <= 0)
                         {
                             if (closingVP != null) { closingVP.setVisible(false); closingVP.setPreferredSize(null); }
+                            if (currentOpenWatchlistRow != null) { currentOpenWatchlistRow.setBackground(currentOpenWatchlistRowColor); }
+                            if (currentOpenWatchlistInfo != null) { currentOpenWatchlistInfo.setBackground(currentOpenWatchlistRowColor); currentOpenWatchlistInfo = null; }
+                            if (currentOpenWatchlistIconWrapper != null) { currentOpenWatchlistIconWrapper.setBackground(currentOpenWatchlistRowColor); currentOpenWatchlistIconWrapper = null; }
+                            if (currentOpenWatchlistDeltaRow != null) { currentOpenWatchlistDeltaRow.setBackground(currentOpenWatchlistRowColor); currentOpenWatchlistDeltaRow = null; }
                             watchlistListPanel.revalidate();
                             watchlistListPanel.repaint();
                             closeTimer.stop();
@@ -1534,6 +1555,10 @@ private String openBankItemName = null;
                         if (curH3[0] <= 0)
                         {
                             if (closingVP2 != null) { closingVP2.setVisible(false); closingVP2.setPreferredSize(null); }
+                            if (currentOpenWatchlistRow != null) { currentOpenWatchlistRow.setBackground(currentOpenWatchlistRowColor); }
+                            if (currentOpenWatchlistInfo != null) { currentOpenWatchlistInfo.setBackground(currentOpenWatchlistRowColor); currentOpenWatchlistInfo = null; }
+                            if (currentOpenWatchlistIconWrapper != null) { currentOpenWatchlistIconWrapper.setBackground(currentOpenWatchlistRowColor); currentOpenWatchlistIconWrapper = null; }
+                            if (currentOpenWatchlistDeltaRow != null) { currentOpenWatchlistDeltaRow.setBackground(currentOpenWatchlistRowColor); currentOpenWatchlistDeltaRow = null; }
                             watchlistListPanel.revalidate();
                             watchlistListPanel.repaint();
                             closeTimer2.stop();
@@ -1564,6 +1589,9 @@ private String openBankItemName = null;
                 currentOpenWatchlistRow = row;
                 currentOpenWatchlistRowColor = rowBg;
                 currentOpenWatchlistDetail = detailSlot;
+                currentOpenWatchlistInfo = info;
+                currentOpenWatchlistIconWrapper = iconWrapper;
+                currentOpenWatchlistDeltaRow = deltaLimitRow;
 
                 detailSlot.removeAll();
                 detailSlot.add(buildInlineDetail(item, true), BorderLayout.CENTER);
