@@ -86,6 +86,25 @@ public class GECompanionPanel extends PluginPanel
     private java.util.Map<Integer, Long> buyVolume1h = new java.util.HashMap<>();
     private java.util.Map<Integer, Long> sellVolume1h = new java.util.HashMap<>();
 
+    // Price graph cache — key: "itemId_timeframe" e.g. "20997_30d"
+    private final java.util.Map<String, java.util.List<PricePoint>> timeseriesCache = new java.util.HashMap<>();
+
+    // Price point for graph data
+    static class PricePoint {
+        long timestamp;
+        long buyPrice;
+        long sellPrice;
+        int buyVolume;
+        int sellVolume;
+        PricePoint(long timestamp, long buyPrice, long sellPrice, int buyVolume, int sellVolume) {
+            this.timestamp = timestamp;
+            this.buyPrice = buyPrice;
+            this.sellPrice = sellPrice;
+            this.buyVolume = buyVolume;
+            this.sellVolume = sellVolume;
+        }
+    }
+
     // Pinned/watched items
     private final java.util.Map<Integer, javax.swing.ImageIcon> iconCache = new java.util.HashMap<>();
     private final java.util.List<String> pinnedItems = new java.util.ArrayList<>();
@@ -654,6 +673,99 @@ private String openBankItemName = null;
             } catch (Exception ex) { }
         });
         footer.add(wikiBtn);
+
+// ── Show Price Chart button ────────────────────────────────────
+        int graphItemId = -1;
+        try { if (item.length > 12) graphItemId = Integer.parseInt(item[12]); } catch (NumberFormatException ignored) {}
+        long currentMidPrice = 0;
+        try { currentMidPrice = Long.parseLong(item[1]); } catch (NumberFormatException ignored) {}
+
+        final boolean[] graphOpen = {false};
+        final JPanel[] graphPanelHolder = {null};
+
+        JButton chartBtn = buildFooterBtn("▼ Show Price Chart", false);
+        chartBtn.setMaximumSize(new Dimension(220, 24));
+        chartBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        inner.add(Box.createVerticalStrut(4));
+        inner.add(chartBtn);
+        inner.add(Box.createVerticalStrut(4));
+
+        // ── graph viewport (animated drawer) ──────────────────────────
+        JViewport graphViewport = new JViewport();
+        graphViewport.setBackground(new Color(14, 12, 13));
+        graphViewport.setVisible(false);
+        graphViewport.setPreferredSize(new Dimension(1, 0));
+        graphViewport.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+        inner.add(graphViewport);
+        inner.add(Box.createVerticalStrut(4));
+
+        final int graphItemIdFinal = graphItemId;
+        final long currentMidPriceFinal = currentMidPrice;
+
+        chartBtn.addActionListener(e -> {
+            if (!graphOpen[0]) {
+                // build graph panel on first open
+                if (graphPanelHolder[0] == null) {
+                    String tf = config.defaultChartRange().toString().equals("Day") ? "7D"
+                            : config.defaultChartRange().toString().equals("Week") ? "7D"
+                              : config.defaultChartRange().toString().equals("Month") ? "30D"
+                                : config.defaultChartRange().toString().equals("Quarter") ? "3M"
+                                  : config.defaultChartRange().toString().equals("Year") ? "1Y" : "All";
+                    graphPanelHolder[0] = buildGraphPanel(graphItemIdFinal, currentMidPriceFinal, tf);
+                }
+                graphViewport.setView(graphPanelHolder[0]);
+                graphViewport.setVisible(true);
+
+                int fullH = graphPanelHolder[0].getPreferredSize().height;
+                if (fullH <= 0) fullH = 200;
+                final int targetH = fullH;
+                graphViewport.setPreferredSize(new Dimension(1, 0));
+                graphViewport.setViewPosition(new java.awt.Point(0, targetH));
+                int[] curH = {0};
+                javax.swing.Timer openTimer = new javax.swing.Timer(16, null);
+                openTimer.addActionListener(ev -> {
+                    curH[0] = Math.min(curH[0] + 30, targetH);
+                    graphViewport.setPreferredSize(new Dimension(1, curH[0]));
+                    graphViewport.setViewPosition(new java.awt.Point(0, targetH - curH[0]));
+                    graphViewport.revalidate();
+                    if (curH[0] >= targetH) {
+                        openTimer.stop();
+                        graphViewport.setPreferredSize(new Dimension(1, targetH));
+                        graphViewport.revalidate();
+                    }
+                });
+                openTimer.start();
+                graphOpen[0] = true;
+                chartBtn.setText("▲ Hide Price Chart");
+                chartBtn.setForeground(GOLD);
+                chartBtn.setBorder(BorderFactory.createLineBorder(GOLD));
+            } else {
+                // close animation
+                int fullH = graphViewport.getView() != null
+                        ? graphViewport.getView().getPreferredSize().height : 200;
+                if (fullH <= 0) fullH = 200;
+                final int targetH = fullH;
+                int[] curH = {targetH};
+                javax.swing.Timer closeTimer = new javax.swing.Timer(16, null);
+                closeTimer.addActionListener(ev -> {
+                    curH[0] = Math.max(curH[0] - 30, 0);
+                    graphViewport.setPreferredSize(new Dimension(1, curH[0]));
+                    graphViewport.setViewPosition(new java.awt.Point(0, targetH - curH[0]));
+                    graphViewport.revalidate();
+                    if (curH[0] <= 0) {
+                        closeTimer.stop();
+                        graphViewport.setVisible(false);
+                        graphViewport.setPreferredSize(new Dimension(1, 0));
+                        graphViewport.revalidate();
+                    }
+                });
+                closeTimer.start();
+                graphOpen[0] = false;
+                chartBtn.setText("▼ Show Price Chart");
+                chartBtn.setForeground(TAB_INACTIVE);
+                chartBtn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+            }
+        });
 
         inner.add(footer);
         det.add(inner, BorderLayout.CENTER);
@@ -2555,6 +2667,83 @@ private String openBankItemName = null;
     }).start();
 }
 
+    private void fetchTimeseries(int itemId, String timeframe, java.util.function.Consumer<java.util.List<PricePoint>> callback)
+    {
+        String cacheKey = itemId + "_" + timeframe;
+        if (timeseriesCache.containsKey(cacheKey))
+        {
+            callback.accept(timeseriesCache.get(cacheKey));
+            return;
+        }
+
+        new Thread(() ->
+        {
+            try
+            {
+                String timestep;
+                switch (timeframe)
+                {
+                    case "7D":  timestep = "1h";  break;
+                    case "30D": timestep = "6h";  break;
+                    case "3M":
+                    case "1Y":
+                    case "All": timestep = "24h"; break;
+                    default:    timestep = "6h";  break;
+                }
+
+                String url = "https://prices.runescape.wiki/api/v1/osrs/timeseries?timestep=" + timestep + "&id=" + itemId;
+                okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
+                okhttp3.Request request = new okhttp3.Request.Builder()
+                        .url(url)
+                        .header("User-Agent", "GE Companion RuneLite Plugin")
+                        .build();
+
+                try (okhttp3.Response response = client.newCall(request).execute())
+                {
+                    if (!response.isSuccessful() || response.body() == null) return;
+                    String body = response.body().string();
+                    org.json.JSONObject json = new org.json.JSONObject(body);
+                    org.json.JSONArray data = json.getJSONArray("data");
+
+                    java.util.List<PricePoint> points = new java.util.ArrayList<>();
+                    for (int i = 0; i < data.length(); i++)
+                    {
+                        org.json.JSONObject obj = data.getJSONObject(i);
+                        long timestamp  = obj.optLong("timestamp", 0);
+                        long buyPrice   = obj.optLong("avgHighPrice", 0);
+                        long sellPrice  = obj.optLong("avgLowPrice", 0);
+                        int  buyVolume  = obj.optInt("highPriceVolume", 0);
+                        int  sellVolume = obj.optInt("lowPriceVolume", 0);
+                        if (timestamp > 0)
+                            points.add(new PricePoint(timestamp, buyPrice, sellPrice, buyVolume, sellVolume));
+                    }
+
+                    // Filter to correct date range
+                    long now = System.currentTimeMillis() / 1000L;
+                    long cutoff = 0;
+                    switch (timeframe)
+                    {
+                        case "7D":  cutoff = now - 7L   * 86400; break;
+                        case "30D": cutoff = now - 30L  * 86400; break;
+                        case "3M":  cutoff = now - 90L  * 86400; break;
+                        case "1Y":  cutoff = now - 365L * 86400; break;
+                        default:    cutoff = 0; break;
+                    }
+                    final long fc = cutoff;
+                    java.util.List<PricePoint> filtered = new java.util.ArrayList<>();
+                    for (PricePoint p : points)
+                        if (p.timestamp >= fc) filtered.add(p);
+
+                    timeseriesCache.put(cacheKey, filtered);
+                    javax.swing.SwingUtilities.invokeLater(() -> callback.accept(filtered));
+                }
+            }
+            catch (Exception e)
+            {
+                // silently fail — graph just won't render
+            }
+        }).start();
+    }
 private String[] buildItemDataFromCache(String name)
     {
         String normalizedName = name.toLowerCase()
@@ -2589,7 +2778,7 @@ private String[] buildItemDataFromCache(String name)
         long lastTraded = (pd.highTime >= pd.lowTime) ? pd.high : pd.low;
         String lastTradedStr = lastTraded > 0 ? String.valueOf(lastTraded) : "0";
         String lastTradedTime = pd.getTimeSince();
-        return new String[]{name, price, buyPrice, sellPrice, "0", delta, limitStr, gpChangeStr, buyQty, sellQty, lastTradedStr, lastTradedTime};
+        return new String[]{name, price, buyPrice, sellPrice, "0", delta, limitStr, gpChangeStr, buyQty, sellQty, lastTradedStr, lastTradedTime, String.valueOf(id)};
     }
 
 
@@ -2706,6 +2895,402 @@ private String[] buildItemDataFromCache(String name)
         return headerRow;
     }
 
+    private JPanel buildGraphPanel(int itemId, long currentPrice, String initialTimeframe)
+    {
+        final String[] activeFrame = {initialTimeframe};
+        final java.util.List<PricePoint>[] pointsHolder = new java.util.List[]{null};
+        final boolean[] animating = {false};
+        final int[] crosshairIdx = {-1};
+
+        // ── outer wrapper ──────────────────────────────────────────────
+        JPanel wrapper = new JPanel();
+        wrapper.setLayout(new BoxLayout(wrapper, BoxLayout.Y_AXIS));
+        wrapper.setBackground(new Color(14, 12, 13));
+        wrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
+        wrapper.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+
+        // ── timeframe buttons ──────────────────────────────────────────
+        String[] frames = {"7D", "30D", "3M", "1Y", "All"};
+        JPanel tfBar = new JPanel(new GridLayout(1, 5, 2, 0));
+        tfBar.setBackground(new Color(14, 12, 13));
+        tfBar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
+        tfBar.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JButton[] tfBtns = new JButton[5];
+        for (int i = 0; i < frames.length; i++)
+        {
+            JButton b = new JButton(frames[i]);
+            b.setFont(new Font("Monospaced", Font.PLAIN, 10));
+            b.setFocusPainted(false);
+            b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            b.setBackground(new Color(14, 12, 13));
+            boolean active = frames[i].equals(initialTimeframe);
+            b.setForeground(active ? GOLD : TAB_INACTIVE);
+            b.setBorder(active
+                    ? BorderFactory.createLineBorder(GOLD)
+                    : BorderFactory.createLineBorder(new Color(58, 53, 48)));
+            tfBtns[i] = b;
+            tfBar.add(b);
+        }
+        wrapper.add(tfBar);
+        wrapper.add(Box.createVerticalStrut(4));
+
+        // ── legend ─────────────────────────────────────────────────────
+        JPanel legend = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        legend.setBackground(new Color(14, 12, 13));
+        legend.setMaximumSize(new Dimension(225, 16));
+        legend.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JLabel buyLeg  = new JLabel("— Buy");
+        buyLeg.setForeground(GOLD);
+        buyLeg.setFont(new Font("Monospaced", Font.PLAIN, 10));
+        JLabel sellLeg = new JLabel("— Sell");
+        sellLeg.setForeground(new Color(74, 122, 191));
+        sellLeg.setFont(new Font("Monospaced", Font.PLAIN, 10));
+        JLabel curLeg  = new JLabel("--- Current");
+        curLeg.setForeground(new Color(155, 89, 182));
+        curLeg.setFont(new Font("Monospaced", Font.PLAIN, 10));
+        legend.add(buyLeg);
+        legend.add(sellLeg);
+        legend.add(curLeg);
+        wrapper.add(legend);
+        wrapper.add(Box.createVerticalStrut(3));
+
+        // ── price canvas ───────────────────────────────────────────────
+        JPanel priceCanvas = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                int w = getWidth(), h = getHeight();
+                g2.setColor(new Color(14, 12, 13));
+                g2.fillRect(0, 0, w, h);
+
+                java.util.List<PricePoint> pts = pointsHolder[0];
+                if (pts == null || pts.size() < 2) {
+                    g2.setColor(new Color(110, 100, 90));
+                    g2.setFont(new Font("Monospaced", Font.PLAIN, 10));
+                    g2.drawString("Loading...", w / 2 - 25, h / 2);
+                    g2.dispose();
+                    return;
+                }
+
+                // price range
+                long minP = Long.MAX_VALUE, maxP = Long.MIN_VALUE;
+                for (PricePoint p : pts) {
+                    if (p.buyPrice  > 0) { minP = Math.min(minP, p.buyPrice);  maxP = Math.max(maxP, p.buyPrice); }
+                    if (p.sellPrice > 0) { minP = Math.min(minP, p.sellPrice); maxP = Math.max(maxP, p.sellPrice); }
+                }
+                if (currentPrice > 0) { minP = Math.min(minP, currentPrice); maxP = Math.max(maxP, currentPrice); }
+                if (minP == Long.MAX_VALUE) { g2.dispose(); return; }
+                long pad = Math.max((maxP - minP) / 8, 1);
+                minP -= pad; maxP += pad;
+                final long fMin = minP, fMax = maxP;
+
+                // grid lines
+                g2.setColor(new Color(40, 36, 34));
+                for (float pct : new float[]{0.25f, 0.5f, 0.75f}) {
+                    int y = (int)(h * pct);
+                    g2.drawLine(0, y, w, y);
+                }
+
+                // current price dashed line
+                if (currentPrice > 0 && currentPrice >= fMin && currentPrice <= fMax) {
+                    int cy = h - (int)((currentPrice - fMin) * h / Math.max(fMax - fMin, 1));
+                    g2.setColor(new Color(155, 89, 182));
+                    g2.setStroke(new java.awt.BasicStroke(1f, java.awt.BasicStroke.CAP_BUTT,
+                            java.awt.BasicStroke.JOIN_MITER, 10f, new float[]{4f, 3f}, 0f));
+                    g2.drawLine(0, cy, w, cy);
+                    g2.setStroke(new java.awt.BasicStroke(1f));
+                    g2.setFont(new Font("Monospaced", Font.PLAIN, 9));
+                    g2.drawString("current", w - 46, cy - 2);
+                }
+
+                int n = pts.size();
+                // helper: x position for index
+                // buy line
+                g2.setStroke(new java.awt.BasicStroke(1.4f));
+                g2.setColor(GOLD);
+                int[] bx = new int[n], by = new int[n];
+                for (int i = 0; i < n; i++) {
+                    bx[i] = (int)(i * (w - 1.0) / (n - 1));
+                    by[i] = pts.get(i).buyPrice > 0
+                            ? h - (int)((pts.get(i).buyPrice - fMin) * h / Math.max(fMax - fMin, 1))
+                            : -1;
+                }
+                for (int i = 0; i < n - 1; i++)
+                    if (by[i] >= 0 && by[i+1] >= 0)
+                        g2.drawLine(bx[i], by[i], bx[i+1], by[i+1]);
+
+                // sell line
+                g2.setColor(new Color(74, 122, 191));
+                int[] sx = new int[n], sy = new int[n];
+                for (int i = 0; i < n; i++) {
+                    sx[i] = bx[i];
+                    sy[i] = pts.get(i).sellPrice > 0
+                            ? h - (int)((pts.get(i).sellPrice - fMin) * h / Math.max(fMax - fMin, 1))
+                            : -1;
+                }
+                for (int i = 0; i < n - 1; i++)
+                    if (sy[i] >= 0 && sy[i+1] >= 0)
+                        g2.drawLine(sx[i], sy[i], sx[i+1], sy[i+1]);
+
+                // dots
+                g2.setStroke(new java.awt.BasicStroke(1f));
+                for (int i = 0; i < n; i++) {
+                    if (by[i] >= 0) { g2.setColor(GOLD); g2.fillOval(bx[i]-1, by[i]-1, 2, 2); }
+                    if (sy[i] >= 0) { g2.setColor(new Color(74, 122, 191)); g2.fillOval(sx[i]-1, sy[i]-1, 2, 2); }
+                }
+
+                // crosshair
+                int ci = crosshairIdx[0];
+                if (!animating[0] && ci >= 0 && ci < n) {
+                    int cx = bx[ci];
+                    // vertical line
+                    g2.setColor(new Color(200, 200, 200, 160));
+                    g2.setStroke(new java.awt.BasicStroke(1f, java.awt.BasicStroke.CAP_BUTT,
+                            java.awt.BasicStroke.JOIN_MITER, 10f, new float[]{3f, 3f}, 0f));
+                    g2.drawLine(cx, 0, cx, h);
+                    g2.setStroke(new java.awt.BasicStroke(1f));
+
+                    PricePoint cp = pts.get(ci);
+                    // buy dot + label
+                    if (by[ci] >= 0) {
+                        g2.setColor(new Color(14, 12, 13));
+                        g2.fillOval(bx[ci]-4, by[ci]-4, 8, 8);
+                        g2.setColor(GOLD);
+                        g2.drawOval(bx[ci]-4, by[ci]-4, 8, 8);
+                        g2.fillOval(bx[ci]-2, by[ci]-2, 4, 4);
+                    }
+                    if (sy[ci] >= 0) {
+                        g2.setColor(new Color(14, 12, 13));
+                        g2.fillOval(sx[ci]-4, sy[ci]-4, 8, 8);
+                        g2.setColor(new Color(74, 122, 191));
+                        g2.drawOval(sx[ci]-4, sy[ci]-4, 8, 8);
+                        g2.fillOval(sx[ci]-2, sy[ci]-2, 4, 4);
+                    }
+
+                    // floating price labels
+                    g2.setFont(new Font("Monospaced", Font.PLAIN, 9));
+                    FontMetrics fm = g2.getFontMetrics();
+                    int labelW = 82, labelH = 14;
+                    int gap = 3;
+
+                    int buyLabelY  = by[ci] >= 0 ? by[ci] - labelH / 2 : -999;
+                    int sellLabelY = sy[ci] >= 0 ? sy[ci] - labelH / 2 : -999;
+
+                    // collision avoidance
+                    if (by[ci] >= 0 && sy[ci] >= 0 && Math.abs(by[ci] - sy[ci]) < labelH + gap) {
+                        int mid = (by[ci] + sy[ci]) / 2;
+                        buyLabelY  = mid - labelH - gap / 2;
+                        sellLabelY = mid + gap / 2;
+                    }
+
+                    boolean nearRight = cx > w - labelW - 6;
+                    int lx = nearRight ? cx - labelW - 6 : cx + 6;
+
+                    if (by[ci] >= 0) {
+                        String buyStr = String.format("%,d", cp.buyPrice);
+                        g2.setColor(new Color(30, 25, 10));
+                        g2.fillRect(lx, buyLabelY, labelW, labelH);
+                        g2.setColor(GOLD);
+                        g2.drawRect(lx, buyLabelY, labelW, labelH);
+                        g2.drawString(buyStr, lx + 3, buyLabelY + labelH - 3);
+                    }
+                    if (sy[ci] >= 0) {
+                        String sellStr = String.format("%,d", cp.sellPrice);
+                        g2.setColor(new Color(10, 15, 30));
+                        g2.fillRect(lx, sellLabelY, labelW, labelH);
+                        g2.setColor(new Color(74, 122, 191));
+                        g2.drawRect(lx, sellLabelY, labelW, labelH);
+                        g2.drawString(sellStr, lx + 3, sellLabelY + labelH - 3);
+                    }
+                }
+                g2.dispose();
+            }
+        };
+        priceCanvas.setPreferredSize(new Dimension(1, 80));
+        priceCanvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
+        priceCanvas.setMinimumSize(new Dimension(0, 80));
+        priceCanvas.setBackground(new Color(14, 12, 13));
+        priceCanvas.setAlignmentX(Component.LEFT_ALIGNMENT);
+        wrapper.add(priceCanvas);
+        wrapper.add(Box.createVerticalStrut(3));
+
+        // ── volume label ───────────────────────────────────────────────
+        JPanel volLabelRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        volLabelRow.setBackground(new Color(14, 12, 13));
+        volLabelRow.setMaximumSize(new Dimension(225, 14));
+        volLabelRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JLabel volLbl  = new JLabel("Volume");
+        volLbl.setForeground(new Color(110, 100, 90));
+        volLbl.setFont(new Font("Monospaced", Font.PLAIN, 9));
+        JLabel volBuyL = new JLabel("■ Buy");
+        volBuyL.setForeground(GOLD);
+        volBuyL.setFont(new Font("Monospaced", Font.PLAIN, 9));
+        JLabel volSelL = new JLabel("■ Sell");
+        volSelL.setForeground(new Color(74, 122, 191));
+        volSelL.setFont(new Font("Monospaced", Font.PLAIN, 9));
+        volLabelRow.add(volLbl);
+        volLabelRow.add(volBuyL);
+        volLabelRow.add(volSelL);
+        wrapper.add(volLabelRow);
+
+        // ── volume canvas ──────────────────────────────────────────────
+        JPanel volCanvas = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g.create();
+                int w = getWidth(), h = getHeight();
+                g2.setColor(new Color(14, 12, 13));
+                g2.fillRect(0, 0, w, h);
+
+                java.util.List<PricePoint> pts = pointsHolder[0];
+                if (pts == null || pts.size() < 2) { g2.dispose(); return; }
+                int n = pts.size();
+
+                long maxVol = 1;
+                for (PricePoint p : pts)
+                    maxVol = Math.max(maxVol, Math.max(p.buyVolume, p.sellVolume));
+
+                int ci = crosshairIdx[0];
+                float barW = (float)(w) / (n * 2 + n + 1);
+                if (barW < 1) barW = 1;
+
+                for (int i = 0; i < n; i++) {
+                    PricePoint p = pts.get(i);
+                    int x = (int)(i * (w - 1.0) / (n - 1));
+                    boolean hovered = (i == ci);
+                    float alpha = (!animating[0] && ci >= 0 && !hovered) ? 0.15f : 1.0f;
+
+                    // buy bar
+                    int bh = (int)((double)p.buyVolume / maxVol * h);
+                    g2.setColor(new Color(GOLD.getRed(), GOLD.getGreen(), GOLD.getBlue(), (int)(255 * alpha)));
+                    int bx2 = Math.max(0, x - (int)barW - 1);
+                    g2.fillRect(bx2, h - bh, (int)barW, bh);
+
+                    // sell bar
+                    int sh = (int)((double)p.sellVolume / maxVol * h);
+                    g2.setColor(new Color(74, 122, 191, (int)(255 * alpha)));
+                    g2.fillRect(x + 1, h - sh, (int)barW, sh);
+                }
+                g2.dispose();
+            }
+        };
+        volCanvas.setPreferredSize(new Dimension(1, 28));
+        volCanvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 28));
+        volCanvas.setMinimumSize(new Dimension(0, 28));
+        volCanvas.setBackground(new Color(14, 12, 13));
+        volCanvas.setAlignmentX(Component.LEFT_ALIGNMENT);
+        wrapper.add(volCanvas);
+        wrapper.add(Box.createVerticalStrut(2));
+
+        // ── date label ─────────────────────────────────────────────────
+        JLabel dateLabel = new JLabel(" ", SwingConstants.CENTER);
+        dateLabel.setForeground(new Color(110, 100, 90));
+        dateLabel.setFont(new Font("Monospaced", Font.PLAIN, 9));
+        dateLabel.setMaximumSize(new Dimension(225, 14));
+        dateLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        wrapper.add(dateLabel);
+        wrapper.add(Box.createVerticalStrut(4));
+
+        // ── mouse interaction ──────────────────────────────────────────
+        priceCanvas.addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                java.util.List<PricePoint> pts = pointsHolder[0];
+                if (animating[0] || pts == null || pts.size() < 2) return;
+                int n = pts.size();
+                int w = priceCanvas.getWidth();
+                int nearest = 0;
+                double minDist = Double.MAX_VALUE;
+                for (int i = 0; i < n; i++) {
+                    int px = (int)(i * (w - 1.0) / (n - 1));
+                    double dist = Math.abs(e.getX() - px);
+                    if (dist < minDist) { minDist = dist; nearest = i; }
+                }
+                crosshairIdx[0] = nearest;
+                PricePoint cp = pts.get(nearest);
+                java.time.Instant inst = java.time.Instant.ofEpochSecond(cp.timestamp);
+                java.time.LocalDateTime ldt = java.time.LocalDateTime.ofInstant(inst, java.time.ZoneId.systemDefault());
+                String fmt = activeFrame[0].equals("7D")
+                        ? String.format("%s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
+                        : String.format("%d %s %d", ldt.getDayOfMonth(),
+                        ldt.getMonth().toString().substring(0,3), ldt.getYear());
+                dateLabel.setText(fmt);
+                priceCanvas.repaint();
+                volCanvas.repaint();
+            }
+        });
+        priceCanvas.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseExited(MouseEvent e) {
+                crosshairIdx[0] = -1;
+                dateLabel.setText(" ");
+                priceCanvas.repaint();
+                volCanvas.repaint();
+            }
+        });
+
+        // ── timeframe button wiring ────────────────────────────────────
+        for (int i = 0; i < frames.length; i++) {
+            final String frame = frames[i];
+            final int fi = i;
+            tfBtns[i].addActionListener(e -> {
+                if (frame.equals(activeFrame[0])) return;
+                activeFrame[0] = frame;
+                crosshairIdx[0] = -1;
+                dateLabel.setText(" ");
+
+                // update button styles
+                for (int j = 0; j < frames.length; j++) {
+                    boolean a = frames[j].equals(frame);
+                    tfBtns[j].setForeground(a ? GOLD : TAB_INACTIVE);
+                    tfBtns[j].setBorder(a
+                            ? BorderFactory.createLineBorder(GOLD)
+                            : BorderFactory.createLineBorder(new Color(58, 53, 48)));
+                }
+
+                // load data then animate in
+                pointsHolder[0] = null;
+                priceCanvas.repaint();
+                volCanvas.repaint();
+
+                fetchTimeseries(itemId, frame, pts -> {
+                    pointsHolder[0] = pts;
+                    animating[0] = true;
+
+                    // animate price canvas grow
+                    int fullH = 80;
+                    int[] curH = {0};
+                    javax.swing.Timer t = new javax.swing.Timer(16, null);
+                    t.addActionListener(ev -> {
+                        curH[0] = Math.min(curH[0] + 30, fullH);
+                        priceCanvas.setPreferredSize(new Dimension(225, curH[0]));
+                        priceCanvas.revalidate();
+                        priceCanvas.repaint();
+                        volCanvas.repaint();
+                        if (curH[0] >= fullH) {
+                            t.stop();
+                            animating[0] = false;
+                            priceCanvas.setPreferredSize(new Dimension(1, 80));
+                            priceCanvas.revalidate();
+                        }
+                    });
+                    t.start();
+                });
+            });
+        }
+
+        // ── initial data load ──────────────────────────────────────────
+        fetchTimeseries(itemId, initialTimeframe, pts -> {
+            pointsHolder[0] = pts;
+            priceCanvas.repaint();
+            volCanvas.repaint();
+        });
+
+        return wrapper;
+    }
     private JPanel buildStatBox(String label, String value, Color valueColor, String tooltip)
     {
         JPanel box = new JPanel();
