@@ -2992,20 +2992,20 @@ private String[] buildItemDataFromCache(String name)
 
 // Current price value on second line
         JLabel curPriceLabel = new JLabel(currentPrice > 0 ? String.format("%,d gp", currentPrice) : "");
-        curPriceLabel.setForeground(new Color(155, 89, 182));
         curPriceLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
         curPriceLabel.setBorder(new EmptyBorder(0, 105, 0, 0));
         curPriceLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        curPriceLabel.setForeground(new Color(0, 0, 0, 0));
         curPriceLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         curLeg.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         final JPanel[] priceCanvasHolder = {null};
         curLeg.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) { currentLineHighlighted[0] = true; if (priceCanvasHolder[0] != null) priceCanvasHolder[0].repaint(); }
-            public void mouseExited(MouseEvent e)  { currentLineHighlighted[0] = false; if (priceCanvasHolder[0] != null) priceCanvasHolder[0].repaint(); }
+            public void mouseEntered(MouseEvent e) { currentLineHighlighted[0] = true; curPriceLabel.setForeground(new Color(185, 109, 222)); if (priceCanvasHolder[0] != null) priceCanvasHolder[0].repaint(); }
+            public void mouseExited(MouseEvent e)  { currentLineHighlighted[0] = false; curPriceLabel.setForeground(new Color(0, 0, 0, 0)); if (priceCanvasHolder[0] != null) priceCanvasHolder[0].repaint(); }
         });
         curPriceLabel.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) { currentLineHighlighted[0] = true; if (priceCanvasHolder[0] != null) priceCanvasHolder[0].repaint(); }
-            public void mouseExited(MouseEvent e)  { currentLineHighlighted[0] = false; if (priceCanvasHolder[0] != null) priceCanvasHolder[0].repaint(); }
+            public void mouseEntered(MouseEvent e) { currentLineHighlighted[0] = true; curPriceLabel.setForeground(new Color(185, 109, 222)); if (priceCanvasHolder[0] != null) priceCanvasHolder[0].repaint(); }
+            public void mouseExited(MouseEvent e)  { currentLineHighlighted[0] = false; curPriceLabel.setForeground(new Color(0, 0, 0, 0)); if (priceCanvasHolder[0] != null) priceCanvasHolder[0].repaint(); }
         });
         wrapper.add(legend);
         wrapper.add(curPriceLabel);
