@@ -575,7 +575,7 @@ private String openBankItemName = null;
         inner.setLayout(new BoxLayout(inner, BoxLayout.Y_AXIS));
         inner.setBackground(BG_DETAIL);
         inner.setBorder(new javax.swing.border.CompoundBorder(
-                new MatteBorder(0, 0, 2, 0, GOLD),
+                new MatteBorder(0, 0, 1, 0, GOLD),
                 new EmptyBorder(6, 7, 6, 7)));
         inner.add(buildDetailHeader(name, price, item.length > 6 ? item[6] : "?"));
         inner.add(Box.createVerticalStrut(6));
