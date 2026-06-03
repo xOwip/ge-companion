@@ -2937,6 +2937,7 @@ private String[] buildItemDataFromCache(String name)
         final String[] activeFrame = {initialTimeframe};
         final java.util.List<PricePoint>[] pointsHolder = new java.util.List[]{null};
         final boolean[] animating = {false};
+        final boolean[] currentLineHighlighted = {false};
         final int[] crosshairIdx = {-1};
 
         // ── outer wrapper ──────────────────────────────────────────────
@@ -2974,7 +2975,7 @@ private String[] buildItemDataFromCache(String name)
         // ── legend ─────────────────────────────────────────────────────
         JPanel legend = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
         legend.setBackground(new Color(14, 12, 13));
-        legend.setMaximumSize(new Dimension(225, 16));
+        legend.setMaximumSize(new Dimension(Integer.MAX_VALUE, 16));
         legend.setAlignmentX(Component.LEFT_ALIGNMENT);
         JLabel buyLeg  = new JLabel("— Buy");
         buyLeg.setForeground(GOLD);
@@ -2988,7 +2989,26 @@ private String[] buildItemDataFromCache(String name)
         legend.add(buyLeg);
         legend.add(sellLeg);
         legend.add(curLeg);
+
+// Current price value on second line
+        JLabel curPriceLabel = new JLabel(currentPrice > 0 ? String.format("%,d gp", currentPrice) : "");
+        curPriceLabel.setForeground(new Color(155, 89, 182));
+        curPriceLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
+        curPriceLabel.setBorder(new EmptyBorder(0, 105, 0, 0));
+        curPriceLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        curPriceLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        curLeg.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        final JPanel[] priceCanvasHolder = {null};
+        curLeg.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) { currentLineHighlighted[0] = true; if (priceCanvasHolder[0] != null) priceCanvasHolder[0].repaint(); }
+            public void mouseExited(MouseEvent e)  { currentLineHighlighted[0] = false; if (priceCanvasHolder[0] != null) priceCanvasHolder[0].repaint(); }
+        });
+        curPriceLabel.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) { currentLineHighlighted[0] = true; if (priceCanvasHolder[0] != null) priceCanvasHolder[0].repaint(); }
+            public void mouseExited(MouseEvent e)  { currentLineHighlighted[0] = false; if (priceCanvasHolder[0] != null) priceCanvasHolder[0].repaint(); }
+        });
         wrapper.add(legend);
+        wrapper.add(curPriceLabel);
         wrapper.add(Box.createVerticalStrut(3));
 
         // ── price canvas ───────────────────────────────────────────────
@@ -3030,21 +3050,8 @@ private String[] buildItemDataFromCache(String name)
                     g2.drawLine(0, y, w, y);
                 }
 
-                // current price dashed line
-                if (currentPrice > 0 && currentPrice >= fMin && currentPrice <= fMax) {
-                    int cy = h - (int)((currentPrice - fMin) * h / Math.max(fMax - fMin, 1));
-                    g2.setColor(new Color(155, 89, 182));
-                    g2.setStroke(new java.awt.BasicStroke(1f, java.awt.BasicStroke.CAP_BUTT,
-                            java.awt.BasicStroke.JOIN_MITER, 10f, new float[]{4f, 3f}, 0f));
-                    g2.drawLine(0, cy, w, cy);
-                    g2.setStroke(new java.awt.BasicStroke(1f));
-                    g2.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
-                    g2.drawString("current", w - 46, cy - 2);
-                }
-
                 int n = pts.size();
-                // helper: x position for index
-                // buy line
+// buy line
                 g2.setStroke(new java.awt.BasicStroke(1.4f));
                 g2.setColor(GOLD);
                 int[] bx = new int[n], by = new int[n];
@@ -3071,11 +3078,28 @@ private String[] buildItemDataFromCache(String name)
                     if (sy[i] >= 0 && sy[i+1] >= 0)
                         g2.drawLine(sx[i], sy[i], sx[i+1], sy[i+1]);
 
-                // dots
+// dots
                 g2.setStroke(new java.awt.BasicStroke(1f));
                 for (int i = 0; i < n; i++) {
                     if (by[i] >= 0) { g2.setColor(GOLD); g2.fillOval(bx[i]-1, by[i]-1, 2, 2); }
                     if (sy[i] >= 0) { g2.setColor(new Color(74, 122, 191)); g2.fillOval(sx[i]-1, sy[i]-1, 2, 2); }
+                }
+
+// current price dashed line (drawn after lines/dots so label is on top)
+                if (currentPrice > 0 && currentPrice >= fMin && currentPrice <= fMax) {
+                    int cy = h - (int)((currentPrice - fMin) * h / Math.max(fMax - fMin, 1));
+                    boolean highlighted = currentLineHighlighted[0];
+                    g2.setColor(highlighted ? new Color(185, 109, 222) : new Color(155, 89, 182));
+                    if (highlighted) {
+                        g2.setStroke(new java.awt.BasicStroke(3.0f));
+                        g2.drawLine(0, cy, w, cy);
+                        g2.setStroke(new java.awt.BasicStroke(1f));
+                    } else {
+                        g2.setStroke(new java.awt.BasicStroke(1f, java.awt.BasicStroke.CAP_BUTT,
+                                java.awt.BasicStroke.JOIN_MITER, 10f, new float[]{4f, 3f}, 0f));
+                        g2.drawLine(0, cy, w, cy);
+                        g2.setStroke(new java.awt.BasicStroke(1f));
+                    }
                 }
 
                 // crosshair
@@ -3109,7 +3133,7 @@ private String[] buildItemDataFromCache(String name)
                     // floating price labels
                     g2.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
                     FontMetrics fm = g2.getFontMetrics();
-                    int labelW = 82, labelH = 14;
+                    int labelW = fm.stringWidth("1,555,555,555") + 6, labelH = 14;
                     int gap = 3;
 
                     int buyLabelY  = by[ci] >= 0 ? by[ci] - labelH / 2 : -999;
@@ -3146,6 +3170,7 @@ private String[] buildItemDataFromCache(String name)
             }
         };
         priceCanvas.setPreferredSize(new Dimension(1, 80));
+        priceCanvasHolder[0] = priceCanvas;
         priceCanvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
         priceCanvas.setMinimumSize(new Dimension(0, 80));
         priceCanvas.setBackground(new Color(14, 12, 13));
