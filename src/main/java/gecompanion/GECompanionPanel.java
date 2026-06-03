@@ -684,8 +684,14 @@ private String openBankItemName = null;
         final boolean[] graphOpen = {false};
         final JPanel[] graphPanelHolder = {null};
 
-        JButton chartBtn = buildFooterBtn("▼ Show Price Chart", false);
-        chartBtn.setMaximumSize(new Dimension(220, 24));
+        JButton chartBtn = new JButton("▼ Show Price Chart");
+        chartBtn.setForeground(TAB_INACTIVE);
+        chartBtn.setBackground(BG_DETAIL);
+        chartBtn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+        chartBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_TAB));
+        chartBtn.setFocusPainted(false);
+        chartBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        chartBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 28));
         chartBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
         inner.add(Box.createVerticalStrut(4));
         inner.add(chartBtn);
@@ -2950,7 +2956,7 @@ private String[] buildItemDataFromCache(String name)
         for (int i = 0; i < frames.length; i++)
         {
             JButton b = new JButton(frames[i]);
-            b.setFont(new Font("Monospaced", Font.PLAIN, 10));
+            b.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
             b.setFocusPainted(false);
             b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             b.setBackground(new Color(14, 12, 13));
@@ -2972,13 +2978,13 @@ private String[] buildItemDataFromCache(String name)
         legend.setAlignmentX(Component.LEFT_ALIGNMENT);
         JLabel buyLeg  = new JLabel("— Buy");
         buyLeg.setForeground(GOLD);
-        buyLeg.setFont(new Font("Monospaced", Font.PLAIN, 10));
+        buyLeg.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
         JLabel sellLeg = new JLabel("— Sell");
         sellLeg.setForeground(new Color(74, 122, 191));
-        sellLeg.setFont(new Font("Monospaced", Font.PLAIN, 10));
+        sellLeg.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
         JLabel curLeg  = new JLabel("--- Current");
         curLeg.setForeground(new Color(155, 89, 182));
-        curLeg.setFont(new Font("Monospaced", Font.PLAIN, 10));
+        curLeg.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
         legend.add(buyLeg);
         legend.add(sellLeg);
         legend.add(curLeg);
@@ -3032,7 +3038,7 @@ private String[] buildItemDataFromCache(String name)
                             java.awt.BasicStroke.JOIN_MITER, 10f, new float[]{4f, 3f}, 0f));
                     g2.drawLine(0, cy, w, cy);
                     g2.setStroke(new java.awt.BasicStroke(1f));
-                    g2.setFont(new Font("Monospaced", Font.PLAIN, 9));
+                    g2.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
                     g2.drawString("current", w - 46, cy - 2);
                 }
 
@@ -3101,7 +3107,7 @@ private String[] buildItemDataFromCache(String name)
                     }
 
                     // floating price labels
-                    g2.setFont(new Font("Monospaced", Font.PLAIN, 9));
+                    g2.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
                     FontMetrics fm = g2.getFontMetrics();
                     int labelW = 82, labelH = 14;
                     int gap = 3;
@@ -3154,13 +3160,13 @@ private String[] buildItemDataFromCache(String name)
         volLabelRow.setAlignmentX(Component.LEFT_ALIGNMENT);
         JLabel volLbl  = new JLabel("Volume");
         volLbl.setForeground(new Color(110, 100, 90));
-        volLbl.setFont(new Font("Monospaced", Font.PLAIN, 9));
+        volLbl.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
         JLabel volBuyL = new JLabel("■ Buy");
         volBuyL.setForeground(GOLD);
-        volBuyL.setFont(new Font("Monospaced", Font.PLAIN, 9));
+        volBuyL.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
         JLabel volSelL = new JLabel("■ Sell");
         volSelL.setForeground(new Color(74, 122, 191));
-        volSelL.setFont(new Font("Monospaced", Font.PLAIN, 9));
+        volSelL.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
         volLabelRow.add(volLbl);
         volLabelRow.add(volBuyL);
         volLabelRow.add(volSelL);
@@ -3219,7 +3225,7 @@ private String[] buildItemDataFromCache(String name)
         // ── date label ─────────────────────────────────────────────────
         JLabel dateLabel = new JLabel(" ", SwingConstants.CENTER);
         dateLabel.setForeground(new Color(110, 100, 90));
-        dateLabel.setFont(new Font("Monospaced", Font.PLAIN, 9));
+        dateLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
         dateLabel.setMaximumSize(new Dimension(225, 14));
         dateLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         wrapper.add(dateLabel);
