@@ -50,6 +50,7 @@ public class GECompanionPanel extends PluginPanel
     public int getActiveTab() { return activeTab; }
     private String activeTimeFrame = "24H";
     private boolean bankAllItemsCollapsed = true;
+    private boolean graphWasOpen = false;
     private JPanel tabContentPanel;
     private JLabel[] tabLabels = new JLabel[3];
     private JLabel timerLabel;
@@ -736,6 +737,7 @@ private String openBankItemName = null;
                 });
                 openTimer.start();
                 graphOpen[0] = true;
+                graphWasOpen = true;
                 chartBtn.setText("▲ Hide Price Chart");
                 chartBtn.setForeground(GOLD);
                 chartBtn.setBorder(BorderFactory.createLineBorder(GOLD));
@@ -761,6 +763,7 @@ private String openBankItemName = null;
                 });
                 closeTimer.start();
                 graphOpen[0] = false;
+                graphWasOpen = false;
                 chartBtn.setText("▼ Show Price Chart");
                 chartBtn.setForeground(TAB_INACTIVE);
                 chartBtn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
@@ -1367,6 +1370,7 @@ private String openBankItemName = null;
                                     newDetailSlot.add(buildInlineDetail(itemData, false), BorderLayout.CENTER);
                                     newViewport.setVisible(true);
                                     scheduleRepaint(newDetailSlot);
+                                    if (graphWasOpen) reopenGraph(newDetailSlot);
                                     currentOpenSearchDetail = newDetailSlot;
                                     selectedItemName = itemData[0];
                                     newRow.setBorder(BorderFactory.createCompoundBorder(
@@ -1761,6 +1765,7 @@ private String openBankItemName = null;
                                     newDetailSlot.add(buildInlineDetail(itemData, true), BorderLayout.CENTER);
                                     newViewport.setVisible(true);
                                     scheduleRepaint(newDetailSlot);
+                                    if (graphWasOpen) reopenGraph(newDetailSlot);
                                     currentOpenWatchlistDetail = newDetailSlot;
                                     selectedWatchlistItemName = itemData[0];
                                     newRow.setBorder(new MatteBorder(0, 3, 0, 0, GOLD));
@@ -2565,6 +2570,7 @@ private String openBankItemName = null;
                                     newDetailSlot.add(buildInlineDetail(itemData, false), BorderLayout.CENTER);
                                     newViewport.setVisible(true);                                    ;
                                     scheduleRepaint(newDetailSlot);
+                                    if (graphWasOpen) reopenGraph(newDetailSlot);
                                     currentOpenBankDetail = newDetailSlot;
                                     selectedBankItemName = itemData[0];
                                     newRow.setBorder(new MatteBorder(0, 4, 0, 0, GOLD));
@@ -2667,6 +2673,31 @@ private String openBankItemName = null;
     }).start();
 }
 
+    private void reopenGraph(JPanel detailSlot)
+    {
+        // Find the chart button inside the rebuilt detail panel and click it
+        findAndClickChartButton(detailSlot);
+    }
+
+    private void findAndClickChartButton(java.awt.Container container)
+    {
+        for (java.awt.Component c : container.getComponents())
+        {
+            if (c instanceof JButton)
+            {
+                JButton btn = (JButton) c;
+                if (btn.getText().contains("Show Price Chart"))
+                {
+                    btn.doClick();
+                    return;
+                }
+            }
+            if (c instanceof java.awt.Container)
+            {
+                findAndClickChartButton((java.awt.Container) c);
+            }
+        }
+    }
     private void fetchTimeseries(int itemId, String timeframe, java.util.function.Consumer<java.util.List<PricePoint>> callback)
     {
         String cacheKey = itemId + "_" + timeframe;
