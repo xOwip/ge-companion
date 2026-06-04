@@ -3104,7 +3104,7 @@ private String[] buildItemDataFromCache(String name)
                     boolean highlighted = currentLineHighlighted[0];
                     g2.setColor(highlighted ? new Color(185, 109, 222) : new Color(155, 89, 182));
                     if (highlighted) {
-                        g2.setStroke(new java.awt.BasicStroke(3.0f));
+                        g2.setStroke(new java.awt.BasicStroke(1.8f));
                         g2.drawLine(0, cy, w, cy);
                         g2.setStroke(new java.awt.BasicStroke(1f));
                     } else {
