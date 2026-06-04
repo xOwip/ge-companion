@@ -3039,7 +3039,7 @@ private String[] buildItemDataFromCache(String name)
                 }
                 if (currentPrice > 0) { minP = Math.min(minP, currentPrice); maxP = Math.max(maxP, currentPrice); }
                 if (minP == Long.MAX_VALUE) { g2.dispose(); return; }
-                long pad = Math.max((maxP - minP) / 8, 1);
+                long pad = Math.max((maxP - minP) / 3, 1);
                 minP -= pad; maxP += pad;
                 final long fMin = minP, fMax = maxP;
 
@@ -3136,8 +3136,8 @@ private String[] buildItemDataFromCache(String name)
                     int labelW = fm.stringWidth("1,555,555,555") + 6, labelH = 14;
                     int gap = 3;
 
-                    int buyLabelY  = by[ci] >= 0 ? by[ci] - labelH / 2 : -999;
-                    int sellLabelY = sy[ci] >= 0 ? sy[ci] - labelH / 2 : -999;
+                    int buyLabelY  = by[ci] >= 0 ? Math.min(h - labelH, Math.max(0, by[ci] - labelH / 2)) : -999;
+                    int sellLabelY = sy[ci] >= 0 ? Math.min(h - labelH, Math.max(0, sy[ci] - labelH / 2)) : -999;
 
                     // collision avoidance
                     if (by[ci] >= 0 && sy[ci] >= 0 && Math.abs(by[ci] - sy[ci]) < labelH + gap) {
@@ -3234,14 +3234,50 @@ private String[] buildItemDataFromCache(String name)
                     // sell bar
                     int sh = (int)((double)p.sellVolume / maxVol * h);
                     g2.setColor(new Color(74, 122, 191, (int)(255 * alpha)));
-                    g2.fillRect(x + 1, h - sh, (int)barW, sh);
                 }
+
+                // volume tooltips on hovered bar
+                if (!animating[0] && ci >= 0 && ci < n) {
+                    PricePoint cp = pts.get(ci);
+                    int x = (int)(ci * (w - 1.0) / (n - 1));
+                    g2.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+                    FontMetrics fm = g2.getFontMetrics();
+
+                    String buyStr = String.format("%,d", cp.buyVolume);
+                    String sellStr = String.format("%,d", cp.sellVolume);
+                    int buyLabelW = fm.stringWidth(buyStr) + 6;
+                    int sellLabelW = fm.stringWidth(sellStr) + 6;
+                    int labelH = 14;
+                    int gap = 3;
+
+                    boolean nearRight = x > w - buyLabelW - 6;
+                    int lx = nearRight ? x - buyLabelW - 6 : x + 6;
+
+                    int buyLabelY = 1;
+                    int sellLabelY = buyLabelY + labelH + gap;
+
+                    // buy volume label
+                    g2.setColor(new Color(30, 25, 10));
+                    g2.fillRect(lx, buyLabelY, buyLabelW, labelH);
+                    g2.setColor(GOLD);
+                    g2.drawRect(lx, buyLabelY, buyLabelW, labelH);
+                    g2.drawString(buyStr, lx + 3, buyLabelY + labelH - 3);
+
+                    // sell volume label
+                    int sellLx = nearRight ? x - sellLabelW - 6 : x + 6;
+                    g2.setColor(new Color(10, 15, 30));
+                    g2.fillRect(sellLx, sellLabelY, sellLabelW, labelH);
+                    g2.setColor(new Color(74, 122, 191));
+                    g2.drawRect(sellLx, sellLabelY, sellLabelW, labelH);
+                    g2.drawString(sellStr, sellLx + 3, sellLabelY + labelH - 3);
+                }
+
                 g2.dispose();
             }
         };
-        volCanvas.setPreferredSize(new Dimension(1, 28));
-        volCanvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 28));
-        volCanvas.setMinimumSize(new Dimension(0, 28));
+        volCanvas.setPreferredSize(new Dimension(1, 35));
+        volCanvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
+        volCanvas.setMinimumSize(new Dimension(0, 35));
         volCanvas.setBackground(new Color(14, 12, 13));
         volCanvas.setAlignmentX(Component.LEFT_ALIGNMENT);
         wrapper.add(volCanvas);
@@ -3294,7 +3330,45 @@ private String[] buildItemDataFromCache(String name)
             }
         });
 
-        // ── timeframe button wiring ────────────────────────────────────
+// ── volume canvas mouse interaction ───────────────────────────
+        volCanvas.addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                java.util.List<PricePoint> pts = pointsHolder[0];
+                if (animating[0] || pts == null || pts.size() < 2) return;
+                int n = pts.size();
+                int w = volCanvas.getWidth();
+                int nearest = 0;
+                double minDist = Double.MAX_VALUE;
+                for (int i = 0; i < n; i++) {
+                    int px = (int)(i * (w - 1.0) / (n - 1));
+                    double dist = Math.abs(e.getX() - px);
+                    if (dist < minDist) { minDist = dist; nearest = i; }
+                }
+                crosshairIdx[0] = nearest;
+                PricePoint cp = pts.get(nearest);
+                java.time.Instant inst = java.time.Instant.ofEpochSecond(cp.timestamp);
+                java.time.LocalDateTime ldt = java.time.LocalDateTime.ofInstant(inst, java.time.ZoneId.systemDefault());
+                String fmt = activeFrame[0].equals("7D")
+                        ? String.format("%s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
+                        : String.format("%d %s %d", ldt.getDayOfMonth(),
+                        ldt.getMonth().toString().substring(0,3), ldt.getYear());
+                dateLabel.setText(fmt);
+                priceCanvas.repaint();
+                volCanvas.repaint();
+            }
+        });
+        volCanvas.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseExited(MouseEvent e) {
+                crosshairIdx[0] = -1;
+                dateLabel.setText(" ");
+                priceCanvas.repaint();
+                volCanvas.repaint();
+            }
+        });
+
+// ── timeframe button wiring ────────────────────────────────────
         for (int i = 0; i < frames.length; i++) {
             final String frame = frames[i];
             final int fi = i;
