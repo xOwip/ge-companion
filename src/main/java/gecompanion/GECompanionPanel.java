@@ -51,7 +51,7 @@ public class GECompanionPanel extends PluginPanel
     private String activeTimeFrame = "24H";
     private boolean bankAllItemsCollapsed = true;
     private boolean graphWasOpen = false;
-    private String graphActiveTimeframe = "30D";
+    private String graphActiveTimeframe = "1D";
     private JPanel tabContentPanel;
     private JLabel[] tabLabels = new JLabel[3];
     private JLabel timerLabel;
@@ -2717,11 +2717,11 @@ private String openBankItemName = null;
                 String timestep;
                 switch (timeframe)
                 {
+                    case "1D":  timestep = "5m";  break;
                     case "7D":  timestep = "1h";  break;
                     case "30D": timestep = "6h";  break;
                     case "3M":
-                    case "1Y":
-                    case "All": timestep = "24h"; break;
+                    case "1Y":  timestep = "24h"; break;
                     default:    timestep = "6h";  break;
                 }
 
@@ -2757,6 +2757,7 @@ private String openBankItemName = null;
                     long cutoff = 0;
                     switch (timeframe)
                     {
+                        case "1D":  cutoff = now - 1L   * 86400; break;
                         case "7D":  cutoff = now - 7L   * 86400; break;
                         case "30D": cutoff = now - 30L  * 86400; break;
                         case "3M":  cutoff = now - 90L  * 86400; break;
@@ -2767,6 +2768,15 @@ private String openBankItemName = null;
                     java.util.List<PricePoint> filtered = new java.util.ArrayList<>();
                     for (PricePoint p : points)
                         if (p.timestamp >= fc) filtered.add(p);
+
+                    // forward-fill zero prices with last known value
+                    long lastBuy = 0, lastSell = 0;
+                    for (PricePoint p : filtered) {
+                        if (p.buyPrice > 0) lastBuy = p.buyPrice;
+                        else p.buyPrice = lastBuy;
+                        if (p.sellPrice > 0) lastSell = p.sellPrice;
+                        else p.sellPrice = lastSell;
+                    }
 
                     timeseriesCache.put(cacheKey, filtered);
                     javax.swing.SwingUtilities.invokeLater(() -> callback.accept(filtered));
@@ -2946,7 +2956,7 @@ private String[] buildItemDataFromCache(String name)
         wrapper.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
 
         // ── timeframe buttons ──────────────────────────────────────────
-        String[] frames = {"7D", "30D", "3M", "1Y", "All"};
+        String[] frames = {"1D", "7D", "30D", "3M", "1Y"};
         JPanel tfBar = new JPanel(new GridLayout(1, 5, 2, 0));
         tfBar.setBackground(new Color(14, 12, 13));
         tfBar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
@@ -3315,7 +3325,7 @@ private String[] buildItemDataFromCache(String name)
                 PricePoint cp = pts.get(nearest);
                 java.time.Instant inst = java.time.Instant.ofEpochSecond(cp.timestamp);
                 java.time.LocalDateTime ldt = java.time.LocalDateTime.ofInstant(inst, java.time.ZoneId.systemDefault());
-                String fmt = activeFrame[0].equals("7D")
+                String fmt = (activeFrame[0].equals("1D") || activeFrame[0].equals("7D"))
                         ? String.format("%s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
                         : String.format("%d %s %d", ldt.getDayOfMonth(),
                         ldt.getMonth().toString().substring(0,3), ldt.getYear());
@@ -3353,7 +3363,7 @@ private String[] buildItemDataFromCache(String name)
                 PricePoint cp = pts.get(nearest);
                 java.time.Instant inst = java.time.Instant.ofEpochSecond(cp.timestamp);
                 java.time.LocalDateTime ldt = java.time.LocalDateTime.ofInstant(inst, java.time.ZoneId.systemDefault());
-                String fmt = activeFrame[0].equals("7D")
+                String fmt = (activeFrame[0].equals("1D") || activeFrame[0].equals("7D"))
                         ? String.format("%s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
                         : String.format("%d %s %d", ldt.getDayOfMonth(),
                         ldt.getMonth().toString().substring(0,3), ldt.getYear());
