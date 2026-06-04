@@ -51,6 +51,7 @@ public class GECompanionPanel extends PluginPanel
     private String activeTimeFrame = "24H";
     private boolean bankAllItemsCollapsed = true;
     private boolean graphWasOpen = false;
+    private String graphActiveTimeframe = "30D";
     private JPanel tabContentPanel;
     private JLabel[] tabLabels = new JLabel[3];
     private JLabel timerLabel;
@@ -713,11 +714,7 @@ private String openBankItemName = null;
             if (!graphOpen[0]) {
                 // build graph panel on first open
                 if (graphPanelHolder[0] == null) {
-                    String tf = config.defaultChartRange().toString().equals("Day") ? "7D"
-                            : config.defaultChartRange().toString().equals("Week") ? "7D"
-                              : config.defaultChartRange().toString().equals("Month") ? "30D"
-                                : config.defaultChartRange().toString().equals("Quarter") ? "3M"
-                                  : config.defaultChartRange().toString().equals("Year") ? "1Y" : "All";
+                    String tf = graphActiveTimeframe;
                     graphPanelHolder[0] = buildGraphPanel(graphItemIdFinal, currentMidPriceFinal, tf);
                 }
                 graphViewport.setView(graphPanelHolder[0]);
@@ -3379,6 +3376,7 @@ private String[] buildItemDataFromCache(String name)
             tfBtns[i].addActionListener(e -> {
                 if (frame.equals(activeFrame[0])) return;
                 activeFrame[0] = frame;
+                graphActiveTimeframe = frame;
                 crosshairIdx[0] = -1;
                 dateLabel.setText(" ");
 
