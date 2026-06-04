@@ -2947,6 +2947,8 @@ private String[] buildItemDataFromCache(String name)
         final boolean[] currentLineHighlighted = {false};
         final int[] crosshairIdx = {-1};
         final int[] revealW = {0};
+        final boolean[] magnifying = {false};
+        final int[] magnifyIdx = {-1};
 
         // ── outer wrapper ──────────────────────────────────────────────
         JPanel wrapper = new JPanel();
@@ -3141,7 +3143,8 @@ private String[] buildItemDataFromCache(String name)
                         g2.fillOval(sx[ci]-2, sy[ci]-2, 4, 4);
                     }
 
-                    // floating price labels
+// floating price labels (suppressed when magnifier is active)
+                    if (!magnifying[0]) {
                     g2.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
                     FontMetrics fm = g2.getFontMetrics();
                     PricePoint cp2 = pts.get(ci);
@@ -3179,16 +3182,131 @@ private String[] buildItemDataFromCache(String name)
                         g2.drawRect(lx, sellLabelY, labelW, labelH);
                         g2.drawString(sellStr2, lx + 3, sellLabelY + labelH - 3);
                     }
+                    } // end if (!magnifying[0])
+                } // end crosshair if block
+
+                // ── magnifier / loupe ──────────────────────────────────────────
+                if (magnifying[0] && magnifyIdx[0] >= 0 && pts != null && pts.size() >= 2) {
+                    int mci = magnifyIdx[0];
+                    int mn = pts.size();
+                    int magW = 160, magH = 70, magPad = 5;
+                    int half = 3;
+
+                    // position: above crosshair, flip left/right near edges
+                    int cx = (int)(mci * (w - 1.0) / (mn - 1));
+                    int magX = cx - magW / 2;
+                    if (magX < 2) magX = 2;
+                    if (magX + magW > w - 2) magX = w - magW - 2;
+                    int magY = 4;
+
+// background + border
+                    g2.setColor(new Color(14, 12, 13));
+                    g2.fillRect(magX, magY, magW, magH);
+                    g2.setColor(GOLD);
+                    g2.drawRect(magX, magY, magW, magH);
+
+                    // compute zoom window — ±3 points around mci
+                    int zStart = Math.max(0, mci - half);
+                    int zEnd   = Math.min(mn - 1, mci + half);
+                    int zCount = zEnd - zStart + 1;
+                    if (zCount < 2) { g2.dispose(); return; }
+
+                    // price range for zoomed window
+                    long zMinP = Long.MAX_VALUE, zMaxP = Long.MIN_VALUE;
+                    for (int i = zStart; i <= zEnd; i++) {
+                        PricePoint zp = pts.get(i);
+                        if (zp.buyPrice  > 0) { zMinP = Math.min(zMinP, zp.buyPrice);  zMaxP = Math.max(zMaxP, zp.buyPrice); }
+                        if (zp.sellPrice > 0) { zMinP = Math.min(zMinP, zp.sellPrice); zMaxP = Math.max(zMaxP, zp.sellPrice); }
+                    }
+                    if (zMinP == Long.MAX_VALUE) { g2.dispose(); return; }
+                    long zPad = Math.max((zMaxP - zMinP) / 4, 1);
+                    zMinP -= zPad; zMaxP += zPad;
+
+                    // draw buy line in zoomed window
+                    g2.setStroke(new java.awt.BasicStroke(1.4f));
+                    g2.setColor(GOLD);
+                    int[] zbx = new int[zCount], zby = new int[zCount];
+                    for (int i = 0; i < zCount; i++) {
+                        zbx[i] = magX + magPad + (int)(i * (magW - magPad * 2 - 1.0) / (zCount - 1));
+                        long bp = pts.get(zStart + i).buyPrice;
+                        zby[i] = bp > 0 ? magY + magH - magPad - (int)((bp - zMinP) * (magH - magPad * 2) / Math.max(zMaxP - zMinP, 1)) : -1;
+                    }
+                    for (int i = 0; i < zCount - 1; i++)
+                        if (zby[i] >= 0 && zby[i+1] >= 0)
+                            g2.drawLine(zbx[i], zby[i], zbx[i+1], zby[i+1]);
+
+                    // draw sell line in zoomed window
+                    g2.setColor(new Color(74, 122, 191));
+                    int[] zsx = new int[zCount], zsy = new int[zCount];
+                    for (int i = 0; i < zCount; i++) {
+                        zsx[i] = zbx[i];
+                        long sp = pts.get(zStart + i).sellPrice;
+                        zsy[i] = sp > 0 ? magY + magH - magPad - (int)((sp - zMinP) * (magH - magPad * 2) / Math.max(zMaxP - zMinP, 1)) : -1;
+                    }
+                    for (int i = 0; i < zCount - 1; i++)
+                        if (zsy[i] >= 0 && zsy[i+1] >= 0)
+                            g2.drawLine(zsx[i], zsy[i], zsx[i+1], zsy[i+1]);
+
+                    // center point dots
+                    int zci = mci - zStart;
+                    if (zci >= 0 && zci < zCount) {
+                        if (zby[zci] >= 0) { g2.setColor(GOLD); g2.fillOval(zbx[zci]-3, zby[zci]-3, 6, 6); }
+                        if (zsy[zci] >= 0) { g2.setColor(new Color(74, 122, 191)); g2.fillOval(zsx[zci]-3, zsy[zci]-3, 6, 6); }
+                    }
+
+// crosshair vertical line at center point
+                    int zcx = magX + magPad + (int)(zci * (magW - magPad * 2 - 1.0) / Math.max(zCount - 1, 1));
+                    g2.setColor(new Color(200, 200, 200, 120));
+                    g2.setStroke(new java.awt.BasicStroke(1f, java.awt.BasicStroke.CAP_BUTT,
+                            java.awt.BasicStroke.JOIN_MITER, 10f, new float[]{3f, 3f}, 0f));
+                    g2.drawLine(zcx, magY + 1, zcx, magY + magH - 1);
+                    g2.setStroke(new java.awt.BasicStroke(1f));
+
+                    // price labels for center point
+                    PricePoint mcp = pts.get(mci);
+                    g2.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+                    FontMetrics mfm = g2.getFontMetrics();
+                    if (zby[zci] >= 0 && mcp.buyPrice > 0) {
+                        String mBuyStr = String.format("%,d", mcp.buyPrice);
+                        int mlw = mfm.stringWidth(mBuyStr) + 6;
+                        boolean mNearRight = zcx > magX + magW - mlw - 6;
+                        int mlx = mNearRight ? zcx - mlw - 3 : zcx + 3;
+                        int mly = Math.max(magY + 2, zby[zci] - 18);
+                        g2.setColor(new Color(30, 25, 10));
+                        g2.fillRect(mlx, mly, mlw, 12);
+                        g2.setColor(GOLD);
+                        g2.drawRect(mlx, mly, mlw, 12);
+                        g2.drawString(mBuyStr, mlx + 3, mly + 10);
+                    }
+                    if (zsy[zci] >= 0 && mcp.sellPrice > 0) {
+                        String mSellStr = String.format("%,d", mcp.sellPrice);
+                        int mlw = mfm.stringWidth(mSellStr) + 6;
+                        boolean mNearRight = zcx > magX + magW - mlw - 6;
+                        int mlx = mNearRight ? zcx - mlw - 3 : zcx + 3;
+                        int mly = Math.min(magY + magH - 13, zsy[zci] + 8);
+                        if (zby[zci] >= 0 && Math.abs(zby[zci] - zsy[zci]) < 14) mly = zby[zci] + 14;
+                        mly = Math.max(magY + 1, mly);
+                        g2.setColor(new Color(10, 15, 30));
+                        g2.fillRect(mlx, mly, mlw, 12);
+                        g2.setColor(new Color(74, 122, 191));
+                        g2.drawRect(mlx, mly, mlw, 12);
+                        g2.drawString(mSellStr, mlx + 3, mly + 10);
+                    }
+
+                    g2.setStroke(new java.awt.BasicStroke(1f));
                 }
+
                 g2.dispose();
             }
         };
+
         priceCanvas.setPreferredSize(new Dimension(1, 80));
         priceCanvasHolder[0] = priceCanvas;
         priceCanvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
         priceCanvas.setMinimumSize(new Dimension(0, 80));
         priceCanvas.setBackground(new Color(14, 12, 13));
         priceCanvas.setAlignmentX(Component.LEFT_ALIGNMENT);
+        priceCanvas.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         wrapper.add(priceCanvas);
         wrapper.add(Box.createVerticalStrut(3));
 
@@ -3305,6 +3423,13 @@ private String[] buildItemDataFromCache(String name)
         dateLabel.setMaximumSize(new Dimension(225, 14));
         dateLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         wrapper.add(dateLabel);
+// ── zoom hint text ─────────────────────────────────────────────
+        JLabel zoomHint = new JLabel("Click & hold to zoom", SwingConstants.CENTER);
+        zoomHint.setForeground(TEXT_DIM);
+        zoomHint.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+        zoomHint.setMaximumSize(new Dimension(Integer.MAX_VALUE, 14));
+        zoomHint.setAlignmentX(Component.LEFT_ALIGNMENT);
+        wrapper.add(zoomHint);
         wrapper.add(Box.createVerticalStrut(4));
 
         // ── mouse interaction ──────────────────────────────────────────
@@ -3339,7 +3464,65 @@ private String[] buildItemDataFromCache(String name)
             @Override
             public void mouseExited(MouseEvent e) {
                 crosshairIdx[0] = -1;
+                magnifying[0] = false;
+                magnifyIdx[0] = -1;
                 dateLabel.setText(" ");
+                priceCanvas.repaint();
+                volCanvas.repaint();
+            }
+            @Override
+            public void mousePressed(MouseEvent e) {
+                java.util.List<PricePoint> pts = pointsHolder[0];
+                if (animating[0] || pts == null || pts.size() < 2) return;
+                int n = pts.size();
+                int w = priceCanvas.getWidth();
+                int nearest = 0;
+                double minDist = Double.MAX_VALUE;
+                for (int i = 0; i < n; i++) {
+                    int px = (int)(i * (w - 1.0) / (n - 1));
+                    double dist = Math.abs(e.getX() - px);
+                    if (dist < minDist) { minDist = dist; nearest = i; }
+                }
+                magnifyIdx[0] = nearest;
+                crosshairIdx[0] = nearest;
+                magnifying[0] = true;
+                priceCanvas.repaint();
+                volCanvas.repaint();
+            }
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                magnifying[0] = false;
+                magnifyIdx[0] = -1;
+                priceCanvas.repaint();
+            }
+        });
+        priceCanvas.addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                java.util.List<PricePoint> pts = pointsHolder[0];
+                if (!magnifying[0] || pts == null || pts.size() < 2) return;
+                int n = pts.size();
+                int w = priceCanvas.getWidth();
+                int nearest = 0;
+                double minDist = Double.MAX_VALUE;
+                for (int i = 0; i < n; i++) {
+                    int px = (int) (i * (w - 1.0) / (n - 1));
+                    double dist = Math.abs(e.getX() - px);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        nearest = i;
+                    }
+                }
+                magnifyIdx[0] = nearest;
+                crosshairIdx[0] = nearest;
+                PricePoint cp = pts.get(nearest);
+                java.time.Instant inst = java.time.Instant.ofEpochSecond(cp.timestamp);
+                java.time.LocalDateTime ldt = java.time.LocalDateTime.ofInstant(inst, java.time.ZoneId.systemDefault());
+                String fmt = (activeFrame[0].equals("1D") || activeFrame[0].equals("7D"))
+                        ? String.format("%s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
+                        : String.format("%d %s %d", ldt.getDayOfMonth(),
+                        ldt.getMonth().toString().substring(0,3), ldt.getYear());
+                dateLabel.setText(fmt);
                 priceCanvas.repaint();
                 volCanvas.repaint();
             }
