@@ -3134,7 +3134,10 @@ private String[] buildItemDataFromCache(String name)
                     // floating price labels
                     g2.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
                     FontMetrics fm = g2.getFontMetrics();
-                    int labelW = fm.stringWidth("1,555,555,555") + 6, labelH = 14;
+                    PricePoint cp2 = pts.get(ci);
+                    String buyStr2 = cp2.buyPrice > 0 ? String.format("%,d", cp2.buyPrice) : "";
+                    String sellStr2 = cp2.sellPrice > 0 ? String.format("%,d", cp2.sellPrice) : "";
+                    int labelW = Math.max(fm.stringWidth(buyStr2), fm.stringWidth(sellStr2)) + 6, labelH = 14;
                     int gap = 3;
 
                     int buyLabelY  = by[ci] >= 0 ? Math.min(h - labelH, Math.max(0, by[ci] - labelH / 2)) : -999;
@@ -3151,20 +3154,20 @@ private String[] buildItemDataFromCache(String name)
                     int lx = nearRight ? cx - labelW - 6 : cx + 6;
 
                     if (by[ci] >= 0) {
-                        String buyStr = String.format("%,d", cp.buyPrice);
+
                         g2.setColor(new Color(30, 25, 10));
                         g2.fillRect(lx, buyLabelY, labelW, labelH);
                         g2.setColor(GOLD);
                         g2.drawRect(lx, buyLabelY, labelW, labelH);
-                        g2.drawString(buyStr, lx + 3, buyLabelY + labelH - 3);
+                        g2.drawString(buyStr2, lx + 3, buyLabelY + labelH - 3);
                     }
                     if (sy[ci] >= 0) {
-                        String sellStr = String.format("%,d", cp.sellPrice);
+
                         g2.setColor(new Color(10, 15, 30));
                         g2.fillRect(lx, sellLabelY, labelW, labelH);
                         g2.setColor(new Color(74, 122, 191));
                         g2.drawRect(lx, sellLabelY, labelW, labelH);
-                        g2.drawString(sellStr, lx + 3, sellLabelY + labelH - 3);
+                        g2.drawString(sellStr2, lx + 3, sellLabelY + labelH - 3);
                     }
                 }
                 g2.dispose();
