@@ -2939,6 +2939,7 @@ private String[] buildItemDataFromCache(String name)
         final boolean[] animating = {false};
         final boolean[] currentLineHighlighted = {false};
         final int[] crosshairIdx = {-1};
+        final int[] revealW = {0};
 
         // ── outer wrapper ──────────────────────────────────────────────
         JPanel wrapper = new JPanel();
@@ -3019,6 +3020,9 @@ private String[] buildItemDataFromCache(String name)
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 int w = getWidth(), h = getHeight();
+                if (animating[0] && revealW[0] < 100) {
+                    g2.setClip(0, 0, (int)(w * revealW[0] / 100.0), h);
+                }
                 g2.setColor(new Color(14, 12, 13));
                 g2.fillRect(0, 0, w, h);
 
@@ -3395,22 +3399,17 @@ private String[] buildItemDataFromCache(String name)
                 fetchTimeseries(itemId, frame, pts -> {
                     pointsHolder[0] = pts;
                     animating[0] = true;
-
-                    // animate price canvas grow
-                    int fullH = 80;
-                    int[] curH = {0};
+                    revealW[0] = 0;
                     javax.swing.Timer t = new javax.swing.Timer(16, null);
                     t.addActionListener(ev -> {
-                        curH[0] = Math.min(curH[0] + 30, fullH);
-                        priceCanvas.setPreferredSize(new Dimension(225, curH[0]));
-                        priceCanvas.revalidate();
+                        revealW[0] = Math.min(revealW[0] + 8, 100);
                         priceCanvas.repaint();
                         volCanvas.repaint();
-                        if (curH[0] >= fullH) {
+                        if (revealW[0] >= 100) {
                             t.stop();
                             animating[0] = false;
-                            priceCanvas.setPreferredSize(new Dimension(1, 80));
-                            priceCanvas.revalidate();
+                            revealW[0] = 100;
+                            priceCanvas.repaint();
                         }
                     });
                     t.start();
