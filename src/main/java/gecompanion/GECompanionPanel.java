@@ -3245,9 +3245,10 @@ private String[] buildItemDataFromCache(String name)
                     int bx2 = Math.max(0, x - (int)barW - 1);
                     g2.fillRect(bx2, h - bh, (int)barW, bh);
 
-                    // sell bar
+// sell bar
                     int sh = (int)((double)p.sellVolume / maxVol * h);
                     g2.setColor(new Color(74, 122, 191, (int)(255 * alpha)));
+                    g2.fillRect(x + 1, h - sh, (int)barW, sh);
                 }
 
                 // volume tooltips on hovered bar
