@@ -3483,7 +3483,7 @@ private String[] buildItemDataFromCache(String name)
         };
         volCanvas.setPreferredSize(new Dimension(1, 35));
         volCanvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
-        volCanvas.setMinimumSize(new Dimension(0, 35));
+        volCanvasHolder[0] = volCanvas;
         volCanvas.setBackground(new Color(14, 12, 13));
         volCanvas.setAlignmentX(Component.LEFT_ALIGNMENT);
         wrapper.add(volCanvas);
