@@ -3708,6 +3708,7 @@ private String[] buildItemDataFromCache(String name)
                         dateLabel.setText(fmt);
                     }
                     priceCanvas.repaint();
+                    volCanvas.repaint();
                 }
             });
 
