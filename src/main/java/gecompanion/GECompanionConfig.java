@@ -71,7 +71,14 @@ public interface GECompanionConfig extends Config
 			position = 0
 	)
 	default ChartRange defaultChartRange() { return ChartRange.MONTH; }
-
+	@ConfigItem(
+			keyName = "chartZoomMode",
+			name = "Chart zoom mode",
+			description = "Choose between Drag Select zoom or Magnifier for the price chart",
+			section = watchlistSection,
+			position = 1
+	)
+	default ChartZoomMode chartZoomMode() { return ChartZoomMode.DRAG_SELECT; }
 	@ConfigItem(
 			keyName = "defaultTimeFrame",
 			name = "Default timeframe",

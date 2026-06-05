@@ -3009,6 +3009,31 @@ private String[] buildItemDataFromCache(String name)
         curPriceLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         curLeg.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         final JPanel[] priceCanvasHolder = {null};
+        final JPanel[] volCanvasHolder = {null};
+
+        // ↺ reset zoom button (only for DRAG_SELECT mode)
+        if (config.chartZoomMode() == ChartZoomMode.DRAG_SELECT) {
+            JLabel resetBtn = new JLabel("↺");
+            resetBtn.setForeground(TEXT_DIM);
+            resetBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
+            resetBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            resetBtn.setToolTipText("Reset zoom");
+            resetBtn.addMouseListener(new MouseAdapter() {
+                public void mouseEntered(MouseEvent e) { resetBtn.setForeground(GOLD); }
+                public void mouseExited(MouseEvent e)  { resetBtn.setForeground(TEXT_DIM); }
+                public void mouseClicked(MouseEvent e) {
+                    if (priceCanvasHolder[0] != null) {
+                        Object zsObj = priceCanvasHolder[0].getClientProperty("zoomStart");
+                        Object zeObj = priceCanvasHolder[0].getClientProperty("zoomEnd");
+                        if (zsObj instanceof int[]) ((int[])zsObj)[0] = 0;
+                        if (zeObj instanceof int[]) ((int[])zeObj)[0] = -1;
+                        priceCanvasHolder[0].repaint();
+                    }
+                    if (volCanvasHolder[0] != null) volCanvasHolder[0].repaint();
+                }
+            });
+            legend.add(resetBtn);
+        }
         curLeg.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent e) { currentLineHighlighted[0] = true; curPriceLabel.setForeground(new Color(185, 109, 222)); if (priceCanvasHolder[0] != null) priceCanvasHolder[0].repaint(); }
             public void mouseExited(MouseEvent e)  { currentLineHighlighted[0] = false; curPriceLabel.setForeground(new Color(0, 0, 0, 0)); if (priceCanvasHolder[0] != null) priceCanvasHolder[0].repaint(); }
@@ -3044,9 +3069,20 @@ private String[] buildItemDataFromCache(String name)
                     return;
                 }
 
-                // price range
+// price range
+                // read zoom state from client properties (drag-to-select zoom)
+                Object zsObj = getClientProperty("zoomStart");
+                Object zeObj = getClientProperty("zoomEnd");
+                int[] zoomStartArr = zsObj instanceof int[] ? (int[])zsObj : null;
+                int[] zoomEndArr = zeObj instanceof int[] ? (int[])zeObj : null;
+                int visStart = zoomStartArr != null ? zoomStartArr[0] : 0;
+                int visEnd = zoomEndArr != null && zoomEndArr[0] >= 0 ? zoomEndArr[0] : pts.size() - 1;
+                visStart = Math.max(0, Math.min(visStart, pts.size()-1));
+                visEnd = Math.max(visStart+1, Math.min(visEnd, pts.size()-1));
+                java.util.List<PricePoint> visPts = pts.subList(visStart, visEnd+1);
+
                 long minP = Long.MAX_VALUE, maxP = Long.MIN_VALUE;
-                for (PricePoint p : pts) {
+                for (PricePoint p : visPts) {
                     if (p.buyPrice  > 0) { minP = Math.min(minP, p.buyPrice);  maxP = Math.max(maxP, p.buyPrice); }
                     if (p.sellPrice > 0) { minP = Math.min(minP, p.sellPrice); maxP = Math.max(maxP, p.sellPrice); }
                 }
@@ -3063,15 +3099,16 @@ private String[] buildItemDataFromCache(String name)
                     g2.drawLine(0, y, w, y);
                 }
 
-                int n = pts.size();
+                int n = visPts.size();
+
 // buy line
                 g2.setStroke(new java.awt.BasicStroke(1.4f));
                 g2.setColor(GOLD);
                 int[] bx = new int[n], by = new int[n];
                 for (int i = 0; i < n; i++) {
                     bx[i] = (int)(i * (w - 1.0) / (n - 1));
-                    by[i] = pts.get(i).buyPrice > 0
-                            ? h - (int)((pts.get(i).buyPrice - fMin) * h / Math.max(fMax - fMin, 1))
+                    by[i] = visPts.get(i).buyPrice > 0
+                            ? h - (int)((visPts.get(i).buyPrice - fMin) * h / Math.max(fMax - fMin, 1))
                             : -1;
                 }
                 for (int i = 0; i < n - 1; i++)
@@ -3083,8 +3120,8 @@ private String[] buildItemDataFromCache(String name)
                 int[] sx = new int[n], sy = new int[n];
                 for (int i = 0; i < n; i++) {
                     sx[i] = bx[i];
-                    sy[i] = pts.get(i).sellPrice > 0
-                            ? h - (int)((pts.get(i).sellPrice - fMin) * h / Math.max(fMax - fMin, 1))
+                    sy[i] = visPts.get(i).sellPrice > 0
+                            ? h - (int)((visPts.get(i).sellPrice - fMin) * h / Math.max(fMax - fMin, 1))
                             : -1;
                 }
                 for (int i = 0; i < n - 1; i++)
@@ -3126,7 +3163,7 @@ private String[] buildItemDataFromCache(String name)
                     g2.drawLine(cx, 0, cx, h);
                     g2.setStroke(new java.awt.BasicStroke(1f));
 
-                    PricePoint cp = pts.get(ci);
+                    PricePoint cp = visPts.get(ci);
                     // buy dot + label
                     if (by[ci] >= 0) {
                         g2.setColor(new Color(14, 12, 13));
@@ -3185,7 +3222,32 @@ private String[] buildItemDataFromCache(String name)
                     } // end if (!magnifying[0])
                 } // end crosshair if block
 
-                // ── magnifier / loupe ──────────────────────────────────────────
+            // ── drag selection rectangle overlay ──────────────────────────
+                if (config.chartZoomMode() == ChartZoomMode.DRAG_SELECT) {
+                Object dsObj = getClientProperty("isDragging");
+                Object dx1Obj = getClientProperty("dragStart");
+                Object dx2Obj = getClientProperty("dragEnd");
+                boolean draggingNow = dsObj instanceof boolean[] && ((boolean[])dsObj)[0];
+                if (draggingNow && dx1Obj instanceof int[] && dx2Obj instanceof int[]) {
+                    int dx1 = Math.min(((int[])dx1Obj)[0], ((int[])dx2Obj)[0]);
+                    int dx2 = Math.max(((int[])dx1Obj)[0], ((int[])dx2Obj)[0]);
+                    // shade outside selection
+                    g2.setColor(new Color(0, 0, 0, 90));
+                    g2.fillRect(0, 0, dx1, h);
+                    g2.fillRect(dx2, 0, w - dx2, h);
+                    // selection fill
+                    g2.setColor(new Color(74, 122, 191, 30));
+                    g2.fillRect(dx1, 0, dx2 - dx1, h);
+                    // selection border
+                    g2.setColor(new Color(100, 160, 255, 200));
+                    g2.setStroke(new java.awt.BasicStroke(1.5f));
+                    g2.drawLine(dx1, 0, dx1, h);
+                    g2.drawLine(dx2, 0, dx2, h);
+                    g2.setStroke(new java.awt.BasicStroke(1f));
+                }
+            }
+
+            // ── magnifier / loupe ──────────────────────────────────────────
                 if (magnifying[0] && magnifyIdx[0] >= 0 && pts != null && pts.size() >= 2) {
                     int mci = magnifyIdx[0];
                     int mn = pts.size();
@@ -3341,10 +3403,21 @@ private String[] buildItemDataFromCache(String name)
 
                 java.util.List<PricePoint> pts = pointsHolder[0];
                 if (pts == null || pts.size() < 2) { g2.dispose(); return; }
-                int n = pts.size();
+
+                // sync zoom with price canvas
+                Object zsObj = priceCanvas.getClientProperty("zoomStart");
+                Object zeObj = priceCanvas.getClientProperty("zoomEnd");
+                int[] zoomStartArr = zsObj instanceof int[] ? (int[])zsObj : null;
+                int[] zoomEndArr = zeObj instanceof int[] ? (int[])zeObj : null;
+                int visStart = zoomStartArr != null ? zoomStartArr[0] : 0;
+                int visEnd = zoomEndArr != null && zoomEndArr[0] >= 0 ? zoomEndArr[0] : pts.size() - 1;
+                visStart = Math.max(0, Math.min(visStart, pts.size()-1));
+                visEnd = Math.max(visStart+1, Math.min(visEnd, pts.size()-1));
+                java.util.List<PricePoint> visPts = pts.subList(visStart, visEnd+1);
+                int n = visPts.size();
 
                 long maxVol = 1;
-                for (PricePoint p : pts)
+                for (PricePoint p : visPts)
                     maxVol = Math.max(maxVol, Math.max(p.buyVolume, p.sellVolume));
 
                 int ci = crosshairIdx[0];
@@ -3352,7 +3425,7 @@ private String[] buildItemDataFromCache(String name)
                 if (barW < 1) barW = 1;
 
                 for (int i = 0; i < n; i++) {
-                    PricePoint p = pts.get(i);
+                    PricePoint p = visPts.get(i);
                     int x = (int)(i * (w - 1.0) / (n - 1));
                     boolean hovered = (i == ci);
                     float alpha = (!animating[0] && ci >= 0 && !hovered) ? 0.15f : 1.0f;
@@ -3371,7 +3444,7 @@ private String[] buildItemDataFromCache(String name)
 
                 // volume tooltips on hovered bar
                 if (!animating[0] && ci >= 0 && ci < n) {
-                    PricePoint cp = pts.get(ci);
+                    PricePoint cp = visPts.get(ci);
                     int x = (int)(ci * (w - 1.0) / (n - 1));
                     g2.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
                     FontMetrics fm = g2.getFontMetrics();
@@ -3423,8 +3496,13 @@ private String[] buildItemDataFromCache(String name)
         dateLabel.setMaximumSize(new Dimension(225, 14));
         dateLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         wrapper.add(dateLabel);
+
 // ── zoom hint text ─────────────────────────────────────────────
-        JLabel zoomHint = new JLabel("Click & hold to zoom", SwingConstants.CENTER);
+        JLabel zoomHint = new JLabel(
+                config.chartZoomMode() == ChartZoomMode.DRAG_SELECT
+                        ? "Drag to zoom · double-click to reset"
+                        : "Click & hold to zoom",
+                SwingConstants.CENTER);
         zoomHint.setForeground(TEXT_DIM);
         zoomHint.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
         zoomHint.setMaximumSize(new Dimension(Integer.MAX_VALUE, 14));
@@ -3460,7 +3538,8 @@ private String[] buildItemDataFromCache(String name)
                 volCanvas.repaint();
             }
         });
-        priceCanvas.addMouseListener(new MouseAdapter() {
+        if (config.chartZoomMode() == ChartZoomMode.MAGNIFIER) {
+            priceCanvas.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseExited(MouseEvent e) {
                 crosshairIdx[0] = -1;
@@ -3527,6 +3606,108 @@ private String[] buildItemDataFromCache(String name)
                 volCanvas.repaint();
             }
         });
+        } // end MAGNIFIER mode
+
+// ── drag-to-select zoom ────────────────────────────────────────
+        if (config.chartZoomMode() == ChartZoomMode.DRAG_SELECT) {
+            final int[] dragStart = {-1};
+            final int[] dragEnd = {-1};
+            final boolean[] isDragging = {false};
+            final int[] zoomStart = {0};
+            final int[] zoomEnd = {-1}; // -1 means full range
+
+            priceCanvas.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    crosshairIdx[0] = -1;
+                    dateLabel.setText(" ");
+                    priceCanvas.repaint();
+                    volCanvas.repaint();
+                }
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    if (e.getButton() == java.awt.event.MouseEvent.BUTTON2) {
+                        zoomStart[0] = 0; zoomEnd[0] = -1;
+                        dragStart[0] = -1; dragEnd[0] = -1;
+                        priceCanvas.repaint(); volCanvas.repaint(); return;
+                    }
+                    isDragging[0] = true;
+                    dragStart[0] = e.getX();
+                    dragEnd[0] = e.getX();
+                    priceCanvas.repaint();
+                }
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                    if (!isDragging[0]) return;
+                    isDragging[0] = false;
+                    java.util.List<PricePoint> pts = pointsHolder[0];
+                    if (pts == null || pts.size() < 2) { dragStart[0]=-1; dragEnd[0]=-1; priceCanvas.repaint(); return; }
+                    int x1 = Math.min(dragStart[0], dragEnd[0]);
+                    int x2 = Math.max(dragStart[0], dragEnd[0]);
+                    if (x2 - x1 < 8) { dragStart[0]=-1; dragEnd[0]=-1; priceCanvas.repaint(); return; }
+                    int w = priceCanvas.getWidth();
+                    int totalN = pts.size();
+                    int curStart = zoomStart[0];
+                    int curEnd = zoomEnd[0] < 0 ? totalN - 1 : zoomEnd[0];
+                    int visN = curEnd - curStart + 1;
+                    int newStart = curStart + (int)(x1 * visN / (double)w);
+                    int newEnd = curStart + (int)(x2 * visN / (double)w);
+                    newStart = Math.max(0, newStart);
+                    newEnd = Math.min(totalN - 1, newEnd);
+                    if (newEnd - newStart < 2) { dragStart[0]=-1; dragEnd[0]=-1; priceCanvas.repaint(); return; }
+                    zoomStart[0] = newStart;
+                    zoomEnd[0] = newEnd;
+                    dragStart[0] = -1; dragEnd[0] = -1;
+                    priceCanvas.repaint(); volCanvas.repaint();
+                }
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    if (e.getClickCount() == 2) {
+                        zoomStart[0] = 0; zoomEnd[0] = -1;
+                        priceCanvas.repaint(); volCanvas.repaint();
+                    }
+                }
+            });
+            priceCanvas.addMouseMotionListener(new MouseAdapter() {
+                @Override
+                public void mouseMoved(MouseEvent e) {
+                    java.util.List<PricePoint> pts = pointsHolder[0];
+                    if (animating[0] || pts == null || pts.size() < 2) return;
+                    int curStart = zoomStart[0];
+                    int curEnd = zoomEnd[0] < 0 ? pts.size()-1 : zoomEnd[0];
+                    int visN = curEnd - curStart + 1;
+                    int w = priceCanvas.getWidth();
+                    int nearest = 0; double minDist = Double.MAX_VALUE;
+                    for (int i = 0; i < visN; i++) {
+                        int px = (int)(i * (w - 1.0) / (visN - 1));
+                        double dist = Math.abs(e.getX() - px);
+                        if (dist < minDist) { minDist = dist; nearest = i; }
+                    }
+                    crosshairIdx[0] = nearest;
+                    PricePoint cp = pts.get(curStart + nearest);
+                    java.time.Instant inst = java.time.Instant.ofEpochSecond(cp.timestamp);
+                    java.time.LocalDateTime ldt = java.time.LocalDateTime.ofInstant(inst, java.time.ZoneId.systemDefault());
+                    String fmt = (activeFrame[0].equals("1D") || activeFrame[0].equals("7D"))
+                            ? String.format("%s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
+                            : String.format("%d %s %d", ldt.getDayOfMonth(), ldt.getMonth().toString().substring(0,3), ldt.getYear());
+                    dateLabel.setText(fmt);
+                    priceCanvas.repaint(); volCanvas.repaint();
+                }
+                @Override
+                public void mouseDragged(MouseEvent e) {
+                    if (!isDragging[0]) return;
+                    dragEnd[0] = e.getX();
+                    priceCanvas.repaint();
+                }
+            });
+
+            // store zoom state so paintComponent can use it
+            priceCanvas.putClientProperty("zoomStart", zoomStart);
+            priceCanvas.putClientProperty("zoomEnd", zoomEnd);
+            priceCanvas.putClientProperty("isDragging", isDragging);
+            priceCanvas.putClientProperty("dragStart", dragStart);
+            priceCanvas.putClientProperty("dragEnd", dragEnd);
+        } // end DRAG_SELECT mode
 
 // ── volume canvas mouse interaction ───────────────────────────
         volCanvas.addMouseMotionListener(new MouseAdapter() {
