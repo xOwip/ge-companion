@@ -6,8 +6,7 @@ public enum ChartRange
     WEEK("Week"),
     MONTH("Month"),
     QUARTER("Quarter"),
-    YEAR("Year"),
-    ALL("All");
+    YEAR("Year");
 
     private final String name;
 

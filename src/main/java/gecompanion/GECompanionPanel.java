@@ -3174,7 +3174,9 @@ private String[] buildItemDataFromCache(String name)
                     }
 
 // floating price labels (suppressed when magnifier is active)
-                    if (!magnifying[0]) {
+                    Object dsObj2 = getClientProperty("isDragging");
+                    boolean draggingNow2 = dsObj2 instanceof boolean[] && ((boolean[])dsObj2)[0];
+                    if (!magnifying[0] && !draggingNow2) {
                     g2.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
                     FontMetrics fm = g2.getFontMetrics();
                         PricePoint cp2 = visPts.get(ci);
