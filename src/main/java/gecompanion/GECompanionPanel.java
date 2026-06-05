@@ -3024,13 +3024,9 @@ private String[] buildItemDataFromCache(String name)
                 public void mouseEntered(MouseEvent e) { resetBtn.setForeground(GOLD); }
                 public void mouseExited(MouseEvent e)  { resetBtn.setForeground(TEXT_DIM); }
                 public void mouseClicked(MouseEvent e) {
-                    if (priceCanvasHolder[0] != null) {
-                        Object zsObj = priceCanvasHolder[0].getClientProperty("zoomStart");
-                        Object zeObj = priceCanvasHolder[0].getClientProperty("zoomEnd");
-                        if (zsObj instanceof int[]) ((int[])zsObj)[0] = 0;
-                        if (zeObj instanceof int[]) ((int[])zeObj)[0] = -1;
-                        priceCanvasHolder[0].repaint();
-                    }
+                    zoomStart[0] = 0;
+                    zoomEnd[0] = -1;
+                    if (priceCanvasHolder[0] != null) priceCanvasHolder[0].repaint();
                     if (volCanvasHolder[0] != null) volCanvasHolder[0].repaint();
                 }
             });
@@ -3181,7 +3177,7 @@ private String[] buildItemDataFromCache(String name)
                     if (!magnifying[0]) {
                     g2.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
                     FontMetrics fm = g2.getFontMetrics();
-                    PricePoint cp2 = pts.get(ci);
+                        PricePoint cp2 = visPts.get(ci);
                     String buyStr2 = cp2.buyPrice > 0 ? String.format("%,d", cp2.buyPrice) : "";
                     String sellStr2 = cp2.sellPrice > 0 ? String.format("%,d", cp2.sellPrice) : "";
                     int labelW = Math.max(fm.stringWidth(buyStr2), fm.stringWidth(sellStr2)) + 6, labelH = 14;
@@ -3245,7 +3241,7 @@ private String[] buildItemDataFromCache(String name)
             }
 
             // ── magnifier / loupe ──────────────────────────────────────────
-                if (magnifying[0] && magnifyIdx[0] >= 0 && pts != null && pts.size() >= 2) {
+                if (config.chartZoomMode() == ChartZoomMode.MAGNIFIER && magnifying[0] && magnifyIdx[0] >= 0 && pts != null && pts.size() >= 2) {
                     int mci = magnifyIdx[0];
                     int mn = pts.size();
                     int magW = 160, magH = 70, magPad = 5;
@@ -3504,7 +3500,7 @@ private String[] buildItemDataFromCache(String name)
         wrapper.add(Box.createVerticalStrut(4));
 
 // ── mouse interaction ──────────────────────────────────────────
-        priceCanvas.addMouseMotionListener(new MouseAdapter() {
+        if (config.chartZoomMode() != ChartZoomMode.DRAG_SELECT) priceCanvas.addMouseMotionListener(new MouseAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
                 java.util.List<PricePoint> pts = pointsHolder[0];
@@ -3531,7 +3527,7 @@ private String[] buildItemDataFromCache(String name)
                 priceCanvas.repaint();
                 volCanvas.repaint();
             }
-        });
+        }); // end non-DRAG_SELECT mouseMoved
         if (config.chartZoomMode() == ChartZoomMode.MAGNIFIER) {
             priceCanvas.addMouseListener(new MouseAdapter() {
             @Override
