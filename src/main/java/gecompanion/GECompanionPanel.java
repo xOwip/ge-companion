@@ -3500,7 +3500,7 @@ private String[] buildItemDataFromCache(String name)
 // ── zoom hint text ─────────────────────────────────────────────
         JLabel zoomHint = new JLabel(
                 config.chartZoomMode() == ChartZoomMode.DRAG_SELECT
-                        ? "Drag to zoom · double-click to reset"
+                        ? "Drag to zoom · dbl-click resets"
                         : "Click & hold to zoom",
                 SwingConstants.CENTER);
         zoomHint.setForeground(TEXT_DIM);
@@ -3516,17 +3516,23 @@ private String[] buildItemDataFromCache(String name)
             public void mouseMoved(MouseEvent e) {
                 java.util.List<PricePoint> pts = pointsHolder[0];
                 if (animating[0] || pts == null || pts.size() < 2) return;
-                int n = pts.size();
+                // get visible range from zoom state
+                Object zsObj = getClientProperty("zoomStart");
+                Object zeObj = getClientProperty("zoomEnd");
+                int[] zsArr = zsObj instanceof int[] ? (int[])zsObj : null;
+                int[] zeArr = zeObj instanceof int[] ? (int[])zeObj : null;
+                int curStart = zsArr != null ? zsArr[0] : 0;
+                int curEnd = zeArr != null && zeArr[0] >= 0 ? zeArr[0] : pts.size()-1;
+                int visN = curEnd - curStart + 1;
                 int w = priceCanvas.getWidth();
-                int nearest = 0;
-                double minDist = Double.MAX_VALUE;
-                for (int i = 0; i < n; i++) {
-                    int px = (int)(i * (w - 1.0) / (n - 1));
+                int nearest = 0; double minDist = Double.MAX_VALUE;
+                for (int i = 0; i < visN; i++) {
+                    int px = (int)(i * (w - 1.0) / (visN - 1));
                     double dist = Math.abs(e.getX() - px);
                     if (dist < minDist) { minDist = dist; nearest = i; }
                 }
                 crosshairIdx[0] = nearest;
-                PricePoint cp = pts.get(nearest);
+                PricePoint cp = pts.get(curStart + nearest);
                 java.time.Instant inst = java.time.Instant.ofEpochSecond(cp.timestamp);
                 java.time.LocalDateTime ldt = java.time.LocalDateTime.ofInstant(inst, java.time.ZoneId.systemDefault());
                 String fmt = (activeFrame[0].equals("1D") || activeFrame[0].equals("7D"))
@@ -3697,6 +3703,28 @@ private String[] buildItemDataFromCache(String name)
                 public void mouseDragged(MouseEvent e) {
                     if (!isDragging[0]) return;
                     dragEnd[0] = e.getX();
+                    // update crosshair to drag end position
+                    java.util.List<PricePoint> pts = pointsHolder[0];
+                    if (pts != null && pts.size() >= 2) {
+                        int curStart = zoomStart[0];
+                        int curEnd = zoomEnd[0] < 0 ? pts.size()-1 : zoomEnd[0];
+                        int visN = curEnd - curStart + 1;
+                        int w = priceCanvas.getWidth();
+                        int nearest = 0; double minDist = Double.MAX_VALUE;
+                        for (int i = 0; i < visN; i++) {
+                            int px = (int)(i * (w - 1.0) / (visN - 1));
+                            double dist = Math.abs(e.getX() - px);
+                            if (dist < minDist) { minDist = dist; nearest = i; }
+                        }
+                        crosshairIdx[0] = nearest;
+                        PricePoint cp = pts.get(curStart + nearest);
+                        java.time.Instant inst = java.time.Instant.ofEpochSecond(cp.timestamp);
+                        java.time.LocalDateTime ldt = java.time.LocalDateTime.ofInstant(inst, java.time.ZoneId.systemDefault());
+                        String fmt = (activeFrame[0].equals("1D") || activeFrame[0].equals("7D"))
+                                ? String.format("%s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
+                                : String.format("%d %s %d", ldt.getDayOfMonth(), ldt.getMonth().toString().substring(0,3), ldt.getYear());
+                        dateLabel.setText(fmt);
+                    }
                     priceCanvas.repaint();
                 }
             });
