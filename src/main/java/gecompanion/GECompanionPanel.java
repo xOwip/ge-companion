@@ -2947,6 +2947,8 @@ private String[] buildItemDataFromCache(String name)
         final boolean[] currentLineHighlighted = {false};
         final int[] crosshairIdx = {-1};
         final int[] revealW = {0};
+        final int[] zoomStart = {0};
+        final int[] zoomEnd = {-1}; // -1 means full range
         final boolean[] magnifying = {false};
         final int[] magnifyIdx = {-1};
 
@@ -3069,14 +3071,9 @@ private String[] buildItemDataFromCache(String name)
                     return;
                 }
 
-// price range
-                // read zoom state from client properties (drag-to-select zoom)
-                Object zsObj = getClientProperty("zoomStart");
-                Object zeObj = getClientProperty("zoomEnd");
-                int[] zoomStartArr = zsObj instanceof int[] ? (int[])zsObj : null;
-                int[] zoomEndArr = zeObj instanceof int[] ? (int[])zeObj : null;
-                int visStart = zoomStartArr != null ? zoomStartArr[0] : 0;
-                int visEnd = zoomEndArr != null && zoomEndArr[0] >= 0 ? zoomEndArr[0] : pts.size() - 1;
+// price range — use shared zoom state directly
+                int visStart = zoomStart[0];
+                int visEnd = zoomEnd[0] >= 0 ? zoomEnd[0] : pts.size() - 1;
                 visStart = Math.max(0, Math.min(visStart, pts.size()-1));
                 visEnd = Math.max(visStart+1, Math.min(visEnd, pts.size()-1));
                 java.util.List<PricePoint> visPts = pts.subList(visStart, visEnd+1);
@@ -3404,13 +3401,9 @@ private String[] buildItemDataFromCache(String name)
                 java.util.List<PricePoint> pts = pointsHolder[0];
                 if (pts == null || pts.size() < 2) { g2.dispose(); return; }
 
-                // sync zoom with price canvas
-                Object zsObj = priceCanvas.getClientProperty("zoomStart");
-                Object zeObj = priceCanvas.getClientProperty("zoomEnd");
-                int[] zoomStartArr = zsObj instanceof int[] ? (int[])zsObj : null;
-                int[] zoomEndArr = zeObj instanceof int[] ? (int[])zeObj : null;
-                int visStart = zoomStartArr != null ? zoomStartArr[0] : 0;
-                int visEnd = zoomEndArr != null && zoomEndArr[0] >= 0 ? zoomEndArr[0] : pts.size() - 1;
+// sync zoom with price canvas — use shared zoom state directly
+                int visStart = zoomStart[0];
+                int visEnd = zoomEnd[0] >= 0 ? zoomEnd[0] : pts.size() - 1;
                 visStart = Math.max(0, Math.min(visStart, pts.size()-1));
                 visEnd = Math.max(visStart+1, Math.min(visEnd, pts.size()-1));
                 java.util.List<PricePoint> visPts = pts.subList(visStart, visEnd+1);
@@ -3510,19 +3503,14 @@ private String[] buildItemDataFromCache(String name)
         wrapper.add(zoomHint);
         wrapper.add(Box.createVerticalStrut(4));
 
-        // ── mouse interaction ──────────────────────────────────────────
+// ── mouse interaction ──────────────────────────────────────────
         priceCanvas.addMouseMotionListener(new MouseAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
                 java.util.List<PricePoint> pts = pointsHolder[0];
                 if (animating[0] || pts == null || pts.size() < 2) return;
-                // get visible range from zoom state
-                Object zsObj = getClientProperty("zoomStart");
-                Object zeObj = getClientProperty("zoomEnd");
-                int[] zsArr = zsObj instanceof int[] ? (int[])zsObj : null;
-                int[] zeArr = zeObj instanceof int[] ? (int[])zeObj : null;
-                int curStart = zsArr != null ? zsArr[0] : 0;
-                int curEnd = zeArr != null && zeArr[0] >= 0 ? zeArr[0] : pts.size()-1;
+                int curStart = zoomStart[0];
+                int curEnd = zoomEnd[0] >= 0 ? zoomEnd[0] : pts.size()-1;
                 int visN = curEnd - curStart + 1;
                 int w = priceCanvas.getWidth();
                 int nearest = 0; double minDist = Double.MAX_VALUE;
@@ -3619,8 +3607,6 @@ private String[] buildItemDataFromCache(String name)
             final int[] dragStart = {-1};
             final int[] dragEnd = {-1};
             final boolean[] isDragging = {false};
-            final int[] zoomStart = {0};
-            final int[] zoomEnd = {-1}; // -1 means full range
 
             priceCanvas.addMouseListener(new MouseAdapter() {
                 @Override
@@ -3730,8 +3716,6 @@ private String[] buildItemDataFromCache(String name)
             });
 
             // store zoom state so paintComponent can use it
-            priceCanvas.putClientProperty("zoomStart", zoomStart);
-            priceCanvas.putClientProperty("zoomEnd", zoomEnd);
             priceCanvas.putClientProperty("isDragging", isDragging);
             priceCanvas.putClientProperty("dragStart", dragStart);
             priceCanvas.putClientProperty("dragEnd", dragEnd);
