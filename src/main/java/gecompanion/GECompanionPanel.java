@@ -684,6 +684,7 @@ private String openBankItemName = null;
 
         final boolean[] graphOpen = {false};
         final JPanel[] graphPanelHolder = {null};
+        final JLabel[] statsLabels = new JLabel[6];
 
         JButton chartBtn = new JButton("▼ Show Price Chart");
         chartBtn.setForeground(TAB_INACTIVE);
@@ -715,7 +716,7 @@ private String openBankItemName = null;
                 // build graph panel on first open
                 if (graphPanelHolder[0] == null) {
                     String tf = graphActiveTimeframe;
-                    graphPanelHolder[0] = buildGraphPanel(graphItemIdFinal, currentMidPriceFinal, tf);
+                    graphPanelHolder[0] = buildGraphPanel(graphItemIdFinal, currentMidPriceFinal, tf, statsLabels);
                 }
                 graphViewport.setView(graphPanelHolder[0]);
                 graphViewport.setVisible(true);
@@ -773,6 +774,126 @@ private String openBankItemName = null;
             }
         });
 
+// ── statistics section (at detail panel level, outside graph viewport) ──
+        final boolean[] statsOpen2 = {false};
+
+        JPanel statsHeader = new JPanel(new BorderLayout());
+        statsHeader.setBackground(BG_DETAIL);
+        statsHeader.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 32)));
+        statsHeader.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
+        statsHeader.setAlignmentX(Component.LEFT_ALIGNMENT);
+        statsHeader.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        JLabel statsLbl = new JLabel("STATISTICS");
+        statsLbl.setForeground(new Color(110, 100, 90));
+        statsLbl.setFont(new Font("Monospaced", Font.PLAIN, 10));
+        statsLbl.setBorder(new EmptyBorder(0, 8, 0, 0));
+
+        JLabel statsArrow = new JLabel("▼");
+        statsArrow.setForeground(new Color(110, 100, 90));
+        statsArrow.setFont(new Font("Monospaced", Font.PLAIN, 10));
+        statsArrow.setBorder(new EmptyBorder(0, 0, 0, 8));
+
+        statsHeader.add(statsLbl, BorderLayout.WEST);
+        statsHeader.add(statsArrow, BorderLayout.EAST);
+
+        JPanel statsContent = new JPanel(new GridLayout(3, 2, 2, 2));
+        statsContent.setBackground(BG_DETAIL);
+        statsContent.setAlignmentX(Component.LEFT_ALIGNMENT);
+        statsContent.setMaximumSize(new Dimension(Integer.MAX_VALUE, 200));
+
+        String[] statNames = {"Overall High", "Overall Low", "Buying High", "Buying Low", "Selling High", "Selling Low"};
+        Color[] statColors = {TEXT_PRIMARY, TEXT_PRIMARY, GOLD, GOLD, new Color(74, 122, 191), new Color(74, 122, 191)};
+        for (int i = 0; i < 6; i++) {
+            JPanel box = new JPanel();
+            box.setLayout(new BoxLayout(box, BoxLayout.Y_AXIS));
+            box.setBackground(new Color(14, 12, 13));
+            box.setBorder(new EmptyBorder(4, 5, 4, 5));
+            JLabel nameLabel = new JLabel(statNames[i].toUpperCase());
+            nameLabel.setForeground(TEXT_DIM);
+            nameLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+            JLabel valLabel = new JLabel("—");
+            valLabel.setForeground(statColors[i]);
+            valLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_VALUE));
+            statsLabels[i] = valLabel;
+            box.add(nameLabel);
+            box.add(valLabel);
+            statsContent.add(box);
+        }
+
+        JViewport statsViewport = new JViewport();
+        statsViewport.setBackground(BG_DETAIL);
+        statsViewport.setVisible(false);
+        statsViewport.setPreferredSize(new Dimension(1, 0));
+        statsViewport.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+
+        statsHeader.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                if (!statsOpen2[0]) {
+                    statsViewport.setView(statsContent);
+                    statsViewport.setVisible(true);
+                    int fullH = statsContent.getPreferredSize().height;
+                    if (fullH <= 0) fullH = 100;
+                    final int targetH = fullH;
+                    statsViewport.setPreferredSize(new Dimension(1, 0));
+                    statsViewport.setViewPosition(new java.awt.Point(0, targetH));
+                    int[] curH = {0};
+                    javax.swing.Timer t = new javax.swing.Timer(16, null);
+                    t.addActionListener(ev -> {
+                        curH[0] = Math.min(curH[0] + 30, targetH);
+                        statsViewport.setPreferredSize(new Dimension(1, curH[0]));
+                        statsViewport.setViewPosition(new java.awt.Point(0, targetH - curH[0]));
+                        statsViewport.revalidate();
+                        if (curH[0] >= targetH) {
+                            t.stop();
+                            statsViewport.setPreferredSize(null);
+                            statsViewport.revalidate();
+                        }
+                    });
+                    t.start();
+                    statsOpen2[0] = true;
+                    statsArrow.setText("▲");
+                    statsLbl.setForeground(GOLD);
+                    statsArrow.setForeground(GOLD);
+                    statsHeader.setBorder(BorderFactory.createLineBorder(GOLD));
+                } else {
+                    int fullH = statsViewport.getView() != null ? statsViewport.getView().getPreferredSize().height : 100;
+                    if (fullH <= 0) fullH = 100;
+                    final int targetH = fullH;
+                    int[] curH = {targetH};
+                    javax.swing.Timer t = new javax.swing.Timer(16, null);
+                    t.addActionListener(ev -> {
+                        curH[0] = Math.max(curH[0] - 30, 0);
+                        statsViewport.setPreferredSize(new Dimension(1, curH[0]));
+                        statsViewport.setViewPosition(new java.awt.Point(0, targetH - curH[0]));
+                        statsViewport.revalidate();
+                        if (curH[0] <= 0) {
+                            t.stop();
+                            statsViewport.setVisible(false);
+                            statsViewport.setPreferredSize(new Dimension(1, 0));
+                            statsViewport.revalidate();
+                        }
+                    });
+                    t.start();
+                    statsOpen2[0] = false;
+                    statsArrow.setText("▼");
+                    statsLbl.setForeground(new Color(110, 100, 90));
+                    statsArrow.setForeground(new Color(110, 100, 90));
+                    statsHeader.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 32)));
+                }
+            }
+            public void mouseEntered(MouseEvent e) {
+                if (!statsOpen2[0]) statsHeader.setBorder(BorderFactory.createLineBorder(new Color(80, 70, 60)));
+            }
+            public void mouseExited(MouseEvent e) {
+                if (!statsOpen2[0]) statsHeader.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 32)));
+            }
+        });
+
+        inner.add(Box.createVerticalStrut(4));
+        inner.add(statsHeader);
+        inner.add(statsViewport);
+        inner.add(Box.createVerticalStrut(4));
         inner.add(footer);
         det.add(inner, BorderLayout.CENTER);
         return det;
@@ -2939,7 +3060,7 @@ private String[] buildItemDataFromCache(String name)
         return headerRow;
     }
 
-    private JPanel buildGraphPanel(int itemId, long currentPrice, String initialTimeframe)
+    private JPanel buildGraphPanel(int itemId, long currentPrice, String initialTimeframe, JLabel[] statsLabels)
     {
         final String[] activeFrame = {initialTimeframe};
         final java.util.List<PricePoint>[] pointsHolder = new java.util.List[]{null};
@@ -3521,93 +3642,6 @@ private String[] buildItemDataFromCache(String name)
         zoomHint.setMaximumSize(new Dimension(Integer.MAX_VALUE, 14));
         zoomHint.setAlignmentX(Component.LEFT_ALIGNMENT);
         wrapper.add(zoomHint);
-        wrapper.add(Box.createVerticalStrut(4));
-
-// ── statistics section ─────────────────────────────────────────
-        final JLabel[] statsLabels = new JLabel[6];
-        final boolean[] statsOpen = {false};
-
-        JPanel statsHeader = new JPanel(new BorderLayout());
-        statsHeader.setBackground(new Color(14, 12, 13));
-        statsHeader.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 32)));
-        statsHeader.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
-        statsHeader.setAlignmentX(Component.LEFT_ALIGNMENT);
-        statsHeader.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-
-        JLabel statsLbl = new JLabel("STATISTICS");
-        statsLbl.setForeground(new Color(110, 100, 90));
-        statsLbl.setFont(new Font("Monospaced", Font.PLAIN, 10));
-        statsLbl.setBorder(new EmptyBorder(0, 8, 0, 0));
-
-        JLabel statsArrow = new JLabel("▼");
-        statsArrow.setForeground(new Color(110, 100, 90));
-        statsArrow.setFont(new Font("Monospaced", Font.PLAIN, 10));
-        statsArrow.setBorder(new EmptyBorder(0, 0, 0, 8));
-
-        statsHeader.add(statsLbl, BorderLayout.WEST);
-        statsHeader.add(statsArrow, BorderLayout.EAST);
-
-        JPanel statsContent = new JPanel(new GridLayout(3, 2, 2, 2));
-        statsContent.setBackground(new Color(14, 12, 13));
-        statsContent.setAlignmentX(Component.LEFT_ALIGNMENT);
-        statsContent.setMaximumSize(new Dimension(Integer.MAX_VALUE, 200));
-        statsContent.setVisible(false);
-
-        String[] statNames = {"Overall High", "Overall Low", "Buying High", "Buying Low", "Selling High", "Selling Low"};
-        Color[] statColors = {TEXT_PRIMARY, TEXT_PRIMARY, GOLD, GOLD, new Color(74, 122, 191), new Color(74, 122, 191)};
-        for (int i = 0; i < 6; i++) {
-            JPanel box = new JPanel();
-            box.setLayout(new BoxLayout(box, BoxLayout.Y_AXIS));
-            box.setBackground(new Color(14, 12, 13));
-            box.setBorder(new EmptyBorder(4, 5, 4, 5));
-            JLabel nameLabel = new JLabel(statNames[i].toUpperCase());
-            nameLabel.setForeground(TEXT_DIM);
-            nameLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
-            JLabel valLabel = new JLabel("—");
-            valLabel.setForeground(statColors[i]);
-            valLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_VALUE));
-            statsLabels[i] = valLabel;
-            box.add(nameLabel);
-            box.add(valLabel);
-            statsContent.add(box);
-        }
-
-        statsHeader.addMouseListener(new MouseAdapter() {
-            public void mouseClicked(MouseEvent e) {
-                statsOpen[0] = !statsOpen[0];
-                statsContent.setVisible(statsOpen[0]);
-                if (statsOpen[0]) {
-                    statsArrow.setText("▲");
-                    statsLbl.setForeground(GOLD);
-                    statsArrow.setForeground(GOLD);
-                    statsHeader.setBorder(BorderFactory.createLineBorder(GOLD));
-                } else {
-                    statsArrow.setText("▼");
-                    statsLbl.setForeground(new Color(110, 100, 90));
-                    statsArrow.setForeground(new Color(110, 100, 90));
-                    statsHeader.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 32)));
-                }
-// force detail panel to resize by removing fixed height constraint
-                java.awt.Container p = wrapper.getParent();
-                while (p != null) {
-                    if (p instanceof javax.swing.JViewport) {
-                        ((javax.swing.JViewport) p).setPreferredSize(null);
-                    }
-                    p.revalidate();
-                    p.repaint();
-                    p = p.getParent();
-                }
-            }
-            public void mouseEntered(MouseEvent e) {
-                if (!statsOpen[0]) statsHeader.setBorder(BorderFactory.createLineBorder(new Color(80, 70, 60)));
-            }
-            public void mouseExited(MouseEvent e) {
-                if (!statsOpen[0]) statsHeader.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 32)));
-            }
-        });
-
-        wrapper.add(statsHeader);
-        wrapper.add(statsContent);
         wrapper.add(Box.createVerticalStrut(4));
 
 // ── mouse interaction ──────────────────────────────────────────
