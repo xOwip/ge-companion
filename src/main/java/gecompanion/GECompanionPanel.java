@@ -800,7 +800,8 @@ private String openBankItemName = null;
         JPanel statsContent = new JPanel(new GridLayout(3, 2, 2, 2));
         statsContent.setBackground(BG_DETAIL);
         statsContent.setAlignmentX(Component.LEFT_ALIGNMENT);
-        statsContent.setMaximumSize(new Dimension(Integer.MAX_VALUE, 200));
+        statsContent.setPreferredSize(new Dimension(200, 100));
+        statsContent.setMaximumSize(new Dimension(200, 200));
 
         String[] statNames = {"Overall High", "Overall Low", "Buying High", "Buying Low", "Selling High", "Selling Low"};
         Color[] statColors = {TEXT_PRIMARY, TEXT_PRIMARY, GOLD, GOLD, new Color(74, 122, 191), new Color(74, 122, 191)};
@@ -832,8 +833,8 @@ private String openBankItemName = null;
                 if (!statsOpen2[0]) {
                     statsViewport.setView(statsContent);
                     statsViewport.setVisible(true);
-                    int fullH = statsContent.getPreferredSize().height;
-                    if (fullH <= 0) fullH = 100;
+                    statsContent.doLayout();
+                    int fullH = 135;
                     final int targetH = fullH;
                     statsViewport.setPreferredSize(new Dimension(1, 0));
                     statsViewport.setViewPosition(new java.awt.Point(0, targetH));
@@ -846,7 +847,7 @@ private String openBankItemName = null;
                         statsViewport.revalidate();
                         if (curH[0] >= targetH) {
                             t.stop();
-                            statsViewport.setPreferredSize(null);
+                            statsViewport.setPreferredSize(new Dimension(1, targetH));
                             statsViewport.revalidate();
                         }
                     });
