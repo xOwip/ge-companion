@@ -685,6 +685,11 @@ private String openBankItemName = null;
         final boolean[] graphOpen = {false};
         final JPanel[] graphPanelHolder = {null};
         final JLabel[] statsLabels = new JLabel[6];
+        final boolean[] statsOpen2 = {false};
+        final javax.swing.JViewport[] statsViewportHolder = {null};
+        final JLabel[] statsArrowHolder = {null};
+        final JLabel[] statsLblHolder = {null};
+        final JPanel[] statsHeaderHolder = {null};
 
         JButton chartBtn = new JButton("▼ Show Price Chart");
         chartBtn.setForeground(TAB_INACTIVE);
@@ -742,6 +747,7 @@ private String openBankItemName = null;
                 openTimer.start();
                 graphOpen[0] = true;
                 graphWasOpen = true;
+                if (statsHeaderHolder[0] != null) statsHeaderHolder[0].setVisible(true);
                 chartBtn.setText("▲ Hide Price Chart");
                 chartBtn.setForeground(GOLD);
                 chartBtn.setBorder(BorderFactory.createLineBorder(GOLD));
@@ -768,6 +774,17 @@ private String openBankItemName = null;
                 closeTimer.start();
                 graphOpen[0] = false;
                 graphWasOpen = false;
+                if (statsHeaderHolder[0] != null) statsHeaderHolder[0].setVisible(false);
+                // also close stats if open
+                if (statsOpen2[0] && statsViewportHolder[0] != null) {
+                    statsOpen2[0] = false;
+                    statsViewportHolder[0].setVisible(false);
+                    statsViewportHolder[0].setPreferredSize(new Dimension(1, 0));
+                    if (statsArrowHolder[0] != null) statsArrowHolder[0].setText("▼");
+                    if (statsLblHolder[0] != null) statsLblHolder[0].setForeground(new Color(110, 100, 90));
+                    if (statsArrowHolder[0] != null) statsArrowHolder[0].setForeground(new Color(110, 100, 90));
+                    if (statsHeaderHolder[0] != null) statsHeaderHolder[0].setBorder(BorderFactory.createLineBorder(new Color(42, 37, 32)));
+                }
                 chartBtn.setText("▼ Show Price Chart");
                 chartBtn.setForeground(TAB_INACTIVE);
                 chartBtn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
@@ -775,8 +792,6 @@ private String openBankItemName = null;
         });
 
 // ── statistics section (at detail panel level, outside graph viewport) ──
-        final boolean[] statsOpen2 = {false};
-
         JPanel statsHeader = new JPanel(new BorderLayout());
         statsHeader.setBackground(BG_DETAIL);
         statsHeader.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 32)));
@@ -830,6 +845,7 @@ private String openBankItemName = null;
 
         statsHeader.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
+                if (!graphOpen[0]) return; // don't open stats if chart is closed
                 if (!statsOpen2[0]) {
                     statsViewport.setView(statsContent);
                     statsViewport.setVisible(true);
@@ -891,7 +907,14 @@ private String openBankItemName = null;
             }
         });
 
+// wire up holders
+        statsViewportHolder[0] = statsViewport;
+        statsArrowHolder[0] = statsArrow;
+        statsLblHolder[0] = statsLbl;
+        statsHeaderHolder[0] = statsHeader;
+
         inner.add(Box.createVerticalStrut(4));
+        statsHeader.setVisible(false);
         inner.add(statsHeader);
         inner.add(statsViewport);
         inner.add(Box.createVerticalStrut(4));
