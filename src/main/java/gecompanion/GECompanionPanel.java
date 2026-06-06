@@ -1522,7 +1522,7 @@ private String openBankItemName = null;
                                     currentOpenSearchDetail = newDetailSlot;
                                     selectedItemName = itemData[0];
                                     newRow.setBorder(BorderFactory.createCompoundBorder(
-                                            new MatteBorder(0, 3, 0, 0, GOLD),
+                                            new MatteBorder(1, 3, 0, 0, GOLD),
                                             new MatteBorder(0, 0, 1, 0, new Color(26, 24, 24))
                                     ));
                                     currentOpenSearchRow = newRow;
@@ -1538,8 +1538,8 @@ private String openBankItemName = null;
                 iconWrapper.setBackground(BG_ROW_SELECTED);
                 deltaLimitRow.setBackground(BG_ROW_SELECTED);
                 row.setBorder(BorderFactory.createCompoundBorder(
-                    new MatteBorder(0, 3, 0, 0, GOLD),
-                    new MatteBorder(0, 0, 1, 0, new Color(26, 24, 24))
+                        new MatteBorder(1, 3, 0, 0, GOLD),
+                        new MatteBorder(0, 0, 1, 0, new Color(26, 24, 24))
                 ));
 
                 searchResultsPanel.revalidate();
@@ -1916,7 +1916,7 @@ private String openBankItemName = null;
                                     if (graphWasOpen) reopenGraph(newDetailSlot);
                                     currentOpenWatchlistDetail = newDetailSlot;
                                     selectedWatchlistItemName = itemData[0];
-                                    newRow.setBorder(new MatteBorder(0, 3, 0, 0, GOLD));
+                                    newRow.setBorder(new MatteBorder(1, 3, 0, 0, GOLD));
                                     currentOpenWatchlistRow = newRow;
                                     return;
                                 }
@@ -1930,7 +1930,7 @@ private String openBankItemName = null;
                 iconWrapper.setBackground(BG_ROW_SELECTED);
                 deltaLimitRow.setBackground(BG_ROW_SELECTED);
                 row.setBorder(BorderFactory.createEmptyBorder());
-                row.setBorder(new MatteBorder(0, 3, 0, 0, GOLD));
+                row.setBorder(new MatteBorder(1, 3, 0, 0, GOLD));
                 tabContentPanel.revalidate();
                 tabContentPanel.repaint();
             }
@@ -2660,7 +2660,7 @@ private String openBankItemName = null;
                 currentOpenBankDeltaRow = deltaRow;
                 currentOpenBankDetail = detailSlot;
                 currentOpenBankBorderColor = borderColor;
-                row.setBorder(new MatteBorder(0, 4, 0, 0, GOLD));
+                row.setBorder(new MatteBorder(1, 4, 0, 0, GOLD));
 
                 detailSlot.removeAll();
                 detailSlot.add(buildInlineDetail(item, false), BorderLayout.CENTER);
@@ -2721,7 +2721,7 @@ private String openBankItemName = null;
                                     if (graphWasOpen) reopenGraph(newDetailSlot);
                                     currentOpenBankDetail = newDetailSlot;
                                     selectedBankItemName = itemData[0];
-                                    newRow.setBorder(new MatteBorder(0, 4, 0, 0, GOLD));
+                                    newRow.setBorder(new MatteBorder(1, 4, 0, 0, GOLD));
                                     currentOpenBankRow = newRow;
                                     return;
                                 }
