@@ -3523,6 +3523,93 @@ private String[] buildItemDataFromCache(String name)
         wrapper.add(zoomHint);
         wrapper.add(Box.createVerticalStrut(4));
 
+// ── statistics section ─────────────────────────────────────────
+        final JLabel[] statsLabels = new JLabel[6];
+        final boolean[] statsOpen = {false};
+
+        JPanel statsHeader = new JPanel(new BorderLayout());
+        statsHeader.setBackground(new Color(14, 12, 13));
+        statsHeader.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 32)));
+        statsHeader.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
+        statsHeader.setAlignmentX(Component.LEFT_ALIGNMENT);
+        statsHeader.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        JLabel statsLbl = new JLabel("STATISTICS");
+        statsLbl.setForeground(new Color(110, 100, 90));
+        statsLbl.setFont(new Font("Monospaced", Font.PLAIN, 10));
+        statsLbl.setBorder(new EmptyBorder(0, 8, 0, 0));
+
+        JLabel statsArrow = new JLabel("▼");
+        statsArrow.setForeground(new Color(110, 100, 90));
+        statsArrow.setFont(new Font("Monospaced", Font.PLAIN, 10));
+        statsArrow.setBorder(new EmptyBorder(0, 0, 0, 8));
+
+        statsHeader.add(statsLbl, BorderLayout.WEST);
+        statsHeader.add(statsArrow, BorderLayout.EAST);
+
+        JPanel statsContent = new JPanel(new GridLayout(3, 2, 2, 2));
+        statsContent.setBackground(new Color(14, 12, 13));
+        statsContent.setAlignmentX(Component.LEFT_ALIGNMENT);
+        statsContent.setMaximumSize(new Dimension(Integer.MAX_VALUE, 200));
+        statsContent.setVisible(false);
+
+        String[] statNames = {"Overall High", "Overall Low", "Buying High", "Buying Low", "Selling High", "Selling Low"};
+        Color[] statColors = {TEXT_PRIMARY, TEXT_PRIMARY, GOLD, GOLD, new Color(74, 122, 191), new Color(74, 122, 191)};
+        for (int i = 0; i < 6; i++) {
+            JPanel box = new JPanel();
+            box.setLayout(new BoxLayout(box, BoxLayout.Y_AXIS));
+            box.setBackground(new Color(14, 12, 13));
+            box.setBorder(new EmptyBorder(4, 5, 4, 5));
+            JLabel nameLabel = new JLabel(statNames[i].toUpperCase());
+            nameLabel.setForeground(TEXT_DIM);
+            nameLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+            JLabel valLabel = new JLabel("—");
+            valLabel.setForeground(statColors[i]);
+            valLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_VALUE));
+            statsLabels[i] = valLabel;
+            box.add(nameLabel);
+            box.add(valLabel);
+            statsContent.add(box);
+        }
+
+        statsHeader.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                statsOpen[0] = !statsOpen[0];
+                statsContent.setVisible(statsOpen[0]);
+                if (statsOpen[0]) {
+                    statsArrow.setText("▲");
+                    statsLbl.setForeground(GOLD);
+                    statsArrow.setForeground(GOLD);
+                    statsHeader.setBorder(BorderFactory.createLineBorder(GOLD));
+                } else {
+                    statsArrow.setText("▼");
+                    statsLbl.setForeground(new Color(110, 100, 90));
+                    statsArrow.setForeground(new Color(110, 100, 90));
+                    statsHeader.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 32)));
+                }
+// force detail panel to resize by removing fixed height constraint
+                java.awt.Container p = wrapper.getParent();
+                while (p != null) {
+                    if (p instanceof javax.swing.JViewport) {
+                        ((javax.swing.JViewport) p).setPreferredSize(null);
+                    }
+                    p.revalidate();
+                    p.repaint();
+                    p = p.getParent();
+                }
+            }
+            public void mouseEntered(MouseEvent e) {
+                if (!statsOpen[0]) statsHeader.setBorder(BorderFactory.createLineBorder(new Color(80, 70, 60)));
+            }
+            public void mouseExited(MouseEvent e) {
+                if (!statsOpen[0]) statsHeader.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 32)));
+            }
+        });
+
+        wrapper.add(statsHeader);
+        wrapper.add(statsContent);
+        wrapper.add(Box.createVerticalStrut(4));
+
 // ── mouse interaction ──────────────────────────────────────────
         if (config.chartZoomMode() != ChartZoomMode.DRAG_SELECT) priceCanvas.addMouseMotionListener(new MouseAdapter() {
             @Override
@@ -3823,6 +3910,7 @@ private String[] buildItemDataFromCache(String name)
                     pointsHolder[0] = pts;
                     animating[0] = true;
                     revealW[0] = 0;
+                    updateStatsLabels(pts, statsLabels);
                     javax.swing.Timer t = new javax.swing.Timer(16, null);
                     t.addActionListener(ev -> {
                         revealW[0] = Math.min(revealW[0] + 8, 100);
@@ -3843,11 +3931,47 @@ private String[] buildItemDataFromCache(String name)
         // ── initial data load ──────────────────────────────────────────
         fetchTimeseries(itemId, initialTimeframe, pts -> {
             pointsHolder[0] = pts;
+            updateStatsLabels(pts, statsLabels);
             priceCanvas.repaint();
             volCanvas.repaint();
         });
 
         return wrapper;
+    }
+
+    private void updateStatsLabels(java.util.List<PricePoint> pts, JLabel[] labels) {
+        if (pts == null || pts.size() < 2) return;
+        long ovHigh = Long.MIN_VALUE, ovLow = Long.MAX_VALUE;
+        long buyHigh = Long.MIN_VALUE, buyLow = Long.MAX_VALUE;
+        long sellHigh = Long.MIN_VALUE, sellLow = Long.MAX_VALUE;
+        for (PricePoint p : pts) {
+            if (p.buyPrice > 0) {
+                buyHigh = Math.max(buyHigh, p.buyPrice);
+                buyLow = Math.min(buyLow, p.buyPrice);
+                ovHigh = Math.max(ovHigh, p.buyPrice);
+                ovLow = Math.min(ovLow, p.buyPrice);
+            }
+            if (p.sellPrice > 0) {
+                sellHigh = Math.max(sellHigh, p.sellPrice);
+                sellLow = Math.min(sellLow, p.sellPrice);
+                ovHigh = Math.max(ovHigh, p.sellPrice);
+                ovLow = Math.min(ovLow, p.sellPrice);
+            }
+        }
+        long[] vals = {ovHigh, ovLow, buyHigh, buyLow, sellHigh, sellLow};
+        for (int i = 0; i < 6; i++) {
+            final long v = vals[i];
+            final int idx = i;
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                if (v == Long.MIN_VALUE || v == Long.MAX_VALUE) {
+                    labels[idx].setText("—");
+                    labels[idx].setToolTipText(null);
+                } else {
+                    labels[idx].setText(formatPrice(String.valueOf(v)));
+                    labels[idx].setToolTipText(String.format("%,d gp", v));
+                }
+            });
+        }
     }
     private JPanel buildStatBox(String label, String value, Color valueColor, String tooltip)
     {
