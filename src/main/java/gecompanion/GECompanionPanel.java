@@ -3481,12 +3481,34 @@ private String[] buildItemDataFromCache(String name)
         wrapper.add(Box.createVerticalStrut(2));
 
         // ── date label ─────────────────────────────────────────────────
-        JLabel dateLabel = new JLabel(" ", SwingConstants.CENTER);
-        dateLabel.setForeground(new Color(110, 100, 90));
-        dateLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
-        dateLabel.setMaximumSize(new Dimension(225, 14));
-        dateLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        wrapper.add(dateLabel);
+        JPanel dateCanvas = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                int w = getWidth(), h = getHeight();
+                g2.setColor(new Color(14, 12, 13));
+                g2.fillRect(0, 0, w, h);
+                String text = (String) getClientProperty("dateText");
+                if (text != null && !text.trim().isEmpty()) {
+                    g2.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+                    g2.setColor(new Color(110, 100, 90));
+                    FontMetrics fm = g2.getFontMetrics();
+                    int textW = fm.stringWidth(text);
+                    Integer xPos = (Integer) getClientProperty("dateX");
+                    int x = xPos != null ? Math.max(0, Math.min(w - textW, xPos - textW / 2)) : (w - textW) / 2;
+                    g2.drawString(text, x, h - 2);
+                }
+                g2.dispose();
+            }
+        };
+        dateCanvas.setPreferredSize(new Dimension(1, 14));
+        dateCanvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 14));
+        dateCanvas.setMinimumSize(new Dimension(0, 14));
+        dateCanvas.setBackground(new Color(14, 12, 13));
+        dateCanvas.setAlignmentX(Component.LEFT_ALIGNMENT);
+        wrapper.add(dateCanvas);
 
 // ── zoom hint text ─────────────────────────────────────────────
         JLabel zoomHint = new JLabel(
@@ -3525,7 +3547,9 @@ private String[] buildItemDataFromCache(String name)
                         ? String.format("%s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
                         : String.format("%d %s %d", ldt.getDayOfMonth(),
                         ldt.getMonth().toString().substring(0,3), ldt.getYear());
-                dateLabel.setText(fmt);
+                dateCanvas.putClientProperty("dateText", fmt);
+                dateCanvas.putClientProperty("dateX", (int)(crosshairIdx[0] * (priceCanvas.getWidth()-1.0) / Math.max(zoomEnd[0] >= 0 ? zoomEnd[0]-zoomStart[0] : pointsHolder[0].size()-1, 1)));
+                dateCanvas.repaint();
                 priceCanvas.repaint();
                 volCanvas.repaint();
             }
@@ -3537,7 +3561,8 @@ private String[] buildItemDataFromCache(String name)
                 crosshairIdx[0] = -1;
                 magnifying[0] = false;
                 magnifyIdx[0] = -1;
-                dateLabel.setText(" ");
+                dateCanvas.putClientProperty("dateText", "");
+                dateCanvas.repaint();
                 priceCanvas.repaint();
                 volCanvas.repaint();
             }
@@ -3593,7 +3618,9 @@ private String[] buildItemDataFromCache(String name)
                         ? String.format("%s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
                         : String.format("%d %s %d", ldt.getDayOfMonth(),
                         ldt.getMonth().toString().substring(0,3), ldt.getYear());
-                dateLabel.setText(fmt);
+                dateCanvas.putClientProperty("dateText", fmt);
+                dateCanvas.putClientProperty("dateX", (int)(crosshairIdx[0] * (priceCanvas.getWidth()-1.0) / Math.max(zoomEnd[0] >= 0 ? zoomEnd[0]-zoomStart[0] : pointsHolder[0].size()-1, 1)));
+                dateCanvas.repaint();
                 priceCanvas.repaint();
                 volCanvas.repaint();
             }
@@ -3610,7 +3637,8 @@ private String[] buildItemDataFromCache(String name)
                 @Override
                 public void mouseExited(MouseEvent e) {
                     crosshairIdx[0] = -1;
-                    dateLabel.setText(" ");
+                    dateCanvas.putClientProperty("dateText", "");
+                    dateCanvas.repaint();
                     priceCanvas.repaint();
                     volCanvas.repaint();
                 }
@@ -3680,7 +3708,9 @@ private String[] buildItemDataFromCache(String name)
                     String fmt = (activeFrame[0].equals("1D") || activeFrame[0].equals("7D"))
                             ? String.format("%s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
                             : String.format("%d %s %d", ldt.getDayOfMonth(), ldt.getMonth().toString().substring(0,3), ldt.getYear());
-                    dateLabel.setText(fmt);
+                    dateCanvas.putClientProperty("dateText", fmt);
+                    dateCanvas.putClientProperty("dateX", (int)(nearest * (priceCanvas.getWidth()-1.0) / Math.max(visN-1,1)));
+                    dateCanvas.repaint();
                     priceCanvas.repaint(); volCanvas.repaint();
                 }
                 @Override
@@ -3707,7 +3737,9 @@ private String[] buildItemDataFromCache(String name)
                         String fmt = (activeFrame[0].equals("1D") || activeFrame[0].equals("7D"))
                                 ? String.format("%s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
                                 : String.format("%d %s %d", ldt.getDayOfMonth(), ldt.getMonth().toString().substring(0,3), ldt.getYear());
-                        dateLabel.setText(fmt);
+                        dateCanvas.putClientProperty("dateText", fmt);
+                        dateCanvas.putClientProperty("dateX", (int)(nearest * (priceCanvas.getWidth()-1.0) / Math.max(visN-1,1)));
+                        dateCanvas.repaint();
                     }
                     priceCanvas.repaint();
                     volCanvas.repaint();
@@ -3743,7 +3775,9 @@ private String[] buildItemDataFromCache(String name)
                         ? String.format("%s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
                         : String.format("%d %s %d", ldt.getDayOfMonth(),
                         ldt.getMonth().toString().substring(0,3), ldt.getYear());
-                dateLabel.setText(fmt);
+                dateCanvas.putClientProperty("dateText", fmt);
+                dateCanvas.putClientProperty("dateX", (int)(nearest * (priceCanvas.getWidth()-1.0) / Math.max(zoomEnd[0] >= 0 ? zoomEnd[0]-zoomStart[0] : pointsHolder[0].size()-1, 1)));
+                dateCanvas.repaint();
                 priceCanvas.repaint();
                 volCanvas.repaint();
             }
@@ -3752,7 +3786,8 @@ private String[] buildItemDataFromCache(String name)
             @Override
             public void mouseExited(MouseEvent e) {
                 crosshairIdx[0] = -1;
-                dateLabel.setText(" ");
+                dateCanvas.putClientProperty("dateText", "");
+                dateCanvas.repaint();
                 priceCanvas.repaint();
                 volCanvas.repaint();
             }
@@ -3767,7 +3802,8 @@ private String[] buildItemDataFromCache(String name)
                 activeFrame[0] = frame;
                 graphActiveTimeframe = frame;
                 crosshairIdx[0] = -1;
-                dateLabel.setText(" ");
+                dateCanvas.putClientProperty("dateText", "");
+                dateCanvas.repaint();
 
                 // update button styles
                 for (int j = 0; j < frames.length; j++) {
