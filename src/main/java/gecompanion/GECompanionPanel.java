@@ -3880,17 +3880,19 @@ private String[] buildItemDataFromCache(String name)
             public void mouseMoved(MouseEvent e) {
                 java.util.List<PricePoint> pts = pointsHolder[0];
                 if (animating[0] || pts == null || pts.size() < 2) return;
-                int n = pts.size();
+                int curStart = zoomStart[0];
+                int curEnd = zoomEnd[0] >= 0 ? zoomEnd[0] : pts.size()-1;
+                int visN = curEnd - curStart + 1;
                 int w = volCanvas.getWidth();
                 int nearest = 0;
                 double minDist = Double.MAX_VALUE;
-                for (int i = 0; i < n; i++) {
-                    int px = (int)(i * (w - 1.0) / (n - 1));
+                for (int i = 0; i < visN; i++) {
+                    int px = (int)(i * (w - 1.0) / (visN - 1));
                     double dist = Math.abs(e.getX() - px);
                     if (dist < minDist) { minDist = dist; nearest = i; }
                 }
                 crosshairIdx[0] = nearest;
-                PricePoint cp = pts.get(nearest);
+                PricePoint cp = pts.get(curStart + nearest);
                 java.time.Instant inst = java.time.Instant.ofEpochSecond(cp.timestamp);
                 java.time.LocalDateTime ldt = java.time.LocalDateTime.ofInstant(inst, java.time.ZoneId.systemDefault());
                 String fmt = (activeFrame[0].equals("1D") || activeFrame[0].equals("7D"))
