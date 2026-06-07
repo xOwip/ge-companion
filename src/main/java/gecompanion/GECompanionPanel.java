@@ -66,7 +66,6 @@ public class GECompanionPanel extends PluginPanel
     private JLabel searchClearBtn;
     private boolean suppressSearchChange = false;
     private boolean isRefreshing = false;
-    private long timeframeSwitchTime = 0;
     private Runnable watchlistReopenAction = null;
     private Runnable searchReopenAction = null;
     private Runnable bankReopenAction = null;
@@ -778,31 +777,22 @@ private String openBankItemName = null;
                 int fullH = graphPanelHolder[0].getPreferredSize().height;
                 if (fullH <= 0) fullH = 200;
                 final int targetH = fullH;
-                if (System.currentTimeMillis() - timeframeSwitchTime < 500)
-                {
-                    graphViewport.setPreferredSize(new Dimension(1, targetH));
-                    graphViewport.setViewPosition(new java.awt.Point(0, 0));
+                graphViewport.setPreferredSize(new Dimension(1, 0));
+                graphViewport.setViewPosition(new java.awt.Point(0, targetH));
+                int[] curH = {0};
+                javax.swing.Timer openTimer = new javax.swing.Timer(16, null);
+                openTimer.addActionListener(ev -> {
+                    curH[0] = Math.min(curH[0] + 30, targetH);
+                    graphViewport.setPreferredSize(new Dimension(1, curH[0]));
+                    graphViewport.setViewPosition(new java.awt.Point(0, targetH - curH[0]));
                     graphViewport.revalidate();
-                }
-                else
-                {
-                    graphViewport.setPreferredSize(new Dimension(1, 0));
-                    graphViewport.setViewPosition(new java.awt.Point(0, targetH));
-                    int[] curH = {0};
-                    javax.swing.Timer openTimer = new javax.swing.Timer(16, null);
-                    openTimer.addActionListener(ev -> {
-                        curH[0] = Math.min(curH[0] + 30, targetH);
-                        graphViewport.setPreferredSize(new Dimension(1, curH[0]));
-                        graphViewport.setViewPosition(new java.awt.Point(0, targetH - curH[0]));
+                    if (curH[0] >= targetH) {
+                        openTimer.stop();
+                        graphViewport.setPreferredSize(new Dimension(1, targetH));
                         graphViewport.revalidate();
-                        if (curH[0] >= targetH) {
-                            openTimer.stop();
-                            graphViewport.setPreferredSize(new Dimension(1, targetH));
-                            graphViewport.revalidate();
-                        }
-                    });
-                    openTimer.start();
-                }
+                    }
+                });
+                openTimer.start();
                 graphOpen[0] = true;
                 graphWasOpen = true;
                 if (statsHeaderHolder[0] != null) statsHeaderHolder[0].setVisible(true);
@@ -1536,34 +1526,25 @@ private String openBankItemName = null;
                     int fullHeight = detailSlot.getPreferredSize().height;
                     if (fullHeight <= 0) fullHeight = 150;
                     final int targetFinal = fullHeight;
+                    detailViewport.setPreferredSize(new Dimension(230, 0));
+                    detailViewport.setViewPosition(new java.awt.Point(0, targetFinal));
                     detailViewport.setVisible(true);
-                    if (System.currentTimeMillis() - timeframeSwitchTime < 500)
-                    {
-                        detailViewport.setPreferredSize(new Dimension(230, targetFinal));
-                        detailViewport.setViewPosition(new java.awt.Point(0, 0));
+                    detailViewport.revalidate();
+                    int[] curH = {0};
+                    javax.swing.Timer openTimer = new javax.swing.Timer(16, null);
+                    openTimer.addActionListener(ev -> {
+                        curH[0] = Math.min(curH[0] + 30, targetFinal);
+                        detailViewport.setPreferredSize(new Dimension(230, curH[0]));
+                        detailViewport.setViewPosition(new java.awt.Point(0, targetFinal - curH[0]));
                         detailViewport.revalidate();
-                    }
-                    else
-                    {
-                        detailViewport.setPreferredSize(new Dimension(230, 0));
-                        detailViewport.setViewPosition(new java.awt.Point(0, targetFinal));
-                        detailViewport.revalidate();
-                        int[] curH = {0};
-                        javax.swing.Timer openTimer = new javax.swing.Timer(16, null);
-                        openTimer.addActionListener(ev -> {
-                            curH[0] = Math.min(curH[0] + 30, targetFinal);
-                            detailViewport.setPreferredSize(new Dimension(230, curH[0]));
-                            detailViewport.setViewPosition(new java.awt.Point(0, targetFinal - curH[0]));
-                            detailViewport.revalidate();
-                            if (curH[0] >= targetFinal)
-                            {
-                                detailViewport.setPreferredSize(null);
-                                detailViewport.setViewPosition(new java.awt.Point(0, 0));
-                                openTimer.stop();
-                            }
-                        });
-                        openTimer.start();
-                    }
+                        if (curH[0] >= targetFinal)
+                        {
+                            detailViewport.setPreferredSize(null);
+                            detailViewport.setViewPosition(new java.awt.Point(0, 0));
+                            openTimer.stop();
+                        }
+                    });
+                    openTimer.start();
                 });
                 scheduleRepaint(detailSlot);
                 final String[] itemData = item;
@@ -1593,8 +1574,6 @@ private String openBankItemName = null;
                                     newDetailSlot.removeAll();
                                     newDetailSlot.add(buildInlineDetail(itemData, false), BorderLayout.CENTER);
                                     newViewport.setVisible(true);
-                                    newViewport.setPreferredSize(null);
-                                    newViewport.revalidate();
                                     scheduleRepaint(newDetailSlot);
                                     if (graphWasOpen) reopenGraph(newDetailSlot);
                                     currentOpenSearchDetail = newDetailSlot;
@@ -1950,34 +1929,25 @@ private String openBankItemName = null;
                     int fullHeight = detailSlot.getPreferredSize().height;
                     if (fullHeight <= 0) fullHeight = 150;
                     final int targetFinal = fullHeight;
+                    detailViewport.setPreferredSize(new Dimension(230, 0));
+                    detailViewport.setViewPosition(new java.awt.Point(0, targetFinal));
                     detailViewport.setVisible(true);
-                    if (System.currentTimeMillis() - timeframeSwitchTime < 500)
-                    {
-                        detailViewport.setPreferredSize(new Dimension(230, targetFinal));
-                        detailViewport.setViewPosition(new java.awt.Point(0, 0));
+                    detailViewport.revalidate();
+                    int[] curH = {0};
+                    javax.swing.Timer openTimer = new javax.swing.Timer(16, null);
+                    openTimer.addActionListener(ev -> {
+                        curH[0] = Math.min(curH[0] + 30, targetFinal);
+                        detailViewport.setPreferredSize(new Dimension(230, curH[0]));
+                        detailViewport.setViewPosition(new java.awt.Point(0, targetFinal - curH[0]));
                         detailViewport.revalidate();
-                    }
-                    else
-                    {
-                        detailViewport.setPreferredSize(new Dimension(230, 0));
-                        detailViewport.setViewPosition(new java.awt.Point(0, targetFinal));
-                        detailViewport.revalidate();
-                        int[] curH = {0};
-                        javax.swing.Timer openTimer = new javax.swing.Timer(16, null);
-                        openTimer.addActionListener(ev -> {
-                            curH[0] = Math.min(curH[0] + 30, targetFinal);
-                            detailViewport.setPreferredSize(new Dimension(230, curH[0]));
-                            detailViewport.setViewPosition(new java.awt.Point(0, targetFinal - curH[0]));
-                            detailViewport.revalidate();
-                            if (curH[0] >= targetFinal)
-                            {
-                                detailViewport.setPreferredSize(null);
-                                detailViewport.setViewPosition(new java.awt.Point(0, 0));
-                                openTimer.stop();
-                            }
-                        });
-                        openTimer.start();
-                    }
+                        if (curH[0] >= targetFinal)
+                        {
+                            detailViewport.setPreferredSize(null);
+                            detailViewport.setViewPosition(new java.awt.Point(0, 0));
+                            openTimer.stop();
+                        }
+                    });
+                    openTimer.start();
                 });
                 scheduleRepaint(detailSlot);
                 final String[] itemData = item;
@@ -2007,8 +1977,6 @@ private String openBankItemName = null;
                                     newDetailSlot.removeAll();
                                     newDetailSlot.add(buildInlineDetail(itemData, true), BorderLayout.CENTER);
                                     newViewport.setVisible(true);
-                                    newViewport.setPreferredSize(null);
-                                    newViewport.revalidate();
                                     scheduleRepaint(newDetailSlot);
                                     if (graphWasOpen) reopenGraph(newDetailSlot);
                                     currentOpenWatchlistDetail = newDetailSlot;
@@ -2774,34 +2742,25 @@ private String openBankItemName = null;
                     int fullHeight = detailSlot.getPreferredSize().height;
                     if (fullHeight <= 0) fullHeight = 150;
                     final int targetFinal = fullHeight;
+                    detailViewport.setPreferredSize(new Dimension(230, 0));
+                    detailViewport.setViewPosition(new java.awt.Point(0, targetFinal));
                     detailViewport.setVisible(true);
-                    if (System.currentTimeMillis() - timeframeSwitchTime < 500)
-                    {
-                        detailViewport.setPreferredSize(new Dimension(230, targetFinal));
-                        detailViewport.setViewPosition(new java.awt.Point(0, 0));
+                    detailViewport.revalidate();
+                    int[] curH = {0};
+                    javax.swing.Timer openTimer = new javax.swing.Timer(16, null);
+                    openTimer.addActionListener(ev -> {
+                        curH[0] = Math.min(curH[0] + 30, targetFinal);
+                        detailViewport.setPreferredSize(new Dimension(230, curH[0]));
+                        detailViewport.setViewPosition(new java.awt.Point(0, targetFinal - curH[0]));
                         detailViewport.revalidate();
-                    }
-                    else
-                    {
-                        detailViewport.setPreferredSize(new Dimension(230, 0));
-                        detailViewport.setViewPosition(new java.awt.Point(0, targetFinal));
-                        detailViewport.revalidate();
-                        int[] curH = {0};
-                        javax.swing.Timer openTimer = new javax.swing.Timer(16, null);
-                        openTimer.addActionListener(ev -> {
-                            curH[0] = Math.min(curH[0] + 30, targetFinal);
-                            detailViewport.setPreferredSize(new Dimension(230, curH[0]));
-                            detailViewport.setViewPosition(new java.awt.Point(0, targetFinal - curH[0]));
-                            detailViewport.revalidate();
-                            if (curH[0] >= targetFinal)
-                            {
-                                detailViewport.setPreferredSize(null);
-                                detailViewport.setViewPosition(new java.awt.Point(0, 0));
-                                openTimer.stop();
-                            }
-                        });
-                        openTimer.start();
-                    }
+                        if (curH[0] >= targetFinal)
+                        {
+                            detailViewport.setPreferredSize(null);
+                            detailViewport.setViewPosition(new java.awt.Point(0, 0));
+                            openTimer.stop();
+                        }
+                    });
+                    openTimer.start();
                 });
                 scheduleRepaint(detailSlot);
                 final String[] itemData = item;
@@ -2830,9 +2789,7 @@ private String openBankItemName = null;
                                 {
                                     newDetailSlot.removeAll();
                                     newDetailSlot.add(buildInlineDetail(itemData, false), BorderLayout.CENTER);
-                                    newViewport.setVisible(true);
-                                    newViewport.setPreferredSize(null);
-                                    newViewport.revalidate();
+                                    newViewport.setVisible(true);                                    ;
                                     scheduleRepaint(newDetailSlot);
                                     if (graphWasOpen) reopenGraph(newDetailSlot);
                                     currentOpenBankDetail = newDetailSlot;
@@ -3111,6 +3068,14 @@ private String[] buildItemDataFromCache(String name)
                     isRefreshing = true;
                     showTab(activeTab);
                     isRefreshing = false;
+                    if (searchReopenAction != null && activeTab == 1)
+                    {
+                        javax.swing.SwingUtilities.invokeLater(searchReopenAction);
+                    }
+                    else if (watchlistReopenAction != null && activeTab == 0)
+                    {
+                        javax.swing.SwingUtilities.invokeLater(watchlistReopenAction);
+                    }
                 }
             });
             bar.add(btn);
