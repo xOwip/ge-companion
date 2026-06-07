@@ -77,6 +77,15 @@ public class GECompanionPanel extends PluginPanel
     private String[] currentOpenSearchItem = null;
     private String[] currentOpenWatchlistItem = null;
     private String[] currentOpenBankItem = null;
+    // Live label references for zero-disruption refresh
+    private JLabel liveHeaderPriceLabel = null;
+    private JLabel liveLastTradedValueLabel = null;
+    private JLabel liveLastTradedHeaderLabel = null;
+    private JPanel liveStatGrid = null;
+    private JLabel[] liveStatsLabels = null;
+    private int liveOpenItemId = -1;
+    private String[] liveOpenItemData = null;
+    private javax.swing.JPanel liveGraphPanel = null;
 
     // Live price data
     private java.util.Map<Integer, PriceData> priceCache = new java.util.HashMap<>();
@@ -226,44 +235,15 @@ private String openBankItemName = null;
         this.sellVolume1h = sellVolume1h;
         secondsSinceRefresh = 0;
 
-        // Preserve open detail panel state before refresh
-        String savedSearchItem = selectedItemName;
-        String savedWatchlistItem = selectedWatchlistItemName;
-        String savedBankItem = selectedBankItemName;
-
-        isRefreshing = true;
-        showTab(activeTab);
-        isRefreshing = false;
-
-// Restore open detail panel state after refresh
-        selectedItemName = savedSearchItem;
-        selectedWatchlistItemName = savedWatchlistItem;
-        selectedBankItemName = savedBankItem;
-
-// Reopen detail panel for Search tab
-        if (!isRefreshing && savedSearchItem != null && activeTab == 1 && searchReopenAction != null)
+        // If a detail panel is open, update labels in place — no rebuild
+        if (liveOpenItemId != -1)
         {
-            javax.swing.Timer reopenTimer = new javax.swing.Timer(50, e2 -> searchReopenAction.run());
-            reopenTimer.setRepeats(false);
-            reopenTimer.start();
+            refreshOpenDetail();
         }
-
-        // Reopen detail panel for Watchlist tab
-        if (!isRefreshing && savedWatchlistItem != null && activeTab == 0 && watchlistReopenAction != null)
+        else
         {
-            javax.swing.Timer reopenTimer = new javax.swing.Timer(150, e2 -> {
-                watchlistReopenAction.run();
-            });
-            reopenTimer.setRepeats(false);
-            reopenTimer.start();
-        }
-
-        // Reopen detail panel for Bank tab
-        if (!isRefreshing && savedBankItem != null && activeTab == 2 && bankReopenAction != null)
-        {
-            javax.swing.Timer reopenTimer = new javax.swing.Timer(150, e2 -> bankReopenAction.run());
-            reopenTimer.setRepeats(false);
-            reopenTimer.start();
+            // No detail panel open — safe to rebuild the tab normally
+            showTab(activeTab);
         }
     }
     private void loadBankData()
@@ -555,6 +535,59 @@ private String openBankItemName = null;
             onSearchChanged(savedSearch);
         }
     }
+    private void refreshOpenDetail()
+    {
+        if (liveOpenItemId == -1 || liveOpenItemData == null) return;
+
+        PriceData pd = priceCache.get(liveOpenItemId);
+        if (pd == null) return;
+
+        String[] item = liveOpenItemData;
+        long mid = pd.getMid();
+
+        // Update header price label
+        if (liveHeaderPriceLabel != null)
+        {
+            liveHeaderPriceLabel.setText(formatFullPrice(String.valueOf(mid)) + " gp");
+        }
+
+        // Update last traded
+        if (liveLastTradedValueLabel != null)
+        {
+            String lastTradedPrice = item.length > 10 ? item[10] : "0";
+            String lastTradedDisplay = lastTradedPrice.equals("0") ? "?" : formatFullPrice(lastTradedPrice) + " gp";
+            liveLastTradedValueLabel.setText(lastTradedDisplay);
+        }
+        if (liveLastTradedHeaderLabel != null)
+        {
+            String lastTradedTime = item.length > 11 ? item[11] : "";
+            String lastTradedLabel = "LAST TRADED" + (lastTradedTime.isEmpty() || lastTradedTime.equals("unknown") ? "" : "  ·  " + lastTradedTime);
+            liveLastTradedHeaderLabel.setText(lastTradedLabel);
+        }
+
+        // Update stat grid (Buy Price, Sell Price, Buy Qty/hr, Sell Qty/hr)
+        if (liveStatGrid != null && liveStatGrid.getComponentCount() == 4)
+        {
+            updateStatBox((JPanel) liveStatGrid.getComponent(0), pd.high == 0 ? "?" : formatPrice(String.valueOf(pd.high)), pd.high == 0 ? null : formatFullPrice(String.valueOf(pd.high)) + " gp");
+            updateStatBox((JPanel) liveStatGrid.getComponent(1), pd.low == 0 ? "?" : formatPrice(String.valueOf(pd.low)), pd.low == 0 ? null : formatFullPrice(String.valueOf(pd.low)) + " gp");
+        }
+
+        // Repaint graph if open
+        if (liveGraphPanel != null)
+        {
+            liveGraphPanel.repaint();
+        }
+    }
+
+    private void updateStatBox(JPanel box, String value, String tooltip)
+    {
+        if (box.getComponentCount() >= 2 && box.getComponent(1) instanceof JLabel)
+        {
+            JLabel valueLabel = (JLabel) box.getComponent(1);
+            valueLabel.setText(value);
+            if (tooltip != null) valueLabel.setToolTipText(tooltip);
+        }
+    }
 
     // ── SHARED DETAIL PANEL BUILDER ──
     private JPanel buildInlineDetail(String[] item, boolean isWatchlist)
@@ -607,6 +640,8 @@ private String openBankItemName = null;
         lastTradedValueComp.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_VALUE));
         lastTradedValueComp.setAlignmentX(Component.CENTER_ALIGNMENT);
         lastTradedValueComp.setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
+        liveLastTradedValueLabel = lastTradedValueComp;
+        liveLastTradedHeaderLabel = lastTradedLabelComp;
 
         lastTradedBox.add(lastTradedLabelComp);
         lastTradedBox.add(lastTradedValueComp);
@@ -622,6 +657,7 @@ private String openBankItemName = null;
         grid.add(buildStatBox("Sell Price", item[3].equals("0") ? "?" : formatPrice(item[3]), STAT_GOLD, item[3].equals("0") ? null : formatFullPrice(item[3]) + " gp"));
         grid.add(buildStatBox("Buy Qty/hr", item.length > 8 ? item[8] : "?", STAT_GOLD, null));
         grid.add(buildStatBox("Sell Qty/hr", item.length > 9 ? item[9] : "?", STAT_GOLD, null));
+        liveStatGrid = grid;
 
         inner.add(grid);
         inner.add(Box.createVerticalStrut(6));
@@ -679,6 +715,8 @@ private String openBankItemName = null;
 // ── Show Price Chart button ────────────────────────────────────
         int graphItemId = -1;
         try { if (item.length > 12) graphItemId = Integer.parseInt(item[12]); } catch (NumberFormatException ignored) {}
+        liveOpenItemId = graphItemId;
+        liveOpenItemData = item;
         long currentMidPrice = 0;
         try { currentMidPrice = Long.parseLong(item[1]); } catch (NumberFormatException ignored) {}
 
@@ -722,6 +760,7 @@ private String openBankItemName = null;
                 if (graphPanelHolder[0] == null) {
                     String tf = graphActiveTimeframe;
                     graphPanelHolder[0] = buildGraphPanel(graphItemIdFinal, currentMidPriceFinal, tf, statsLabels);
+                    liveGraphPanel = graphPanelHolder[0];
                 }
                 graphViewport.setView(graphPanelHolder[0]);
                 graphViewport.setVisible(true);
@@ -836,6 +875,7 @@ private String openBankItemName = null;
             box.add(valLabel);
             statsContent.add(box);
         }
+        liveStatsLabels = statsLabels;
 
         JViewport statsViewport = new JViewport();
         statsViewport.setBackground(BG_DETAIL);
@@ -1390,6 +1430,14 @@ private String openBankItemName = null;
                     }
                     selectedItemName = null;
                     searchReopenAction = null;
+                    liveHeaderPriceLabel = null;
+                    liveLastTradedValueLabel = null;
+                    liveLastTradedHeaderLabel = null;
+                    liveStatGrid = null;
+                    liveStatsLabels = null;
+                    liveOpenItemId = -1;
+                    liveOpenItemData = null;
+                    liveGraphPanel = null;
                     searchResultsPanel.revalidate();
                     searchResultsPanel.repaint();
                     return;
@@ -1797,6 +1845,14 @@ private String openBankItemName = null;
                     }
                     selectedWatchlistItemName = null;
                     watchlistReopenAction = null;
+                    liveHeaderPriceLabel = null;
+                    liveLastTradedValueLabel = null;
+                    liveLastTradedHeaderLabel = null;
+                    liveStatGrid = null;
+                    liveStatsLabels = null;
+                    liveOpenItemId = -1;
+                    liveOpenItemData = null;
+                    liveGraphPanel = null;
                     return;
                 }
 
@@ -2613,6 +2669,14 @@ private String openBankItemName = null;
                     }
                     selectedBankItemName = null;
                     bankReopenAction = null;
+                    liveHeaderPriceLabel = null;
+                    liveLastTradedValueLabel = null;
+                    liveLastTradedHeaderLabel = null;
+                    liveStatGrid = null;
+                    liveStatsLabels = null;
+                    liveOpenItemId = -1;
+                    liveOpenItemData = null;
+                    liveGraphPanel = null;
                     tabContentPanel.revalidate();
                     tabContentPanel.repaint();
                     return;
@@ -3070,6 +3134,7 @@ private String[] buildItemDataFromCache(String name)
         priceLabel.setForeground(PRICE_GOLD);
         priceLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_PRICE));
         priceLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        liveHeaderPriceLabel = priceLabel;
 
         JLabel limitLabel = new JLabel("Lmt: " + limit);
         limitLabel.setForeground(TEXT_PRIMARY);
