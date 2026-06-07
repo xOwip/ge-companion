@@ -66,6 +66,7 @@ public class GECompanionPanel extends PluginPanel
     private JLabel searchClearBtn;
     private boolean suppressSearchChange = false;
     private boolean isRefreshing = false;
+    private boolean isTimeframeSwitching = false;
     private Runnable watchlistReopenAction = null;
     private Runnable searchReopenAction = null;
     private Runnable bankReopenAction = null;
@@ -777,22 +778,31 @@ private String openBankItemName = null;
                 int fullH = graphPanelHolder[0].getPreferredSize().height;
                 if (fullH <= 0) fullH = 200;
                 final int targetH = fullH;
-                graphViewport.setPreferredSize(new Dimension(1, 0));
-                graphViewport.setViewPosition(new java.awt.Point(0, targetH));
-                int[] curH = {0};
-                javax.swing.Timer openTimer = new javax.swing.Timer(16, null);
-                openTimer.addActionListener(ev -> {
-                    curH[0] = Math.min(curH[0] + 30, targetH);
-                    graphViewport.setPreferredSize(new Dimension(1, curH[0]));
-                    graphViewport.setViewPosition(new java.awt.Point(0, targetH - curH[0]));
+                if (isTimeframeSwitching)
+                {
+                    graphViewport.setPreferredSize(new Dimension(1, targetH));
+                    graphViewport.setViewPosition(new java.awt.Point(0, 0));
                     graphViewport.revalidate();
-                    if (curH[0] >= targetH) {
-                        openTimer.stop();
-                        graphViewport.setPreferredSize(new Dimension(1, targetH));
+                }
+                else
+                {
+                    graphViewport.setPreferredSize(new Dimension(1, 0));
+                    graphViewport.setViewPosition(new java.awt.Point(0, targetH));
+                    int[] curH = {0};
+                    javax.swing.Timer openTimer = new javax.swing.Timer(16, null);
+                    openTimer.addActionListener(ev -> {
+                        curH[0] = Math.min(curH[0] + 30, targetH);
+                        graphViewport.setPreferredSize(new Dimension(1, curH[0]));
+                        graphViewport.setViewPosition(new java.awt.Point(0, targetH - curH[0]));
                         graphViewport.revalidate();
-                    }
-                });
-                openTimer.start();
+                        if (curH[0] >= targetH) {
+                            openTimer.stop();
+                            graphViewport.setPreferredSize(new Dimension(1, targetH));
+                            graphViewport.revalidate();
+                        }
+                    });
+                    openTimer.start();
+                }
                 graphOpen[0] = true;
                 graphWasOpen = true;
                 if (statsHeaderHolder[0] != null) statsHeaderHolder[0].setVisible(true);
@@ -3070,15 +3080,27 @@ private String[] buildItemDataFromCache(String name)
                     isRefreshing = false;
                     if (searchReopenAction != null && activeTab == 1)
                     {
-                        javax.swing.Timer t = new javax.swing.Timer(50, e2 -> searchReopenAction.run());
-                        t.setRepeats(false);
-                        t.start();
+                        isTimeframeSwitching = true;
+                        javax.swing.SwingUtilities.invokeLater(() -> {
+                            searchReopenAction.run();
+                            javax.swing.SwingUtilities.invokeLater(() -> isTimeframeSwitching = false);
+                        });
                     }
-                    if (watchlistReopenAction != null && activeTab == 0)
+                    else if (watchlistReopenAction != null && activeTab == 0)
                     {
-                        javax.swing.Timer t = new javax.swing.Timer(150, e2 -> watchlistReopenAction.run());
-                        t.setRepeats(false);
-                        t.start();
+                        isTimeframeSwitching = true;
+                        javax.swing.SwingUtilities.invokeLater(() -> {
+                            watchlistReopenAction.run();
+                            javax.swing.SwingUtilities.invokeLater(() -> isTimeframeSwitching = false);
+                        });
+                    }
+                    else if (bankReopenAction != null && activeTab == 2)
+                    {
+                        isTimeframeSwitching = true;
+                        javax.swing.SwingUtilities.invokeLater(() -> {
+                            bankReopenAction.run();
+                            javax.swing.SwingUtilities.invokeLater(() -> isTimeframeSwitching = false);
+                        });
                     }
                 }
             });
