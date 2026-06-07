@@ -3111,21 +3111,6 @@ private String[] buildItemDataFromCache(String name)
                     isRefreshing = true;
                     showTab(activeTab);
                     isRefreshing = false;
-                    if (searchReopenAction != null && activeTab == 1)
-                    {
-                        timeframeSwitchTime = System.currentTimeMillis();
-                        javax.swing.SwingUtilities.invokeLater(searchReopenAction);
-                    }
-                    else if (watchlistReopenAction != null && activeTab == 0)
-                    {
-                        timeframeSwitchTime = System.currentTimeMillis();
-                        javax.swing.SwingUtilities.invokeLater(watchlistReopenAction);
-                    }
-                    else if (bankReopenAction != null && activeTab == 2)
-                    {
-                        timeframeSwitchTime = System.currentTimeMillis();
-                        javax.swing.SwingUtilities.invokeLater(bankReopenAction);
-                    }
                 }
             });
             bar.add(btn);
