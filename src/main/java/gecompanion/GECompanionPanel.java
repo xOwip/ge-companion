@@ -572,6 +572,15 @@ private String openBankItemName = null;
             updateStatBox((JPanel) liveStatGrid.getComponent(1), pd.low == 0 ? "?" : formatPrice(String.valueOf(pd.low)), pd.low == 0 ? null : formatFullPrice(String.valueOf(pd.low)) + " gp");
         }
 
+        // Update last traded time (recalculated from live data)
+        if (liveLastTradedHeaderLabel != null)
+        {
+            String freshTime = pd.getTimeSince();
+            String lastTradedPrice = liveOpenItemData.length > 10 ? liveOpenItemData[10] : "0";
+            String lastTradedLabel = "LAST TRADED" + (freshTime.equals("unknown") ? "" : "  ·  " + freshTime);
+            liveLastTradedHeaderLabel.setText(lastTradedLabel);
+        }
+
         // Repaint graph if open
         if (liveGraphPanel != null)
         {
