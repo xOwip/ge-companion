@@ -2952,39 +2952,6 @@ private String openBankItemName = null;
                 java.util.List<UpdateMarker> updates = new java.util.ArrayList<>();
                 long oneYearAgo = System.currentTimeMillis() / 1000 - 365L * 24 * 3600;
 
-                // Step 1: fetch category membership for color coding
-                java.util.Map<String, String> titleToCategory = new java.util.HashMap<>();
-                String[][] categories = {
-                        {"Category:Game_updates", "game"},
-                        {"Category:Patch_Notes", "patch"},
-                        {"Category:Events", "event"},
-                        {"Category:Polls", "poll"}
-                };
-                for (String[] catEntry : categories)
-                {
-                    String cmtitle = catEntry[0];
-                    String catLabel = catEntry[1];
-                    String url = "https://oldschool.runescape.wiki/api.php?action=query&list=categorymembers&cmtitle="
-                            + java.net.URLEncoder.encode(cmtitle, "UTF-8")
-                            + "&cmprop=title&cmlimit=500&format=json";
-                    okhttp3.Request request = new okhttp3.Request.Builder()
-                            .url(url).header("User-Agent", "GE Companion RuneLite Plugin").build();
-                    try (okhttp3.Response response = client.newCall(request).execute())
-                    {
-                        if (!response.isSuccessful() || response.body() == null) continue;
-                        String body = response.body().string();
-                        org.json.JSONObject json = new org.json.JSONObject(body);
-                        org.json.JSONArray members = json.getJSONObject("query").getJSONArray("categorymembers");
-                        for (int i = 0; i < members.length(); i++)
-                        {
-                            String title = members.getJSONObject(i).getString("title");
-                            String displayTitle = title.startsWith("Update:") ? title.substring(7) : title;
-                            titleToCategory.put(displayTitle.toLowerCase(), catLabel);
-                        }
-                    }
-                    catch (Exception ex) {}
-                }
-
                 // Step 2: fetch Game_updates page to get accurate dates
                 String pageUrl = "https://oldschool.runescape.wiki/api.php?action=parse&page=Game_updates&prop=text&format=json";
                 okhttp3.Request pageRequest = new okhttp3.Request.Builder()
@@ -3042,7 +3009,7 @@ private String openBankItemName = null;
                             long ts = parseWikiDate(dateStr + " " + year);
                             if (ts == 0 || ts < oneYearAgo) continue;
 
-                            String cat = titleToCategory.getOrDefault(titleRaw.toLowerCase(), "");
+                            String cat = inferUpdateCategory(titleRaw);
                             String wikiUrl = "https://oldschool.runescape.wiki/w/Update:" + titleEncoded;
                             updates.add(new UpdateMarker(titleRaw, ts, cat, wikiUrl));
                         }
@@ -3065,6 +3032,22 @@ private String openBankItemName = null;
                 System.out.println("GE Companion: game updates fetch failed: " + e.getMessage());
             }
         }).start();
+    }
+
+    private String inferUpdateCategory(String title)
+    {
+        if (title == null) return "game";
+        String t = title.toLowerCase();
+        if (t.contains("poll")) return "poll";
+        if (t.contains("patch") || t.contains("hotfix") || t.contains("fix") ||
+                t.contains("fixes") || t.contains("tweak") || t.contains("tweaks") ||
+                t.contains("bug") || t.contains("qol") || t.contains("changes"))
+            return "patch";
+        if (t.contains("event") || t.contains("christmas") || t.contains("easter") ||
+                t.contains("halloween") || t.contains("leagues") || t.contains("deadman") ||
+                t.contains("holiday") || t.contains("anniversary"))
+            return "event";
+        return "game";
     }
 
     private Color getUpdateColor(String category)
