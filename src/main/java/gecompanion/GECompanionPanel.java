@@ -3821,6 +3821,21 @@ private String[] buildItemDataFromCache(String name)
                     g2.fillRect(x + 1, h - sh, (int)barW, sh);
                 }
 
+                // draw drag-select rectangle on volCanvas
+                boolean[] volIsDragging = (boolean[]) getClientProperty("isDragging");
+                int[] volDragStart = (int[]) getClientProperty("dragStart");
+                int[] volDragEnd = (int[]) getClientProperty("dragEnd");
+                String volDragSource = (String) priceCanvas.getClientProperty("dragSource");
+                if (volIsDragging != null && volIsDragging[0] && volDragStart != null && volDragEnd != null
+                        && volDragStart[0] >= 0 && volDragEnd[0] >= 0 && "vol".equals(volDragSource)) {
+                    int x1 = Math.min(volDragStart[0], volDragEnd[0]);
+                    int x2 = Math.max(volDragStart[0], volDragEnd[0]);
+                    g2.setColor(new Color(100, 140, 255, 60));
+                    g2.fillRect(x1, 0, x2 - x1, h);
+                    g2.setColor(new Color(100, 140, 255, 180));
+                    g2.drawRect(x1, 0, x2 - x1, h);
+                }
+
                 // volume tooltips on hovered bar
                 if (!animating[0] && ci >= 0 && ci < n) {
                     PricePoint cp = visPts.get(ci);
@@ -4299,6 +4314,7 @@ private String[] buildItemDataFromCache(String name)
                     isDragging[0] = true;
                     dragStart[0] = e.getX();
                     dragEnd[0] = e.getX();
+                    priceCanvas.putClientProperty("dragSource", "price");
                     priceCanvas.repaint();
                 }
                 @Override
@@ -4399,9 +4415,92 @@ private String[] buildItemDataFromCache(String name)
             priceCanvas.putClientProperty("isDragging", isDragging);
             priceCanvas.putClientProperty("dragStart", dragStart);
             priceCanvas.putClientProperty("dragEnd", dragEnd);
+            volCanvas.putClientProperty("isDragging", isDragging);
+            volCanvas.putClientProperty("dragStart", dragStart);
+            volCanvas.putClientProperty("dragEnd", dragEnd);
         } // end DRAG_SELECT mode
 
 // ── volume canvas mouse interaction ───────────────────────────
+        // Add drag-to-zoom on volCanvas (mirrors priceCanvas drag-select)
+        if (config.chartZoomMode() == ChartZoomMode.DRAG_SELECT) {
+            volCanvas.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    if (e.getButton() == java.awt.event.MouseEvent.BUTTON2) {
+                        zoomStart[0] = 0; zoomEnd[0] = -1;
+                        priceCanvas.repaint(); volCanvas.repaint(); return;
+                    }
+                    boolean[] isDragging = (boolean[]) priceCanvas.getClientProperty("isDragging");
+                    int[] dragStart = (int[]) priceCanvas.getClientProperty("dragStart");
+                    int[] dragEnd = (int[]) priceCanvas.getClientProperty("dragEnd");
+                    if (isDragging == null || dragStart == null || dragEnd == null) return;
+                    isDragging[0] = true;
+                    dragStart[0] = e.getX();
+                    dragEnd[0] = e.getX();
+                    priceCanvas.putClientProperty("dragSource", "vol");
+                    priceCanvas.repaint(); volCanvas.repaint();
+                }
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                    boolean[] isDragging = (boolean[]) priceCanvas.getClientProperty("isDragging");
+                    int[] dragStart = (int[]) priceCanvas.getClientProperty("dragStart");
+                    int[] dragEnd = (int[]) priceCanvas.getClientProperty("dragEnd");
+                    if (isDragging == null || !isDragging[0]) return;
+                    isDragging[0] = false;
+                    java.util.List<PricePoint> pts = pointsHolder[0];
+                    if (pts == null || pts.size() < 2) { dragStart[0]=-1; dragEnd[0]=-1; priceCanvas.repaint(); volCanvas.repaint(); return; }
+                    int x1 = Math.min(dragStart[0], dragEnd[0]);
+                    int x2 = Math.max(dragStart[0], dragEnd[0]);
+                    if (x2 - x1 < 8) { dragStart[0]=-1; dragEnd[0]=-1; priceCanvas.repaint(); volCanvas.repaint(); return; }
+                    int w = volCanvas.getWidth();
+                    int totalN = pts.size();
+                    int curStart = zoomStart[0];
+                    int curEnd = zoomEnd[0] < 0 ? totalN - 1 : zoomEnd[0];
+                    int visN = curEnd - curStart + 1;
+                    int newStart = curStart + (int)(x1 * visN / (double)w);
+                    int newEnd = curStart + (int)(x2 * visN / (double)w);
+                    newStart = Math.max(0, newStart);
+                    newEnd = Math.min(totalN - 1, newEnd);
+                    if (newEnd - newStart < 2) { dragStart[0]=-1; dragEnd[0]=-1; priceCanvas.repaint(); volCanvas.repaint(); return; }
+                    zoomStart[0] = newStart;
+                    zoomEnd[0] = newEnd;
+                    dragStart[0] = -1; dragEnd[0] = -1;
+                    priceCanvas.repaint(); volCanvas.repaint();
+                }
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    if (e.getClickCount() == 2) {
+                        zoomStart[0] = 0; zoomEnd[0] = -1;
+                        priceCanvas.repaint(); volCanvas.repaint();
+                    }
+                }
+            });
+            volCanvas.addMouseMotionListener(new MouseAdapter() {
+                @Override
+                public void mouseDragged(MouseEvent e) {
+                    boolean[] isDragging = (boolean[]) priceCanvas.getClientProperty("isDragging");
+                    int[] dragEnd = (int[]) priceCanvas.getClientProperty("dragEnd");
+                    if (isDragging == null || !isDragging[0] || dragEnd == null) return;
+                    dragEnd[0] = e.getX();
+                    // update crosshair to follow drag position
+                    java.util.List<PricePoint> pts = pointsHolder[0];
+                    if (pts != null && pts.size() >= 2) {
+                        int curStart = zoomStart[0];
+                        int curEnd = zoomEnd[0] < 0 ? pts.size()-1 : zoomEnd[0];
+                        int visN = curEnd - curStart + 1;
+                        int w = volCanvas.getWidth();
+                        int nearest = 0; double minDist = Double.MAX_VALUE;
+                        for (int i = 0; i < visN; i++) {
+                            int px = (int)(i * (w - 1.0) / (visN - 1));
+                            double dist = Math.abs(e.getX() - px);
+                            if (dist < minDist) { minDist = dist; nearest = i; }
+                        }
+                        crosshairIdx[0] = nearest;
+                    }
+                    priceCanvas.repaint(); volCanvas.repaint();
+                }
+            });
+        }
         volCanvas.addMouseMotionListener(new MouseAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
