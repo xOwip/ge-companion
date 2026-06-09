@@ -80,6 +80,14 @@ public interface GECompanionConfig extends Config
 	)
 	default ChartZoomMode chartZoomMode() { return ChartZoomMode.DRAG_SELECT; }
 	@ConfigItem(
+			keyName = "gameUpdateMode",
+			name = "Game update markers",
+			description = "Show game update markers on the price chart",
+			section = watchlistSection,
+			position = 2
+	)
+	default GameUpdateMode gameUpdateMode() { return GameUpdateMode.ALL; }
+	@ConfigItem(
 			keyName = "defaultTimeFrame",
 			name = "Default timeframe",
 			description = "Which timeframe the price display opens on",

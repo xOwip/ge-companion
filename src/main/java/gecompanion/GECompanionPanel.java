@@ -115,6 +115,22 @@ public class GECompanionPanel extends PluginPanel
             this.sellVolume = sellVolume;
         }
     }
+    static class UpdateMarker {
+        String title;
+        long timestamp;
+        String category;
+        String wikiUrl;
+        UpdateMarker(String title, long timestamp, String category, String wikiUrl) {
+            this.title = title;
+            this.timestamp = timestamp;
+            this.category = category;
+            this.wikiUrl = wikiUrl;
+        }
+    }
+
+    // Game update markers cache
+    private java.util.List<UpdateMarker> gameUpdates = null;
+    private boolean gameUpdatesFetching = false;
 
     // Pinned/watched items
     private final java.util.Map<Integer, javax.swing.ImageIcon> iconCache = new java.util.HashMap<>();
@@ -770,6 +786,7 @@ private String openBankItemName = null;
                     String tf = graphActiveTimeframe;
                     graphPanelHolder[0] = buildGraphPanel(graphItemIdFinal, currentMidPriceFinal, tf, statsLabels);
                     liveGraphPanel = graphPanelHolder[0];
+                    fetchGameUpdates();
                 }
                 graphViewport.setView(graphPanelHolder[0]);
                 graphViewport.setVisible(true);
@@ -2919,6 +2936,132 @@ private String openBankItemName = null;
             }
         }
     }
+
+    private void fetchGameUpdates()
+    {
+        if (gameUpdatesFetching || gameUpdates != null) return;
+        gameUpdatesFetching = true;
+
+        new Thread(() ->
+        {
+            try
+            {
+                okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
+                java.util.List<UpdateMarker> updates = new java.util.ArrayList<>();
+                long oneYearAgo = System.currentTimeMillis() / 1000 - 365L * 24 * 3600;
+
+                // category name → dot color category string
+                String[][] categories = {
+                        {"Category:Game_updates", "game"},
+                        {"Category:Patch_Notes", "patch"},
+                        {"Category:Events", "event"},
+                        {"Category:Polls", "poll"}
+                };
+
+                for (String[] catEntry : categories)
+                {
+                    String cmtitle = catEntry[0];
+                    String catLabel = catEntry[1];
+
+                    String url = "https://oldschool.runescape.wiki/api.php?action=query&list=categorymembers&cmtitle="
+                            + java.net.URLEncoder.encode(cmtitle, "UTF-8")
+                            + "&cmprop=title|timestamp&cmlimit=500&format=json";
+
+                    okhttp3.Request request = new okhttp3.Request.Builder()
+                            .url(url)
+                            .header("User-Agent", "GE Companion RuneLite Plugin")
+                            .build();
+
+                    try (okhttp3.Response response = client.newCall(request).execute())
+                    {
+                        if (!response.isSuccessful() || response.body() == null) continue;
+
+                        String body = response.body().string();
+                        org.json.JSONObject json = new org.json.JSONObject(body);
+                        org.json.JSONArray members = json.getJSONObject("query").getJSONArray("categorymembers");
+
+                        for (int i = 0; i < members.length(); i++)
+                        {
+                            org.json.JSONObject member = members.getJSONObject(i);
+                            String title = member.getString("title");
+                            String timestamp = member.optString("timestamp", "");
+                            if (timestamp.isEmpty()) continue;
+
+                            // Parse ISO timestamp: "2025-11-19T00:00:00Z"
+                            long ts;
+                            try {
+                                ts = java.time.Instant.parse(timestamp).getEpochSecond();
+                            } catch (Exception ex) { continue; }
+
+                            if (ts < oneYearAgo) continue;
+
+                            // Strip "Update:" prefix from title if present
+                            String displayTitle = title.startsWith("Update:") ? title.substring(7) : title;
+                            String wikiUrl = "https://oldschool.runescape.wiki/w/" + title.replace(" ", "_");
+
+                            updates.add(new UpdateMarker(displayTitle, ts, catLabel, wikiUrl));
+                        }
+                    }
+                }
+
+                // Sort by timestamp ascending
+                updates.sort((a, b) -> Long.compare(a.timestamp, b.timestamp));
+
+                gameUpdates = updates;
+                gameUpdatesFetching = false;
+                System.out.println("GE Companion: fetched " + gameUpdates.size() + " game updates");
+            }
+            catch (Exception e)
+            {
+                gameUpdatesFetching = false;
+                gameUpdates = new java.util.ArrayList<>();
+                System.out.println("GE Companion: game updates fetch failed: " + e.getMessage());
+            }
+        }).start();
+    }
+
+    private Color getUpdateColor(String category)
+    {
+        if (category == null) return new Color(120, 120, 120);
+        String cat = category.toLowerCase();
+        if (cat.contains("game")) return new Color(212, 175, 55);      // gold
+        if (cat.contains("patch")) return new Color(74, 122, 191);     // blue
+        if (cat.contains("event")) return new Color(75, 153, 75);      // green
+        if (cat.contains("poll")) return new Color(150, 80, 200);      // purple
+        return new Color(120, 120, 120);                                // gray
+    }
+
+    private String extractParam(String params, String key)
+    {
+        java.util.regex.Pattern p = java.util.regex.Pattern.compile(
+                key + "\\s*=\\s*([^|\\}]+)",
+                java.util.regex.Pattern.CASE_INSENSITIVE
+        );
+        java.util.regex.Matcher m = p.matcher(params);
+        if (m.find()) return m.group(1).trim();
+        return null;
+    }
+
+    private long parseWikiDate(String date)
+    {
+        try
+        {
+            java.time.LocalDate ld = java.time.LocalDate.parse(date,
+                    java.time.format.DateTimeFormatter.ofPattern("d MMMM yyyy", java.util.Locale.ENGLISH));
+            return ld.atStartOfDay(java.time.ZoneOffset.UTC).toEpochSecond();
+        }
+        catch (Exception e)
+        {
+            try
+            {
+                java.time.LocalDate ld = java.time.LocalDate.parse(date,
+                        java.time.format.DateTimeFormatter.ofPattern("MMMM d, yyyy", java.util.Locale.ENGLISH));
+                return ld.atStartOfDay(java.time.ZoneOffset.UTC).toEpochSecond();
+            }
+            catch (Exception e2) { return 0; }
+        }
+    }
+
     private void fetchTimeseries(int itemId, String timeframe, java.util.function.Consumer<java.util.List<PricePoint>> callback)
     {
         String cacheKey = itemId + "_" + timeframe;
@@ -3693,6 +3836,130 @@ private String[] buildItemDataFromCache(String name)
         volCanvas.setBackground(new Color(14, 12, 13));
         volCanvas.setAlignmentX(Component.LEFT_ALIGNMENT);
         wrapper.add(volCanvas);
+
+// ── update markers canvas ──────────────────────────────────────
+        final JPanel[] updateCanvasHolder = {null};
+        final JPanel[] dateCanvasHolder = {null};
+        JPanel updateCanvas = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                int w = getWidth(), h = getHeight();
+                g2.setColor(new Color(14, 12, 13));
+                g2.fillRect(0, 0, w, h);
+
+                if (config.gameUpdateMode() == GameUpdateMode.OFF || gameUpdates == null || gameUpdates.isEmpty())
+                { g2.dispose(); return; }
+
+                java.util.List<PricePoint> pts = pointsHolder[0];
+                if (pts == null || pts.size() < 2) { g2.dispose(); return; }
+
+                int visStart = zoomStart[0];
+                int visEnd = zoomEnd[0] >= 0 ? zoomEnd[0] : pts.size() - 1;
+                visStart = Math.max(0, Math.min(visStart, pts.size() - 1));
+                visEnd = Math.max(visStart + 1, Math.min(visEnd, pts.size() - 1));
+                java.util.List<PricePoint> visPts = pts.subList(visStart, visEnd + 1);
+
+                long tMin = visPts.get(0).timestamp;
+                long tMax = visPts.get(visPts.size() - 1).timestamp;
+                if (tMax <= tMin) { g2.dispose(); return; }
+
+                Integer hoveredIdx = (Integer) getClientProperty("hoveredUpdate");
+
+                for (int i = 0; i < gameUpdates.size(); i++) {
+                    UpdateMarker u = gameUpdates.get(i);
+                    if (config.gameUpdateMode() == GameUpdateMode.MAJOR_ONLY &&
+                            !u.category.contains("game")) continue;
+                    if (u.timestamp < tMin || u.timestamp > tMax) continue;
+
+                    int x = (int)((double)(u.timestamp - tMin) / (tMax - tMin) * (w - 1));
+                    Color dotColor = getUpdateColor(u.category);
+                    boolean hovered = hoveredIdx != null && hoveredIdx == i;
+                    int r = hovered ? 5 : 3;
+                    g2.setColor(dotColor);
+                    g2.fillOval(x - r, h / 2 - r, r * 2, r * 2);
+                    if (hovered) {
+                        g2.setColor(dotColor.brighter());
+                        g2.drawOval(x - r - 1, h / 2 - r - 1, r * 2 + 2, r * 2 + 2);
+                    }
+                }
+                g2.dispose();
+            }
+        };
+        updateCanvas.setPreferredSize(new Dimension(1, 10));
+        updateCanvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 10));
+        updateCanvas.setMinimumSize(new Dimension(0, 10));
+        updateCanvas.setBackground(new Color(14, 12, 13));
+        updateCanvas.setAlignmentX(Component.LEFT_ALIGNMENT);
+        updateCanvasHolder[0] = updateCanvas;
+        wrapper.add(updateCanvas);
+        updateCanvas.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(java.awt.event.MouseEvent e) {
+                if (gameUpdates == null || gameUpdates.isEmpty()) return;
+                java.util.List<PricePoint> pts = pointsHolder[0];
+                if (pts == null || pts.size() < 2) return;
+
+                int visStart = zoomStart[0];
+                int visEnd = zoomEnd[0] >= 0 ? zoomEnd[0] : pts.size() - 1;
+                visStart = Math.max(0, Math.min(visStart, pts.size() - 1));
+                visEnd = Math.max(visStart + 1, Math.min(visEnd, pts.size() - 1));
+                java.util.List<PricePoint> visPts = pts.subList(visStart, visEnd + 1);
+                long tMin = visPts.get(0).timestamp;
+                long tMax = visPts.get(visPts.size() - 1).timestamp;
+                if (tMax <= tMin) return;
+
+                int w = updateCanvas.getWidth();
+                int mx = e.getX();
+                int threshold = 6;
+                int found = -1;
+
+                for (int i = 0; i < gameUpdates.size(); i++) {
+                    UpdateMarker u = gameUpdates.get(i);
+                    if (config.gameUpdateMode() == GameUpdateMode.MAJOR_ONLY && !u.category.contains("game")) continue;
+                    if (u.timestamp < tMin || u.timestamp > tMax) continue;
+                    int x = (int)((double)(u.timestamp - tMin) / (tMax - tMin) * (w - 1));
+                    if (Math.abs(mx - x) <= threshold) { found = i; break; }
+                }
+
+                updateCanvas.putClientProperty("hoveredUpdate", found >= 0 ? found : null);
+                updateCanvas.repaint();
+
+                if (found >= 0) {
+                    UpdateMarker u = gameUpdates.get(found);
+                    int x = (int)((double)(u.timestamp - tMin) / (tMax - tMin) * (w - 1));
+                    dateCanvasHolder[0].putClientProperty("dateText", u.title);
+                    dateCanvasHolder[0].putClientProperty("dateX", x);
+                    dateCanvasHolder[0].repaint();
+                } else {
+                    dateCanvasHolder[0].putClientProperty("dateText", "");
+                    dateCanvasHolder[0].repaint();
+                }
+            }
+        });
+
+        updateCanvas.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                updateCanvas.putClientProperty("hoveredUpdate", null);
+                updateCanvas.repaint();
+                dateCanvasHolder[0].putClientProperty("dateText", "");
+                dateCanvasHolder[0].repaint();
+            }
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (e.getButton() != java.awt.event.MouseEvent.BUTTON3) return;
+                if (gameUpdates == null) return;
+                Integer idx = (Integer) updateCanvas.getClientProperty("hoveredUpdate");
+                if (idx == null) return;
+                UpdateMarker u = gameUpdates.get(idx);
+                try {
+                    java.awt.Desktop.getDesktop().browse(new java.net.URI(u.wikiUrl));
+                } catch (Exception ex) {}
+            }
+        });
         wrapper.add(Box.createVerticalStrut(2));
 
         // ── date label ─────────────────────────────────────────────────
@@ -3708,22 +3975,42 @@ private String[] buildItemDataFromCache(String name)
                 String text = (String) getClientProperty("dateText");
                 if (text != null && !text.trim().isEmpty()) {
                     g2.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
-                    g2.setColor(new Color(110, 100, 90));
                     FontMetrics fm = g2.getFontMetrics();
                     int textW = fm.stringWidth(text);
+                    int pad = 5;
+                    int boxW = textW + pad * 2;
+                    int boxH = 14;
+                    int arrowH = 5;
+                    int arrowW = 7;
                     Integer xPos = (Integer) getClientProperty("dateX");
-                    int x = xPos != null ? Math.max(0, Math.min(w - textW, xPos - textW / 2)) : (w - textW) / 2;
-                    g2.drawString(text, x, h - 2);
+                    int cx = xPos != null ? xPos : w / 2;
+                    int boxX = Math.max(0, Math.min(w - boxW, cx - boxW / 2));
+                    int boxY = arrowH;
+                    // arrow (triangle pointing up)
+                    int[] ax = {cx - arrowW/2, cx, cx + arrowW/2};
+                    int[] ay = {arrowH, 0, arrowH};
+                    g2.setColor(new Color(50, 45, 40));
+                    g2.fillPolygon(ax, ay, 3);
+                    // box background
+                    g2.setColor(new Color(30, 27, 25));
+                    g2.fillRect(boxX, boxY, boxW, boxH);
+                    // box border
+                    g2.setColor(new Color(80, 72, 60));
+                    g2.drawRect(boxX, boxY, boxW, boxH);
+                    // text
+                    g2.setColor(new Color(180, 165, 140));
+                    g2.drawString(text, boxX + pad, boxY + boxH - 3);
                 }
                 g2.dispose();
             }
         };
-        dateCanvas.setPreferredSize(new Dimension(1, 14));
-        dateCanvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 14));
-        dateCanvas.setMinimumSize(new Dimension(0, 14));
+        dateCanvas.setPreferredSize(new Dimension(1, 22));
+        dateCanvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
+        dateCanvas.setMinimumSize(new Dimension(0, 22));
         dateCanvas.setBackground(new Color(14, 12, 13));
         dateCanvas.setAlignmentX(Component.LEFT_ALIGNMENT);
         wrapper.add(dateCanvas);
+        dateCanvasHolder[0] = dateCanvas;
 
 // ── zoom hint text ─────────────────────────────────────────────
         JLabel zoomHint = new JLabel(
@@ -3767,6 +4054,7 @@ private String[] buildItemDataFromCache(String name)
                 dateCanvas.repaint();
                 priceCanvas.repaint();
                 volCanvas.repaint();
+                if (updateCanvasHolder[0] != null) updateCanvasHolder[0].repaint();
             }
         }); // end non-DRAG_SELECT mouseMoved
         if (config.chartZoomMode() == ChartZoomMode.MAGNIFIER) {
@@ -3780,9 +4068,10 @@ private String[] buildItemDataFromCache(String name)
                 dateCanvas.repaint();
                 priceCanvas.repaint();
                 volCanvas.repaint();
+                if (updateCanvasHolder[0] != null) updateCanvasHolder[0].repaint();
             }
-            @Override
-            public void mousePressed(MouseEvent e) {
+                @Override
+                public void mousePressed(MouseEvent e) {
                 java.util.List<PricePoint> pts = pointsHolder[0];
                 if (animating[0] || pts == null || pts.size() < 2) return;
                 int n = pts.size();
@@ -3838,6 +4127,7 @@ private String[] buildItemDataFromCache(String name)
                 dateCanvas.repaint();
                 priceCanvas.repaint();
                 volCanvas.repaint();
+                if (updateCanvasHolder[0] != null) updateCanvasHolder[0].repaint();
             }
         });
         } // end MAGNIFIER mode
@@ -3856,6 +4146,7 @@ private String[] buildItemDataFromCache(String name)
                     dateCanvas.repaint();
                     priceCanvas.repaint();
                     volCanvas.repaint();
+                    if (updateCanvasHolder[0] != null) updateCanvasHolder[0].repaint();
                 }
                 @Override
                 public void mousePressed(MouseEvent e) {
@@ -3927,6 +4218,7 @@ private String[] buildItemDataFromCache(String name)
                     dateCanvas.putClientProperty("dateX", (int)(nearest * (priceCanvas.getWidth()-1.0) / Math.max(visN-1,1)));
                     dateCanvas.repaint();
                     priceCanvas.repaint(); volCanvas.repaint();
+                    if (updateCanvasHolder[0] != null) updateCanvasHolder[0].repaint();
                 }
                 @Override
                 public void mouseDragged(MouseEvent e) {
@@ -3958,6 +4250,7 @@ private String[] buildItemDataFromCache(String name)
                     }
                     priceCanvas.repaint();
                     volCanvas.repaint();
+                    if (updateCanvasHolder[0] != null) updateCanvasHolder[0].repaint();
                 }
             });
 
@@ -3997,6 +4290,7 @@ private String[] buildItemDataFromCache(String name)
                 dateCanvas.repaint();
                 priceCanvas.repaint();
                 volCanvas.repaint();
+                if (updateCanvasHolder[0] != null) updateCanvasHolder[0].repaint();
             }
         });
         volCanvas.addMouseListener(new MouseAdapter() {
@@ -4007,6 +4301,7 @@ private String[] buildItemDataFromCache(String name)
                 dateCanvas.repaint();
                 priceCanvas.repaint();
                 volCanvas.repaint();
+                if (updateCanvasHolder[0] != null) updateCanvasHolder[0].repaint();
             }
         });
 
