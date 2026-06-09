@@ -3934,7 +3934,7 @@ private String[] buildItemDataFromCache(String name)
                         g2.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
                         FontMetrics fm = g2.getFontMetrics();
                         java.time.LocalDate ld = java.time.Instant.ofEpochSecond(u.timestamp)
-                                .atZone(java.time.ZoneOffset.UTC).toLocalDate();
+                                .atZone(java.time.ZoneId.systemDefault()).toLocalDate();
                         String catLabel = u.category.equals("patch") ? "Patch Notes" :
                                 u.category.equals("event") ? "Event" :
                                 u.category.equals("poll") ? "Poll" : "Game Update";
