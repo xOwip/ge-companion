@@ -86,6 +86,7 @@ public class GECompanionPanel extends PluginPanel
     private int liveOpenItemId = -1;
     private String[] liveOpenItemData = null;
     private javax.swing.JPanel liveGraphPanel = null;
+    private javax.swing.JPanel liveUpdateCanvas = null;
 
     // Live price data
     private java.util.Map<Integer, PriceData> priceCache = new java.util.HashMap<>();
@@ -131,6 +132,7 @@ public class GECompanionPanel extends PluginPanel
     // Game update markers cache
     private java.util.List<UpdateMarker> gameUpdates = null;
     private boolean gameUpdatesFetching = false;
+    private boolean updateTooltipPinned = false;
 
     // Pinned/watched items
     private final java.util.Map<Integer, javax.swing.ImageIcon> iconCache = new java.util.HashMap<>();
@@ -3010,6 +3012,7 @@ private String openBankItemName = null;
                 gameUpdates = updates;
                 gameUpdatesFetching = false;
                 System.out.println("GE Companion: fetched " + gameUpdates.size() + " game updates");
+                javax.swing.SwingUtilities.invokeLater(() -> { if (liveUpdateCanvas != null) liveUpdateCanvas.repaint(); });
             }
             catch (Exception e)
             {
@@ -3881,7 +3884,7 @@ private String[] buildItemDataFromCache(String name)
                     g2.setColor(dotColor);
                     g2.fillOval(x - r, h / 2 - r, r * 2, r * 2);
                     if (hovered) {
-                        g2.setColor(dotColor.brighter());
+                        g2.setColor(Color.WHITE);
                         g2.drawOval(x - r - 1, h / 2 - r - 1, r * 2 + 2, r * 2 + 2);
                     }
                 }
@@ -3894,6 +3897,7 @@ private String[] buildItemDataFromCache(String name)
         updateCanvas.setBackground(new Color(14, 12, 13));
         updateCanvas.setAlignmentX(Component.LEFT_ALIGNMENT);
         updateCanvasHolder[0] = updateCanvas;
+        liveUpdateCanvas = updateCanvas;
         wrapper.add(updateCanvas);
         updateCanvas.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
             @Override
@@ -3930,12 +3934,34 @@ private String[] buildItemDataFromCache(String name)
                 if (found >= 0) {
                     UpdateMarker u = gameUpdates.get(found);
                     int x = (int)((double)(u.timestamp - tMin) / (tMax - tMin) * (w - 1));
-                    dateCanvasHolder[0].putClientProperty("dateText", u.title);
+                    String displayTitle = u.title.length() > 28 ? u.title.substring(0, 25) + "..." : u.title;
+// format date from timestamp
+                    java.time.LocalDate ld = java.time.Instant.ofEpochSecond(u.timestamp)
+                            .atZone(java.time.ZoneOffset.UTC).toLocalDate();
+                    String dateStr = ld.getDayOfMonth() + " "
+                            + ld.getMonth().toString().substring(0,1)
+                            + ld.getMonth().toString().substring(1,3).toLowerCase()
+                            + " " + ld.getYear();
+                    dateCanvasHolder[0].putClientProperty("dateText", dateStr + "\n" + displayTitle);
                     dateCanvasHolder[0].putClientProperty("dateX", x);
+                    dateCanvasHolder[0].putClientProperty("dateColor", getUpdateColor(u.category));
                     dateCanvasHolder[0].repaint();
+                    // find nearest visPts index for crosshair
+                    int nearest = 0;
+                    long minDiff = Long.MAX_VALUE;
+                    for (int i = 0; i < visPts.size(); i++) {
+                        long diff = Math.abs(visPts.get(i).timestamp - u.timestamp);
+                        if (diff < minDiff) { minDiff = diff; nearest = i; }
+                    }
+                    crosshairIdx[0] = nearest;
+                    if (priceCanvasHolder[0] != null) priceCanvasHolder[0].repaint();
+                    if (volCanvasHolder[0] != null) volCanvasHolder[0].repaint();
                 } else {
+                    crosshairIdx[0] = -1;
                     dateCanvasHolder[0].putClientProperty("dateText", "");
                     dateCanvasHolder[0].repaint();
+                    if (priceCanvasHolder[0] != null) priceCanvasHolder[0].repaint();
+                    if (volCanvasHolder[0] != null) volCanvasHolder[0].repaint();
                 }
             }
         });
@@ -3943,10 +3969,16 @@ private String[] buildItemDataFromCache(String name)
         updateCanvas.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseExited(java.awt.event.MouseEvent e) {
-                updateCanvas.putClientProperty("hoveredUpdate", null);
-                updateCanvas.repaint();
-                dateCanvasHolder[0].putClientProperty("dateText", "");
-                dateCanvasHolder[0].repaint();
+                if (!updateTooltipPinned) {
+                    updateCanvas.putClientProperty("hoveredUpdate", null);
+                    updateCanvas.repaint();
+                    crosshairIdx[0] = -1;
+                    dateCanvasHolder[0].putClientProperty("dateText", "");
+                    dateCanvasHolder[0].putClientProperty("dateColor", null);
+                    dateCanvasHolder[0].repaint();
+                    if (priceCanvasHolder[0] != null) priceCanvasHolder[0].repaint();
+                    if (volCanvasHolder[0] != null) volCanvasHolder[0].repaint();
+                }
             }
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -3960,7 +3992,6 @@ private String[] buildItemDataFromCache(String name)
                 } catch (Exception ex) {}
             }
         });
-        wrapper.add(Box.createVerticalStrut(2));
 
         // ── date label ─────────────────────────────────────────────────
         JPanel dateCanvas = new JPanel() {
@@ -3976,41 +4007,85 @@ private String[] buildItemDataFromCache(String name)
                 if (text != null && !text.trim().isEmpty()) {
                     g2.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
                     FontMetrics fm = g2.getFontMetrics();
-                    int textW = fm.stringWidth(text);
+                    // check for two-line format (date\ntitle)
+                    boolean twoLine = text.contains("\n");
+                    String line1 = twoLine ? text.substring(0, text.indexOf('\n')) : text;
+                    String line2 = twoLine ? text.substring(text.indexOf('\n') + 1) : null;
+                    int line1W = fm.stringWidth(line1);
+                    int line2W = line2 != null ? fm.stringWidth(line2) : 0;
+                    int maxTextW = Math.max(line1W, line2W);
                     int pad = 5;
-                    int boxW = textW + pad * 2;
-                    int boxH = 14;
+                    int boxW = maxTextW + pad * 2;
+                    int lineH = fm.getHeight();
+                    int boxH = twoLine ? lineH * 2 + 2 : lineH;
                     int arrowH = 5;
                     int arrowW = 7;
                     Integer xPos = (Integer) getClientProperty("dateX");
                     int cx = xPos != null ? xPos : w / 2;
                     int boxX = Math.max(0, Math.min(w - boxW, cx - boxW / 2));
                     int boxY = arrowH;
+// clamp arrow cx to stay within canvas
+                    cx = Math.max(arrowW, Math.min(w - arrowW, cx));
                     // arrow (triangle pointing up)
                     int[] ax = {cx - arrowW/2, cx, cx + arrowW/2};
                     int[] ay = {arrowH, 0, arrowH};
                     g2.setColor(new Color(50, 45, 40));
                     g2.fillPolygon(ax, ay, 3);
-                    // box background
-                    g2.setColor(new Color(30, 27, 25));
+// box background — tinted with update color if present
+                    java.awt.Color dotColor = (java.awt.Color) getClientProperty("dateColor");
+                    if (dotColor != null) {
+                        g2.setColor(new Color(
+                                Math.min(255, dotColor.getRed() / 4 + 20),
+                                Math.min(255, dotColor.getGreen() / 4 + 15),
+                                Math.min(255, dotColor.getBlue() / 4 + 15)));
+                    } else {
+                        g2.setColor(new Color(30, 27, 25));
+                    }
                     g2.fillRect(boxX, boxY, boxW, boxH);
-                    // box border
-                    g2.setColor(new Color(80, 72, 60));
+                    // box border — use dot color if present
+                    if (dotColor != null) {
+                        g2.setColor(dotColor.darker());
+                    } else {
+                        g2.setColor(new Color(80, 72, 60));
+                    }
                     g2.drawRect(boxX, boxY, boxW, boxH);
-                    // text
-                    g2.setColor(new Color(180, 165, 140));
-                    g2.drawString(text, boxX + pad, boxY + boxH - 3);
+                    // line1 — date (white)
+                    g2.setColor(Color.WHITE);
+                    g2.drawString(line1, boxX + pad, boxY + lineH - 2);
+                    // line2 — update title (tan), if present
+                    if (line2 != null) {
+                        g2.setColor(new Color(180, 165, 140));
+                        g2.drawString(line2, boxX + pad, boxY + lineH * 2 - 2);
+                    }
                 }
                 g2.dispose();
             }
         };
-        dateCanvas.setPreferredSize(new Dimension(1, 22));
-        dateCanvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
-        dateCanvas.setMinimumSize(new Dimension(0, 22));
+        dateCanvas.setPreferredSize(new Dimension(1, 48));
+        dateCanvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
+        dateCanvas.setMinimumSize(new Dimension(0, 48));
         dateCanvas.setBackground(new Color(14, 12, 13));
         dateCanvas.setAlignmentX(Component.LEFT_ALIGNMENT);
         wrapper.add(dateCanvas);
         dateCanvasHolder[0] = dateCanvas;
+        dateCanvas.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                updateTooltipPinned = true;
+            }
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                updateTooltipPinned = false;
+                updateCanvas.putClientProperty("hoveredUpdate", null);
+                updateCanvas.repaint();
+                crosshairIdx[0] = -1;
+                dateCanvasHolder[0].putClientProperty("dateText", "");
+                dateCanvasHolder[0].putClientProperty("dateColor", null);
+                dateCanvasHolder[0].repaint();
+                if (priceCanvasHolder[0] != null) priceCanvasHolder[0].repaint();
+                if (volCanvasHolder[0] != null) volCanvasHolder[0].repaint();
+            }
+        });
 
 // ── zoom hint text ─────────────────────────────────────────────
         JLabel zoomHint = new JLabel(
@@ -4023,6 +4098,14 @@ private String[] buildItemDataFromCache(String name)
         zoomHint.setMaximumSize(new Dimension(Integer.MAX_VALUE, 14));
         zoomHint.setAlignmentX(Component.LEFT_ALIGNMENT);
         wrapper.add(zoomHint);
+        if (config.gameUpdateMode() != GameUpdateMode.OFF) {
+            JLabel updateHint = new JLabel("Right-click update dot → Wiki ↗", SwingConstants.CENTER);
+            updateHint.setForeground(TEXT_DIM);
+            updateHint.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+            updateHint.setMaximumSize(new Dimension(Integer.MAX_VALUE, 14));
+            updateHint.setAlignmentX(Component.LEFT_ALIGNMENT);
+            wrapper.add(updateHint);
+        }
         wrapper.add(Box.createVerticalStrut(4));
 
 // ── mouse interaction ──────────────────────────────────────────
@@ -4348,6 +4431,7 @@ private String[] buildItemDataFromCache(String name)
                             animating[0] = false;
                             revealW[0] = 100;
                             priceCanvas.repaint();
+                            if (liveUpdateCanvas != null) liveUpdateCanvas.repaint();
                         }
                     });
                     t.start();
@@ -4361,6 +4445,7 @@ private String[] buildItemDataFromCache(String name)
             updateStatsLabels(pts, statsLabels);
             priceCanvas.repaint();
             volCanvas.repaint();
+            if (liveUpdateCanvas != null) liveUpdateCanvas.repaint();
         });
 
         return wrapper;
