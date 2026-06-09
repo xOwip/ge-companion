@@ -4018,6 +4018,8 @@ private String[] buildItemDataFromCache(String name)
                 if (frame.equals(activeFrame[0])) return;
                 activeFrame[0] = frame;
                 graphActiveTimeframe = frame;
+                zoomStart[0] = 0;
+                zoomEnd[0] = -1;
                 crosshairIdx[0] = -1;
                 dateCanvas.putClientProperty("dateText", "");
                 dateCanvas.repaint();
