@@ -2952,59 +2952,103 @@ private String openBankItemName = null;
                 java.util.List<UpdateMarker> updates = new java.util.ArrayList<>();
                 long oneYearAgo = System.currentTimeMillis() / 1000 - 365L * 24 * 3600;
 
-                // category name → dot color category string
+                // Step 1: fetch category membership for color coding
+                java.util.Map<String, String> titleToCategory = new java.util.HashMap<>();
                 String[][] categories = {
                         {"Category:Game_updates", "game"},
                         {"Category:Patch_Notes", "patch"},
                         {"Category:Events", "event"},
                         {"Category:Polls", "poll"}
                 };
-
                 for (String[] catEntry : categories)
                 {
                     String cmtitle = catEntry[0];
                     String catLabel = catEntry[1];
-
                     String url = "https://oldschool.runescape.wiki/api.php?action=query&list=categorymembers&cmtitle="
                             + java.net.URLEncoder.encode(cmtitle, "UTF-8")
-                            + "&cmprop=title|timestamp&cmlimit=500&format=json";
-
+                            + "&cmprop=title&cmlimit=500&format=json";
                     okhttp3.Request request = new okhttp3.Request.Builder()
-                            .url(url)
-                            .header("User-Agent", "GE Companion RuneLite Plugin")
-                            .build();
-
+                            .url(url).header("User-Agent", "GE Companion RuneLite Plugin").build();
                     try (okhttp3.Response response = client.newCall(request).execute())
                     {
                         if (!response.isSuccessful() || response.body() == null) continue;
-
                         String body = response.body().string();
                         org.json.JSONObject json = new org.json.JSONObject(body);
                         org.json.JSONArray members = json.getJSONObject("query").getJSONArray("categorymembers");
-
                         for (int i = 0; i < members.length(); i++)
                         {
-                            org.json.JSONObject member = members.getJSONObject(i);
-                            String title = member.getString("title");
-                            String timestamp = member.optString("timestamp", "");
-                            if (timestamp.isEmpty()) continue;
-
-                            // Parse ISO timestamp: "2025-11-19T00:00:00Z"
-                            long ts;
-                            try {
-                                ts = java.time.Instant.parse(timestamp).getEpochSecond();
-                            } catch (Exception ex) { continue; }
-
-                            if (ts < oneYearAgo) continue;
-
-                            // Strip "Update:" prefix from title if present
+                            String title = members.getJSONObject(i).getString("title");
                             String displayTitle = title.startsWith("Update:") ? title.substring(7) : title;
-                            String wikiUrl = "https://oldschool.runescape.wiki/w/" + title.replace(" ", "_");
+                            titleToCategory.put(displayTitle.toLowerCase(), catLabel);
+                        }
+                    }
+                    catch (Exception ex) {}
+                }
 
-                            updates.add(new UpdateMarker(displayTitle, ts, catLabel, wikiUrl));
+                // Step 2: fetch Game_updates page to get accurate dates
+                String pageUrl = "https://oldschool.runescape.wiki/api.php?action=parse&page=Game_updates&prop=text&format=json";
+                okhttp3.Request pageRequest = new okhttp3.Request.Builder()
+                        .url(pageUrl).header("User-Agent", "GE Companion RuneLite Plugin").build();
+                try (okhttp3.Response response = client.newCall(pageRequest).execute())
+                {
+                    if (response.isSuccessful() && response.body() != null)
+                    {
+                        String body = response.body().string();
+                        org.json.JSONObject json = new org.json.JSONObject(body);
+                        String wikitext = json.getJSONObject("parse").getJSONObject("text").getString("*");
+
+                        // Parse year sections and bullet entries
+                        // Format: ==2026== ... * [[link|Title]] or * [[Update:Title|Title]]
+                        int currentYear = java.time.LocalDate.now().getYear();
+// Parse year sections: <h3 id="2026">
+                        java.util.regex.Pattern yearPattern = java.util.regex.Pattern.compile(
+                                "<h3[^>]*id=\"(\\d{4})\"");
+// Parse entries: <li><a ...>3 June</a> û <a href="/w/Update:Title" ...>
+                        java.util.regex.Pattern entryPattern = java.util.regex.Pattern.compile(
+                                "<li>[^<]*<a[^>]*>([^<]+)</a>\\s*[û\\-–]\\s*<a href=\"/w/Update:([^\"]+)\"[^>]*>([^<]+)</a>");
+
+                        java.util.regex.Matcher yearM = yearPattern.matcher(wikitext);
+                        java.util.regex.Matcher entryM = entryPattern.matcher(wikitext);
+
+// Build year position map
+                        java.util.TreeMap<Integer, Integer> yearPositions = new java.util.TreeMap<>();
+                        while (yearM.find()) {
+                            try {
+                                int y = Integer.parseInt(yearM.group(1));
+                                yearPositions.put(yearM.start(), y);
+                            } catch (Exception ex) {}
+                        }
+
+                        while (entryM.find()) {
+                            String dateStr = entryM.group(1).trim();
+                            String titleEncoded = entryM.group(2).trim();
+                            String titleDisplay = entryM.group(3).trim();
+
+                            // Find which year this entry belongs to
+                            int pos = entryM.start();
+                            int year = currentYear;
+                            for (java.util.Map.Entry<Integer, Integer> entry : yearPositions.entrySet()) {
+                                if (entry.getKey() <= pos) year = entry.getValue();
+                                else break;
+                            }
+
+                            // Decode URL encoding in title
+                            String titleRaw;
+                            try {
+                                titleRaw = java.net.URLDecoder.decode(titleEncoded.replace("_", " "), "UTF-8");
+                            } catch (Exception ex) { titleRaw = titleDisplay; }
+                            if (titleRaw.startsWith("Update:")) titleRaw = titleRaw.substring(7);
+
+                            long ts = parseWikiDate(dateStr + " " + year);
+                            if (ts == 0 || ts < oneYearAgo) continue;
+
+                            String cat = titleToCategory.getOrDefault(titleRaw.toLowerCase(), "");
+                            String wikiUrl = "https://oldschool.runescape.wiki/w/Update:" + titleEncoded;
+                            updates.add(new UpdateMarker(titleRaw, ts, cat, wikiUrl));
                         }
                     }
                 }
+                catch (Exception ex) {}
 
                 // Sort by timestamp ascending
                 updates.sort((a, b) -> Long.compare(a.timestamp, b.timestamp));
