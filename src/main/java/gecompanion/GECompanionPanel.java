@@ -3870,6 +3870,7 @@ private String[] buildItemDataFromCache(String name)
                 if (tMax <= tMin) { g2.dispose(); return; }
 
                 Integer hoveredIdx = (Integer) getClientProperty("hoveredUpdate");
+                int dotY = 5; // center of dot strip (top 10px)
 
                 for (int i = 0; i < gameUpdates.size(); i++) {
                     UpdateMarker u = gameUpdates.get(i);
@@ -3882,17 +3883,62 @@ private String[] buildItemDataFromCache(String name)
                     boolean hovered = hoveredIdx != null && hoveredIdx == i;
                     int r = hovered ? 5 : 3;
                     g2.setColor(dotColor);
-                    g2.fillOval(x - r, h / 2 - r, r * 2, r * 2);
+                    g2.fillOval(x - r, dotY - r, r * 2, r * 2);
                     if (hovered) {
                         g2.setColor(Color.WHITE);
-                        g2.drawOval(x - r - 1, h / 2 - r - 1, r * 2 + 2, r * 2 + 2);
+                        g2.drawOval(x - r - 1, dotY - r - 1, r * 2 + 2, r * 2 + 2);
+
+                        // draw tooltip in bottom 48px strip
+                        g2.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+                        FontMetrics fm = g2.getFontMetrics();
+                        java.time.LocalDate ld = java.time.Instant.ofEpochSecond(u.timestamp)
+                                .atZone(java.time.ZoneOffset.UTC).toLocalDate();
+                        String dateStr = ld.getDayOfMonth() + " "
+                                + ld.getMonth().toString().substring(0,1)
+                                + ld.getMonth().toString().substring(1,3).toLowerCase()
+                                + " " + ld.getYear();
+                        String titleStr = u.title.length() > 28 ? u.title.substring(0, 25) + "..." : u.title;
+                        int line1W = fm.stringWidth(dateStr);
+                        int line2W = fm.stringWidth(titleStr);
+                        int maxTextW = Math.max(line1W, line2W);
+                        int pad = 5;
+                        int boxW = maxTextW + pad * 2;
+                        int lineH = fm.getHeight();
+                        int boxH = lineH * 2 + 4;
+                        int arrowH = 5;
+                        int arrowW = 7;
+                        int tooltipY = 10; // start of tooltip area
+                        int cx = Math.max(arrowW, Math.min(w - arrowW, x));
+                        int boxX = Math.max(0, Math.min(w - boxW, cx - boxW / 2));
+                        int boxY = tooltipY + arrowH;
+                        // arrow
+                        int[] ax = {cx - arrowW/2, cx, cx + arrowW/2};
+                        int[] ay = {tooltipY + arrowH, tooltipY, tooltipY + arrowH};
+                        g2.setColor(new Color(50, 45, 40));
+                        g2.fillPolygon(ax, ay, 3);
+                        // box background tinted
+                        Color dc = dotColor;
+                        g2.setColor(new Color(
+                                Math.min(255, dc.getRed() / 4 + 20),
+                                Math.min(255, dc.getGreen() / 4 + 15),
+                                Math.min(255, dc.getBlue() / 4 + 15)));
+                        g2.fillRect(boxX, boxY, boxW, boxH);
+                        // box border
+                        g2.setColor(dc.darker());
+                        g2.drawRect(boxX, boxY, boxW, boxH);
+                        // date (white)
+                        g2.setColor(Color.WHITE);
+                        g2.drawString(dateStr, boxX + pad, boxY + lineH - 2);
+                        // title (tan)
+                        g2.setColor(new Color(180, 165, 140));
+                        g2.drawString(titleStr, boxX + pad, boxY + lineH * 2 - 2);
                     }
                 }
                 g2.dispose();
             }
         };
         updateCanvas.setPreferredSize(new Dimension(1, 10));
-        updateCanvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 10));
+        updateCanvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 58));
         updateCanvas.setMinimumSize(new Dimension(0, 10));
         updateCanvas.setBackground(new Color(14, 12, 13));
         updateCanvas.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -3917,35 +3963,37 @@ private String[] buildItemDataFromCache(String name)
 
                 int w = updateCanvas.getWidth();
                 int mx = e.getX();
+                int my = e.getY();
                 int threshold = 6;
                 int found = -1;
 
-                for (int i = 0; i < gameUpdates.size(); i++) {
-                    UpdateMarker u = gameUpdates.get(i);
-                    if (config.gameUpdateMode() == GameUpdateMode.MAJOR_ONLY && !u.category.contains("game")) continue;
-                    if (u.timestamp < tMin || u.timestamp > tMax) continue;
-                    int x = (int)((double)(u.timestamp - tMin) / (tMax - tMin) * (w - 1));
-                    if (Math.abs(mx - x) <= threshold) { found = i; break; }
+// check if hovering existing pinned dot first
+                Integer currentHovered = (Integer) updateCanvas.getClientProperty("hoveredUpdate");
+                if (currentHovered != null && my > 10) {
+                    // cursor is in tooltip area — keep current hovered dot
+                    found = currentHovered;
+                } else {
+                    for (int i = 0; i < gameUpdates.size(); i++) {
+                        UpdateMarker u = gameUpdates.get(i);
+                        if (config.gameUpdateMode() == GameUpdateMode.MAJOR_ONLY && !u.category.contains("game")) continue;
+                        if (u.timestamp < tMin || u.timestamp > tMax) continue;
+                        int x = (int)((double)(u.timestamp - tMin) / (tMax - tMin) * (w - 1));
+                        if (Math.abs(mx - x) <= threshold && my <= 12) { found = i; break; }
+                    }
                 }
 
                 updateCanvas.putClientProperty("hoveredUpdate", found >= 0 ? found : null);
+// expand/collapse canvas based on hover state
+                int targetH = found >= 0 ? 58 : 10;
+                if (updateCanvas.getPreferredSize().height != targetH) {
+                    updateCanvas.setPreferredSize(new Dimension(1, targetH));
+                    updateCanvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, targetH));
+                    updateCanvas.revalidate();
+                }
                 updateCanvas.repaint();
 
                 if (found >= 0) {
                     UpdateMarker u = gameUpdates.get(found);
-                    int x = (int)((double)(u.timestamp - tMin) / (tMax - tMin) * (w - 1));
-                    String displayTitle = u.title.length() > 28 ? u.title.substring(0, 25) + "..." : u.title;
-// format date from timestamp
-                    java.time.LocalDate ld = java.time.Instant.ofEpochSecond(u.timestamp)
-                            .atZone(java.time.ZoneOffset.UTC).toLocalDate();
-                    String dateStr = ld.getDayOfMonth() + " "
-                            + ld.getMonth().toString().substring(0,1)
-                            + ld.getMonth().toString().substring(1,3).toLowerCase()
-                            + " " + ld.getYear();
-                    dateCanvasHolder[0].putClientProperty("dateText", dateStr + "\n" + displayTitle);
-                    dateCanvasHolder[0].putClientProperty("dateX", x);
-                    dateCanvasHolder[0].putClientProperty("dateColor", getUpdateColor(u.category));
-                    dateCanvasHolder[0].repaint();
                     // find nearest visPts index for crosshair
                     int nearest = 0;
                     long minDiff = Long.MAX_VALUE;
@@ -3958,8 +4006,6 @@ private String[] buildItemDataFromCache(String name)
                     if (volCanvasHolder[0] != null) volCanvasHolder[0].repaint();
                 } else {
                     crosshairIdx[0] = -1;
-                    dateCanvasHolder[0].putClientProperty("dateText", "");
-                    dateCanvasHolder[0].repaint();
                     if (priceCanvasHolder[0] != null) priceCanvasHolder[0].repaint();
                     if (volCanvasHolder[0] != null) volCanvasHolder[0].repaint();
                 }
@@ -3971,6 +4017,9 @@ private String[] buildItemDataFromCache(String name)
             public void mouseExited(java.awt.event.MouseEvent e) {
                 if (!updateTooltipPinned) {
                     updateCanvas.putClientProperty("hoveredUpdate", null);
+                    updateCanvas.setPreferredSize(new Dimension(1, 10));
+                    updateCanvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 10));
+                    updateCanvas.revalidate();
                     updateCanvas.repaint();
                     crosshairIdx[0] = -1;
                     dateCanvasHolder[0].putClientProperty("dateText", "");
@@ -4007,63 +4056,39 @@ private String[] buildItemDataFromCache(String name)
                 if (text != null && !text.trim().isEmpty()) {
                     g2.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
                     FontMetrics fm = g2.getFontMetrics();
-                    // check for two-line format (date\ntitle)
-                    boolean twoLine = text.contains("\n");
-                    String line1 = twoLine ? text.substring(0, text.indexOf('\n')) : text;
-                    String line2 = twoLine ? text.substring(text.indexOf('\n') + 1) : null;
-                    int line1W = fm.stringWidth(line1);
-                    int line2W = line2 != null ? fm.stringWidth(line2) : 0;
-                    int maxTextW = Math.max(line1W, line2W);
+                    int textW = fm.stringWidth(text);
                     int pad = 5;
-                    int boxW = maxTextW + pad * 2;
+                    int boxW = textW + pad * 2;
                     int lineH = fm.getHeight();
-                    int boxH = twoLine ? lineH * 2 + 2 : lineH;
+                    int boxH = lineH;
                     int arrowH = 5;
                     int arrowW = 7;
                     Integer xPos = (Integer) getClientProperty("dateX");
                     int cx = xPos != null ? xPos : w / 2;
                     int boxX = Math.max(0, Math.min(w - boxW, cx - boxW / 2));
                     int boxY = arrowH;
-// clamp arrow cx to stay within canvas
                     cx = Math.max(arrowW, Math.min(w - arrowW, cx));
-                    // arrow (triangle pointing up)
+                    // arrow
                     int[] ax = {cx - arrowW/2, cx, cx + arrowW/2};
                     int[] ay = {arrowH, 0, arrowH};
                     g2.setColor(new Color(50, 45, 40));
                     g2.fillPolygon(ax, ay, 3);
-// box background — tinted with update color if present
-                    java.awt.Color dotColor = (java.awt.Color) getClientProperty("dateColor");
-                    if (dotColor != null) {
-                        g2.setColor(new Color(
-                                Math.min(255, dotColor.getRed() / 4 + 20),
-                                Math.min(255, dotColor.getGreen() / 4 + 15),
-                                Math.min(255, dotColor.getBlue() / 4 + 15)));
-                    } else {
-                        g2.setColor(new Color(30, 27, 25));
-                    }
+                    // box background
+                    g2.setColor(new Color(30, 27, 25));
                     g2.fillRect(boxX, boxY, boxW, boxH);
-                    // box border — use dot color if present
-                    if (dotColor != null) {
-                        g2.setColor(dotColor.darker());
-                    } else {
-                        g2.setColor(new Color(80, 72, 60));
-                    }
+                    // box border
+                    g2.setColor(new Color(80, 72, 60));
                     g2.drawRect(boxX, boxY, boxW, boxH);
-                    // line1 — date (white)
+                    // date text (white)
                     g2.setColor(Color.WHITE);
-                    g2.drawString(line1, boxX + pad, boxY + lineH - 2);
-                    // line2 — update title (tan), if present
-                    if (line2 != null) {
-                        g2.setColor(new Color(180, 165, 140));
-                        g2.drawString(line2, boxX + pad, boxY + lineH * 2 - 2);
-                    }
+                    g2.drawString(text, boxX + pad, boxY + lineH - 2);
                 }
                 g2.dispose();
             }
         };
-        dateCanvas.setPreferredSize(new Dimension(1, 48));
-        dateCanvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 48));
-        dateCanvas.setMinimumSize(new Dimension(0, 48));
+        dateCanvas.setPreferredSize(new Dimension(1, 22));
+        dateCanvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
+        dateCanvas.setMinimumSize(new Dimension(0, 22));
         dateCanvas.setBackground(new Color(14, 12, 13));
         dateCanvas.setAlignmentX(Component.LEFT_ALIGNMENT);
         wrapper.add(dateCanvas);
@@ -4077,6 +4102,9 @@ private String[] buildItemDataFromCache(String name)
             public void mouseExited(java.awt.event.MouseEvent e) {
                 updateTooltipPinned = false;
                 updateCanvas.putClientProperty("hoveredUpdate", null);
+                updateCanvas.setPreferredSize(new Dimension(1, 10));
+                updateCanvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 10));
+                updateCanvas.revalidate();
                 updateCanvas.repaint();
                 crosshairIdx[0] = -1;
                 dateCanvasHolder[0].putClientProperty("dateText", "");
