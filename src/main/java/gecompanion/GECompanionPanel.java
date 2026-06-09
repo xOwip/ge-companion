@@ -3078,7 +3078,7 @@ private String openBankItemName = null;
         {
             java.time.LocalDate ld = java.time.LocalDate.parse(date,
                     java.time.format.DateTimeFormatter.ofPattern("d MMMM yyyy", java.util.Locale.ENGLISH));
-            return ld.atStartOfDay(java.time.ZoneOffset.UTC).toEpochSecond();
+            return ld.atStartOfDay(java.time.ZoneId.systemDefault()).toEpochSecond();
         }
         catch (Exception e)
         {
@@ -3086,7 +3086,7 @@ private String openBankItemName = null;
             {
                 java.time.LocalDate ld = java.time.LocalDate.parse(date,
                         java.time.format.DateTimeFormatter.ofPattern("MMMM d, yyyy", java.util.Locale.ENGLISH));
-                return ld.atStartOfDay(java.time.ZoneOffset.UTC).toEpochSecond();
+                return ld.atStartOfDay(java.time.ZoneId.systemDefault()).toEpochSecond();
             }
             catch (Exception e2) { return 0; }
         }
@@ -3934,7 +3934,7 @@ private String[] buildItemDataFromCache(String name)
                         g2.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
                         FontMetrics fm = g2.getFontMetrics();
                         java.time.LocalDate ld = java.time.Instant.ofEpochSecond(u.timestamp)
-                                .atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+                                .atZone(java.time.ZoneOffset.UTC).toLocalDate();
                         String catLabel = u.category.equals("patch") ? "Patch Notes" :
                                 u.category.equals("event") ? "Event" :
                                 u.category.equals("poll") ? "Poll" : "Game Update";
