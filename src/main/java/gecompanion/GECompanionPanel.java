@@ -3920,10 +3920,13 @@ private String[] buildItemDataFromCache(String name)
                         FontMetrics fm = g2.getFontMetrics();
                         java.time.LocalDate ld = java.time.Instant.ofEpochSecond(u.timestamp)
                                 .atZone(java.time.ZoneOffset.UTC).toLocalDate();
+                        String catLabel = u.category.equals("patch") ? "Patch Notes" :
+                                u.category.equals("event") ? "Event" :
+                                u.category.equals("poll") ? "Poll" : "Game Update";
                         String dateStr = ld.getDayOfMonth() + " "
                                 + ld.getMonth().toString().substring(0,1)
                                 + ld.getMonth().toString().substring(1,3).toLowerCase()
-                                + " " + ld.getYear();
+                                + " " + ld.getYear() + "  (" + catLabel + ")";
                         String titleStr = u.title.length() > 28 ? u.title.substring(0, 25) + "..." : u.title;
                         int line1W = fm.stringWidth(dateStr);
                         int line2W = fm.stringWidth(titleStr);
