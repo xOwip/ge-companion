@@ -133,6 +133,7 @@ public class GECompanionPanel extends PluginPanel
     private java.util.List<UpdateMarker> gameUpdates = null;
     private boolean gameUpdatesFetching = false;
     private boolean updateTooltipPinned = false;
+    private boolean watchlistEditMode = false;
 
     // Pinned/watched items
     private final java.util.Map<Integer, javax.swing.ImageIcon> iconCache = new java.util.HashMap<>();
@@ -1673,12 +1674,61 @@ private String openBankItemName = null;
         listPanel.setBackground(new Color(20, 18, 19));
         listPanel.setBorder(javax.swing.BorderFactory.createEmptyBorder());
 
+        JPanel pinnedHeader = new JPanel(new BorderLayout());
+        pinnedHeader.setBackground(new Color(20, 18, 19));
+        pinnedHeader.setAlignmentX(Component.LEFT_ALIGNMENT);
+        pinnedHeader.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
+
         JLabel pinnedLabel = new JLabel("Pinned Items");
         pinnedLabel.setForeground(TEXT_DIM);
         pinnedLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_SECTION));
         pinnedLabel.setBorder(new EmptyBorder(4, 7, 2, 7));
-        pinnedLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        listPanel.add(pinnedLabel);
+
+        JLabel editBtn = new JLabel(watchlistEditMode ? "Done" : "Edit");
+        editBtn.setForeground(TAB_INACTIVE);
+        editBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+        editBtn.setBorder(watchlistEditMode ?
+                BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(GOLD), new EmptyBorder(3, 6, 1, 6)) :
+                new EmptyBorder(4, 7, 2, 7));
+        editBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        editBtn.setVisible(watchlistEditMode);
+        editBtn.setForeground(watchlistEditMode ? GOLD : TAB_INACTIVE);
+
+        pinnedHeader.add(pinnedLabel, BorderLayout.WEST);
+        pinnedHeader.add(editBtn, BorderLayout.EAST);
+
+        pinnedHeader.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) { if (currentOpenWatchlistDetail == null) editBtn.setVisible(true); }
+            @Override
+            public void mouseExited(MouseEvent e) { if (!watchlistEditMode) editBtn.setVisible(false); }
+        });
+
+        editBtn.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                editBtn.setVisible(true);
+                editBtn.setForeground(watchlistEditMode ? GOLD : TAB_INACTIVE);
+                editBtn.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(watchlistEditMode ? GOLD : TAB_INACTIVE),
+                        new EmptyBorder(3, 6, 1, 6)));
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+                editBtn.setForeground(watchlistEditMode ? GOLD : TAB_INACTIVE);
+                editBtn.setBorder(watchlistEditMode ?
+                        BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(GOLD), new EmptyBorder(3, 6, 1, 6)) :
+                        new EmptyBorder(4, 7, 2, 7));
+            }
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (currentOpenWatchlistDetail != null) return;
+                watchlistEditMode = !watchlistEditMode;
+                showTab(0);
+            }
+        });
+
+        listPanel.add(pinnedHeader);
 
         int watchlistIndex = 0;
         for (String pinnedName : pinnedItems)
@@ -1808,6 +1858,67 @@ private String openBankItemName = null;
         info.add(priceLabel);
         info.add(deltaLimitRow);
         row.add(info, BorderLayout.CENTER);
+        // ── rearrange arrows (edit mode) ──────────────────────────────
+        if (watchlistEditMode) {
+            final int totalItems = pinnedItems.size();
+            JPanel arrowPanel = new JPanel();
+            arrowPanel.setLayout(new BoxLayout(arrowPanel, BoxLayout.Y_AXIS));
+            arrowPanel.setBackground(rowBg);
+            arrowPanel.setBorder(new EmptyBorder(0, 4, 0, 8));
+            arrowPanel.setPreferredSize(new Dimension(24, 68));
+
+            JLabel upArrow = new JLabel(index > 0 ? "▲" : " ");
+            upArrow.setForeground(TEXT_DIM);
+            upArrow.setFont(new Font("Monospaced", Font.BOLD, FONT_ITEM_NAME));
+            upArrow.setAlignmentX(Component.CENTER_ALIGNMENT);
+            upArrow.setCursor(index > 0 ? Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) : Cursor.getDefaultCursor());
+
+            JLabel downArrow = new JLabel(index < totalItems - 1 ? "▼" : " ");
+            downArrow.setForeground(TEXT_DIM);
+            downArrow.setFont(new Font("Monospaced", Font.BOLD, FONT_ITEM_NAME));
+            downArrow.setAlignmentX(Component.CENTER_ALIGNMENT);
+            downArrow.setCursor(index < totalItems - 1 ? Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) : Cursor.getDefaultCursor());
+
+            arrowPanel.add(Box.createVerticalGlue());
+            arrowPanel.add(upArrow);
+            arrowPanel.add(Box.createVerticalStrut(4));
+            arrowPanel.add(downArrow);
+            arrowPanel.add(Box.createVerticalGlue());
+
+            upArrow.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    e.consume();
+                    if (index > 0) {
+                        java.util.Collections.swap(pinnedItems, index, index - 1);
+                        savePinnedItems();
+                        showTab(0);
+                    }
+                }
+                @Override
+                public void mouseEntered(MouseEvent e) { if (index > 0) upArrow.setForeground(GOLD); }
+                @Override
+                public void mouseExited(MouseEvent e) { upArrow.setForeground(TEXT_DIM); }
+            });
+
+            downArrow.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    e.consume();
+                    if (index < totalItems - 1) {
+                        java.util.Collections.swap(pinnedItems, index, index + 1);
+                        savePinnedItems();
+                        showTab(0);
+                    }
+                }
+                @Override
+                public void mouseEntered(MouseEvent e) { if (index < totalItems - 1) downArrow.setForeground(GOLD); }
+                @Override
+                public void mouseExited(MouseEvent e) { downArrow.setForeground(TEXT_DIM); }
+            });
+
+            row.add(arrowPanel, BorderLayout.EAST);
+        }
         // Inline detail slot
         JPanel detailSlot = new JPanel(new BorderLayout());
         detailSlot.setBackground(BG_DARK);
@@ -1823,6 +1934,7 @@ private String openBankItemName = null;
         {
             public void mouseClicked(MouseEvent e)
             {
+                if (watchlistEditMode) return;
                 // Toggle
                 if (name.equals(selectedWatchlistItemName) && currentOpenWatchlistDetail != null)
                 {
@@ -2029,6 +2141,7 @@ private String openBankItemName = null;
                     info.setBackground(BG_ROW_HOVER);
                     iconWrapper.setBackground(BG_ROW_HOVER);
                     deltaLimitRow.setBackground(BG_ROW_HOVER);
+                    if (watchlistEditMode) row.getComponent(row.getComponentCount()-1).setBackground(BG_ROW_HOVER);
                 }
             }
             public void mouseExited(MouseEvent e)
@@ -2039,6 +2152,7 @@ private String openBankItemName = null;
                     info.setBackground(rowBg);
                     iconWrapper.setBackground(rowBg);
                     deltaLimitRow.setBackground(rowBg);
+                    if (watchlistEditMode) row.getComponent(row.getComponentCount()-1).setBackground(rowBg);
                 }
             }
         });
