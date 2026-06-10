@@ -1719,6 +1719,7 @@ private String openBankItemName = null;
                 editBtn.setBorder(watchlistEditMode ?
                         BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(GOLD), new EmptyBorder(3, 6, 1, 6)) :
                         new EmptyBorder(4, 7, 2, 7));
+                if (!watchlistEditMode) editBtn.setVisible(false);
             }
             @Override
             public void mouseClicked(MouseEvent e) {
