@@ -4074,7 +4074,7 @@ private String[] buildItemDataFromCache(String name)
                         int arrowW = 7;
                         int tooltipY = 10; // start of tooltip area
                         int cx = Math.max(arrowW, Math.min(w - arrowW, x));
-                        int boxX = Math.max(0, Math.min(w - boxW, cx - boxW / 2));
+                        int boxX = Math.max(0, Math.min(w - boxW - 1, cx - boxW / 2));
                         int boxY = tooltipY + arrowH;
                         // arrow
                         int[] ax = {cx - arrowW/2, cx, cx + arrowW/2};
