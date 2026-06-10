@@ -710,7 +710,6 @@ private String openBankItemName = null;
             }
             savePinnedItems();
             if (activeTab == 0) showTab(0);
-        if (activeTab == 2) showTab(2);
             // Update button live
             boolean nowWatched = pinnedItems.contains(item[0]);
             watchBtn.setText(isWatchlist ? "- Unwatch" : (nowWatched ? "✓ Watch" : "+ Watch"));

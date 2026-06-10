@@ -341,7 +341,7 @@ private void fetchMapping()
 	@Subscribe
 	public void onConfigChanged(net.runelite.client.events.ConfigChanged event)
 	{
-		if (event.getGroup().equals("gecompanion") && !event.getKey().equals("recentSearches") && !event.getKey().equals("bankValueLog") && !event.getKey().equals("bankValue") && !event.getKey().equals("bankValueHidden"))
+		if (event.getGroup().equals("gecompanion") && !event.getKey().equals("recentSearches") && !event.getKey().equals("bankValueLog") && !event.getKey().equals("bankValue") && !event.getKey().equals("bankValueHidden") && !event.getKey().equals("pinnedItems"))
 		{
 			javax.swing.SwingUtilities.invokeLater(() -> panel.showTab(panel.getActiveTab()));
 		}
