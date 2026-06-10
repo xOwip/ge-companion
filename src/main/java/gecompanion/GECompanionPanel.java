@@ -1458,6 +1458,7 @@ private String openBankItemName = null;
                     }
                     selectedItemName = null;
                     searchReopenAction = null;
+                    graphWasOpen = false;
                     liveHeaderPriceLabel = null;
                     liveLastTradedValueLabel = null;
                     liveLastTradedHeaderLabel = null;
@@ -1873,6 +1874,7 @@ private String openBankItemName = null;
                     }
                     selectedWatchlistItemName = null;
                     watchlistReopenAction = null;
+                    graphWasOpen = false;
                     liveHeaderPriceLabel = null;
                     liveLastTradedValueLabel = null;
                     liveLastTradedHeaderLabel = null;
@@ -2697,6 +2699,7 @@ private String openBankItemName = null;
                     }
                     selectedBankItemName = null;
                     bankReopenAction = null;
+                    graphWasOpen = false;
                     liveHeaderPriceLabel = null;
                     liveLastTradedValueLabel = null;
                     liveLastTradedHeaderLabel = null;
