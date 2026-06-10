@@ -1501,6 +1501,7 @@ private String openBankItemName = null;
                         }
                     });
                     closeTimer2.start();
+                    graphWasOpen = false;
                 }
                 if (currentOpenSearchRow != null)
                 {
@@ -1915,6 +1916,7 @@ private String openBankItemName = null;
                         }
                     });
                     closeTimer2.start();
+                    graphWasOpen = false;
                 }
                 if (currentOpenWatchlistRow != null)
                 {
@@ -2735,6 +2737,7 @@ private String openBankItemName = null;
                         }
                     });
                     closeTimer2.start();
+                    graphWasOpen = false;
                 }
                 if (currentOpenBankRow != null)
                 {
