@@ -3504,36 +3504,32 @@ private String[] buildItemDataFromCache(String name)
 
     private JPanel buildTimeFrameBar()
     {
-        JPanel bar = new JPanel(new GridLayout(1, 4, 3, 0));
+        JPanel bar = new JPanel(new GridLayout(1, 3, 3, 0));
         bar.setBackground(new Color(26, 23, 24));
         bar.setBorder(new EmptyBorder(5, 6, 5, 6));
 
-        String[] frames = {"1H", "6H", "24H", "30D"};
+        String[] frames = {"1H", "6H", "24H"};
         for (String frame : frames)
         {
             JButton btn = new JButton(frame);
             btn.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
             btn.setFocusPainted(false);
             btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            boolean isDisabled = frame.equals("30D");
             btn.setBackground(frame.equals(activeTimeFrame) ? new Color(26, 21, 0) : new Color(14, 12, 13));
-            btn.setForeground(isDisabled ? new Color(45, 40, 38) : frame.equals(activeTimeFrame) ? GOLD : TAB_INACTIVE);
-            btn.setBorder(BorderFactory.createLineBorder(isDisabled ? new Color(35, 30, 28) : frame.equals(activeTimeFrame) ? GOLD : new Color(58, 53, 48)));
-            btn.setEnabled(!isDisabled);
+            btn.setForeground(frame.equals(activeTimeFrame) ? GOLD : TAB_INACTIVE);
+            btn.setBorder(BorderFactory.createLineBorder(frame.equals(activeTimeFrame) ? GOLD : new Color(58, 53, 48)));
             btn.addActionListener(e -> {
-                if (!isDisabled) {
-                    activeTimeFrame = frame;
-                    isRefreshing = true;
-                    showTab(activeTab);
-                    isRefreshing = false;
-                    if (searchReopenAction != null && activeTab == 1)
-                    {
-                        javax.swing.SwingUtilities.invokeLater(searchReopenAction);
-                    }
-                    else if (watchlistReopenAction != null && activeTab == 0)
-                    {
-                        javax.swing.SwingUtilities.invokeLater(watchlistReopenAction);
-                    }
+                activeTimeFrame = frame;
+                isRefreshing = true;
+                showTab(activeTab);
+                isRefreshing = false;
+                if (searchReopenAction != null && activeTab == 1)
+                {
+                    javax.swing.SwingUtilities.invokeLater(searchReopenAction);
+                }
+                else if (watchlistReopenAction != null && activeTab == 0)
+                {
+                    javax.swing.SwingUtilities.invokeLater(watchlistReopenAction);
                 }
             });
             bar.add(btn);
