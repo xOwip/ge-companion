@@ -347,58 +347,81 @@ private void fetchMapping()
 		}
 	}
 	@Subscribe
-    public void onItemContainerChanged(ItemContainerChanged event)
-    {
-        if (event.getContainerId() != InventoryID.BANK.getId()) return;
+	public void onItemContainerChanged(ItemContainerChanged event)
+	{
+		if (event.getContainerId() != InventoryID.BANK.getId()) return;
 
-        ItemContainer container = event.getItemContainer();
-        if (container == null) return;
+		ItemContainer bankContainer = event.getItemContainer();
+		if (bankContainer == null) return;
 
-        java.util.List<String> newBankItems = new java.util.ArrayList<>();
-        java.util.Map<String, Integer> newBankQuantities = new java.util.HashMap<>();
+		java.util.List<String> newBankItems = new java.util.ArrayList<>();
+		java.util.Map<String, Integer> newBankQuantities = new java.util.HashMap<>();
 
-        for (Item item : container.getItems())
-        {
-            if (item.getId() <= 0 || item.getQuantity() <= 0) continue;
+		for (Item item : bankContainer.getItems())
+		{
+			if (item.getId() <= 0 || item.getQuantity() <= 0) continue;
 
-            // Look up item name from nameToId reverse map
-            for (java.util.Map.Entry<String, Integer> entry : nameToId.entrySet())
-            {
-                if (entry.getValue() == item.getId())
-                {
-                    String name = entry.getKey();
-                    // Capitalize first letter of each word
-                    String[] words = name.split(" ");
-                    StringBuilder sb = new StringBuilder();
-                    for (String word : words)
-                    {
-                        if (word.length() > 0)
-                            sb.append(Character.toUpperCase(word.charAt(0)))
-                              .append(word.substring(1)).append(" ");
-                    }
-                    String displayName = sb.toString().trim();
-                    newBankItems.add(displayName);
-                    newBankQuantities.put(displayName, item.getQuantity());
-                    break;
-                }
-            }
-        }
+			for (java.util.Map.Entry<String, Integer> entry : nameToId.entrySet())
+			{
+				if (entry.getValue() == item.getId())
+				{
+					String name = entry.getKey();
+					String[] words = name.split(" ");
+					StringBuilder sb = new StringBuilder();
+					for (String word : words)
+					{
+						if (word.length() > 0)
+							sb.append(Character.toUpperCase(word.charAt(0)))
+									.append(word.substring(1)).append(" ");
+					}
+					String displayName = sb.toString().trim();
+					newBankItems.add(displayName);
+					newBankQuantities.put(displayName, item.getQuantity());
+					break;
+				}
+			}
+		}
 
-// Calculate total bank value using ItemManager
-		long totalBankValue = 0;
-		for (Item item : container.getItems())
+		// Bank-only value (unchanged calculation — matches RuneLite Bank plugin)
+		long bankOnlyValue = 0;
+		for (Item item : bankContainer.getItems())
 		{
 			if (item.getId() <= 0 || item.getQuantity() <= 0) continue;
 			long price = itemManager.getItemPrice(item.getId());
-			totalBankValue += price * item.getQuantity();
+			bankOnlyValue += price * item.getQuantity();
 		}
 
-		final long finalBankValue = totalBankValue;
-		// Update panel on EDT
+		// Total wealth = bank + inventory + equipment
+		long totalWealthValue = bankOnlyValue;
+
+		ItemContainer invContainer = client.getItemContainer(InventoryID.INVENTORY);
+		if (invContainer != null)
+		{
+			for (Item item : invContainer.getItems())
+			{
+				if (item.getId() <= 0 || item.getQuantity() <= 0) continue;
+				long price = itemManager.getItemPrice(item.getId());
+				totalWealthValue += price * item.getQuantity();
+			}
+		}
+
+		ItemContainer equipContainer = client.getItemContainer(InventoryID.EQUIPMENT);
+		if (equipContainer != null)
+		{
+			for (Item item : equipContainer.getItems())
+			{
+				if (item.getId() <= 0 || item.getQuantity() <= 0) continue;
+				long price = itemManager.getItemPrice(item.getId());
+				totalWealthValue += price * item.getQuantity();
+			}
+		}
+
+		final long finalBankOnly = bankOnlyValue;
+		final long finalTotalWealth = totalWealthValue;
 		javax.swing.SwingUtilities.invokeLater(() -> {
-			panel.updateBankItems(newBankItems, newBankQuantities, finalBankValue);
+			panel.updateBankItems(newBankItems, newBankQuantities, finalBankOnly, finalTotalWealth);
 		});
-    }
+	}
 
 	public void saveConfig(String key, String value)
 	{

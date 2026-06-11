@@ -219,14 +219,14 @@ private String openBankItemName = null;
     private long totalBankValue = 0;
     private java.util.List<long[]> bankValueLog = new java.util.ArrayList<>();
 
-    public void updateBankItems(java.util.List<String> items, java.util.Map<String, Integer> quantities, long bankValue)
+    public void updateBankItems(java.util.List<String> items, java.util.Map<String, Integer> quantities, long bankOnlyValue, long totalWealthValue)
     {
         this.bankItems.clear();
         this.bankItems.addAll(items);
         this.bankQuantities.clear();
         this.bankQuantities.putAll(quantities);
-        this.totalBankValue = bankValue;
-        if (config.showBankValueChange()) saveBankValueLog();
+        this.totalBankValue = bankOnlyValue;
+        if (config.showBankValueChange()) saveBankValueLog(bankOnlyValue, totalWealthValue);
         saveBankData();
         if (activeTab == 2)
         {
@@ -287,31 +287,65 @@ private String openBankItemName = null;
         bankValueLog.clear();
         for (String entry : raw.split(","))
         {
-            String[] parts = entry.split(":");
-            if (parts.length == 2)
+            String[] parts = entry.split("\\|");
+            if (parts.length == 3)
             {
                 try
                 {
                     long ts = Long.parseLong(parts[0]);
-                    long val = Long.parseLong(parts[1]);
-                    bankValueLog.add(new long[]{ts, val});
+                    long bankOnly = Long.parseLong(parts[1]);
+                    long totalWealth = Long.parseLong(parts[2]);
+                    bankValueLog.add(new long[]{ts, bankOnly, totalWealth});
                 }
                 catch (NumberFormatException e) { }
             }
+            // silently drop old format entries (ts:val) — migration
         }
     }
 
-    private void saveBankValueLog()
+    private void saveBankValueLog(long bankOnlyValue, long totalWealthValue)
     {
         long nowSeconds = System.currentTimeMillis() / 1000;
-        bankValueLog.add(new long[]{nowSeconds, totalBankValue});
-        long cutoff = nowSeconds - (48 * 3600);
-        bankValueLog.removeIf(e -> e[0] < cutoff);
+
+        // Add new entry
+        bankValueLog.add(new long[]{nowSeconds, bankOnlyValue, totalWealthValue});
+
+        // Split into recent (within 24h) and older entries
+        long cutoff24h = nowSeconds - (24 * 3600);
+        java.util.List<long[]> recent = new java.util.ArrayList<>();
+        java.util.List<long[]> older = new java.util.ArrayList<>();
+        for (long[] entry : bankValueLog)
+        {
+            if (entry[0] >= cutoff24h) recent.add(entry);
+            else older.add(entry);
+        }
+
+        // Group older entries by calendar day, keep only the last per day
+        java.util.Map<String, long[]> dayMap = new java.util.LinkedHashMap<>();
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        for (long[] entry : older)
+        {
+            cal.setTimeInMillis(entry[0] * 1000);
+            String dayKey = cal.get(java.util.Calendar.YEAR) + "-"
+                    + cal.get(java.util.Calendar.DAY_OF_YEAR);
+            dayMap.put(dayKey, entry);
+        }
+
+        // Prune entries older than 1 year
+        long oneYearAgo = nowSeconds - (365L * 24 * 3600);
+        dayMap.entrySet().removeIf(e -> e.getValue()[0] < oneYearAgo);
+
+        // Rebuild log
+        bankValueLog.clear();
+        bankValueLog.addAll(dayMap.values());
+        bankValueLog.addAll(recent);
+
+        // Serialize
         StringBuilder sb = new StringBuilder();
         for (long[] entry : bankValueLog)
         {
             if (sb.length() > 0) sb.append(",");
-            sb.append(entry[0]).append(":").append(entry[1]);
+            sb.append(entry[0]).append("|").append(entry[1]).append("|").append(entry[2]);
         }
         plugin.saveConfig("bankValueLog", sb.toString());
     }
@@ -2289,7 +2323,7 @@ private String openBankItemName = null;
                 public void mouseClicked(MouseEvent e)
                 {
                     bankValueLog.clear();
-                    saveBankValueLog();
+                    plugin.saveConfig("bankValueLog", "");
                     showTab(activeTab);
                 }
             });
