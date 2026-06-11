@@ -134,6 +134,7 @@ public class GECompanionPanel extends PluginPanel
     private boolean gameUpdatesFetching = false;
     private boolean updateTooltipPinned = false;
     private boolean watchlistEditMode = false;
+    private String bankWealthTimeFrame = "24H";
 
     // Pinned/watched items
     private final java.util.Map<Integer, javax.swing.ImageIcon> iconCache = new java.util.HashMap<>();
@@ -2205,12 +2206,76 @@ private String openBankItemName = null;
 
         JPanel hero = new JPanel();
         hero.setLayout(new BoxLayout(hero, BoxLayout.Y_AXIS));
-        hero.setBackground(new Color(26, 23, 24));
-        hero.setBorder(new EmptyBorder(8, 8, 8, 8));
+        hero.setBackground(BG_DARK);
+        hero.setBorder(new EmptyBorder(6, 6, 4, 6));
 
-        JLabel heroLabel = new JLabel("Total Bank Value (approx.)");
+// OSRS-style bordered wealth section
+        JPanel borderedSection = new JPanel();
+        borderedSection.setLayout(new BoxLayout(borderedSection, BoxLayout.Y_AXIS));
+        borderedSection.setBackground(BG_DARK);
+        borderedSection.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(58, 53, 48), 1),
+                BorderFactory.createLineBorder(new Color(15, 13, 12), 3)
+        ));
+        borderedSection.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+// Wealth timeframe buttons — row 1: 1H 6H 24H 7D 30D
+        JPanel wealthTfRow1 = new JPanel(new GridLayout(1, 5, 3, 0));
+        wealthTfRow1.setBackground(BG_DARK);
+        wealthTfRow1.setBorder(new EmptyBorder(6, 6, 2, 6));
+        wealthTfRow1.setAlignmentX(Component.CENTER_ALIGNMENT);
+        String[] wealthFrames1 = {"1H", "6H", "24H", "7D", "30D"};
+        for (String frame : wealthFrames1)
+        {
+            JButton btn = new JButton(frame);
+            btn.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
+            btn.setFocusPainted(false);
+            btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            btn.setBackground(frame.equals(bankWealthTimeFrame) ? new Color(26, 21, 0) : new Color(20, 16, 10));
+            btn.setForeground(frame.equals(bankWealthTimeFrame) ? GOLD : TAB_INACTIVE);
+            btn.setBorder(BorderFactory.createLineBorder(frame.equals(bankWealthTimeFrame) ? GOLD : new Color(58, 53, 48)));
+            btn.addActionListener(e -> {
+                bankWealthTimeFrame = frame;
+                isRefreshing = true;
+                showTab(activeTab);
+                isRefreshing = false;
+            });
+            wealthTfRow1.add(btn);
+        }
+
+// Wealth timeframe buttons — row 2: 3M 1Y All
+        JPanel wealthTfRow2 = new JPanel(new GridLayout(1, 3, 3, 0));
+        wealthTfRow2.setBackground(BG_DARK);
+        wealthTfRow2.setBorder(new EmptyBorder(0, 6, 4, 6));
+        wealthTfRow2.setAlignmentX(Component.CENTER_ALIGNMENT);
+        String[] wealthFrames2 = {"3M", "1Y", "All"};
+        for (String frame : wealthFrames2)
+        {
+            JButton btn = new JButton(frame);
+            btn.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
+            btn.setFocusPainted(false);
+            btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            btn.setBackground(frame.equals(bankWealthTimeFrame) ? new Color(26, 21, 0) : new Color(20, 16, 10));
+            btn.setForeground(frame.equals(bankWealthTimeFrame) ? GOLD : TAB_INACTIVE);
+            btn.setBorder(BorderFactory.createLineBorder(frame.equals(bankWealthTimeFrame) ? GOLD : new Color(58, 53, 48)));
+            btn.addActionListener(e -> {
+                bankWealthTimeFrame = frame;
+                isRefreshing = true;
+                showTab(activeTab);
+                isRefreshing = false;
+            });
+            wealthTfRow2.add(btn);
+        }
+
+        JSeparator wealthSep = new JSeparator();
+        wealthSep.setForeground(new Color(65, 55, 38));
+        wealthSep.setBackground(new Color(65, 55, 38));
+        wealthSep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
+        wealthSep.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel heroLabel = new JLabel("TOTAL BANK VALUE");
         heroLabel.setForeground(TEXT_DIM);
-        heroLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_SECTION));
+        heroLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
         heroLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
 // Calculate last updated time
@@ -2236,7 +2301,16 @@ private String openBankItemName = null;
         String heroText = bankHidden ? "Click to reveal" : bankValueStr;
         JLabel heroValue = new JLabel(heroText);
         heroValue.setForeground(bankHidden ? TEXT_DIM : PRICE_GOLD);
-        heroValue.setFont(new Font("Monospaced", Font.BOLD, 20));
+// Auto-scale font size to fit within bordered section
+        int heroFontSize = 20;
+        int availableWidth = 230 - 16; // panel width minus border/padding
+        java.awt.FontMetrics fm;
+        do {
+            heroValue.setFont(new Font("Monospaced", Font.BOLD, heroFontSize));
+            fm = heroValue.getFontMetrics(heroValue.getFont());
+            if (fm.stringWidth(heroText) <= availableWidth) break;
+            heroFontSize--;
+        } while (heroFontSize > 10);
         heroValue.setAlignmentX(Component.CENTER_ALIGNMENT);
         heroValue.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         heroValue.setToolTipText(bankHidden ? "Click to reveal bank value" : "Click to hide bank value");
@@ -2257,32 +2331,61 @@ private String openBankItemName = null;
             }
         });
         long targetSeconds = nowSeconds;
-        if (activeTimeFrame.equals("1H")) targetSeconds = nowSeconds - 3600;
-        else if (activeTimeFrame.equals("6H")) targetSeconds = nowSeconds - 21600;
-        else if (activeTimeFrame.equals("24H")) targetSeconds = nowSeconds - 86400;
+        if (bankWealthTimeFrame.equals("1H")) targetSeconds = nowSeconds - 3600;
+        else if (bankWealthTimeFrame.equals("6H")) targetSeconds = nowSeconds - 21600;
+        else if (bankWealthTimeFrame.equals("24H")) targetSeconds = nowSeconds - 86400;
+        else if (bankWealthTimeFrame.equals("7D")) targetSeconds = nowSeconds - 7 * 86400L;
+        else if (bankWealthTimeFrame.equals("30D")) targetSeconds = nowSeconds - 30 * 86400L;
+        else if (bankWealthTimeFrame.equals("3M")) targetSeconds = nowSeconds - 90 * 86400L;
+        else if (bankWealthTimeFrame.equals("1Y")) targetSeconds = nowSeconds - 365 * 86400L;
+// "All" uses earliest entry — handled below
 
         long tolerance = 1800;
-        if (activeTimeFrame.equals("6H")) tolerance = 7200;
-        else if (activeTimeFrame.equals("24H")) tolerance = 14400;
+        if (bankWealthTimeFrame.equals("6H")) tolerance = 7200;
+        else if (bankWealthTimeFrame.equals("24H")) tolerance = 14400;
+        else if (bankWealthTimeFrame.equals("7D")) tolerance = 86400;
+        else if (bankWealthTimeFrame.equals("30D")) tolerance = 86400 * 3L;
+        else if (bankWealthTimeFrame.equals("3M")) tolerance = 86400 * 7L;
+        else if (bankWealthTimeFrame.equals("1Y")) tolerance = 86400 * 14L;
+        else if (bankWealthTimeFrame.equals("All")) tolerance = Long.MAX_VALUE;
 
         long[] closestEntry = null;
         long closestDiff = Long.MAX_VALUE;
         for (long[] entry : bankValueLog)
         {
-            long diff = Math.abs(entry[0] - targetSeconds);
-            if (diff < closestDiff && diff <= tolerance)
+            if (entry.length < 3) continue;
+            long diff = bankWealthTimeFrame.equals("All") ?
+                    (closestEntry == null ? Long.MAX_VALUE : entry[0] < closestEntry[0] ? 0 : Long.MAX_VALUE) :
+                    Math.abs(entry[0] - targetSeconds);
+            if (diff < closestDiff && (bankWealthTimeFrame.equals("All") || diff <= tolerance))
             {
                 closestDiff = diff;
                 closestEntry = entry;
+            }
+        }
+// For "All", find the earliest valid entry
+        if (bankWealthTimeFrame.equals("All"))
+        {
+            closestEntry = null;
+            for (long[] entry : bankValueLog)
+            {
+                if (entry.length < 3) continue;
+                if (closestEntry == null || entry[0] < closestEntry[0])
+                    closestEntry = entry;
             }
         }
 
         String bankChangeStr;
         Color bankChangeColor;
         String noDataMessage;
-        if (activeTimeFrame.equals("1H")) noDataMessage = "Open your bank again in ~1H";
-        else if (activeTimeFrame.equals("6H")) noDataMessage = "Open your bank again in ~6H";
-        else noDataMessage = "Open your bank again in ~24H";
+        if (bankWealthTimeFrame.equals("1H")) noDataMessage = "Open your bank again in ~1H";
+        else if (bankWealthTimeFrame.equals("6H")) noDataMessage = "Open your bank again in ~6H";
+        else if (bankWealthTimeFrame.equals("24H")) noDataMessage = "Open your bank again in ~24H";
+        else if (bankWealthTimeFrame.equals("7D")) noDataMessage = "Open your bank again in ~7D";
+        else if (bankWealthTimeFrame.equals("30D")) noDataMessage = "Open your bank again in ~30D";
+        else if (bankWealthTimeFrame.equals("3M")) noDataMessage = "Open your bank again in ~3M";
+        else if (bankWealthTimeFrame.equals("1Y")) noDataMessage = "Open your bank again in ~1Y";
+        else noDataMessage = "No bank history yet";
 
         if (closestEntry == null || bankItems.isEmpty())
         {
@@ -2291,10 +2394,12 @@ private String openBankItemName = null;
         }
         else
         {
-            long historicalValue = closestEntry[1];
-            long bankGpChange = totalBankValue - historicalValue;
-            double bankPctChange = historicalValue > 0 ?
-                    ((double) bankGpChange / historicalValue) * 100.0 : 0;
+            long historicalWealth = closestEntry[2];
+            long currentWealth = bankValueLog.isEmpty() ? totalBankValue :
+                    bankValueLog.get(bankValueLog.size() - 1)[2];
+            long bankGpChange = currentWealth - historicalWealth;
+            double bankPctChange = historicalWealth > 0 ?
+                    ((double) bankGpChange / historicalWealth) * 100.0 : 0;
             String gpStr = bankGpChange >= 0 ?
                     "+" + formatPrice(String.valueOf(Math.abs(bankGpChange))) + " gp" :
                     "-" + formatPrice(String.valueOf(Math.abs(bankGpChange))) + " gp";
@@ -2322,41 +2427,67 @@ private String openBankItemName = null;
                 public void mouseExited(MouseEvent e) { resetBtn.setForeground(TEXT_DIM); }
                 public void mouseClicked(MouseEvent e)
                 {
-                    bankValueLog.clear();
-                    plugin.saveConfig("bankValueLog", "");
-                    showTab(activeTab);
+                    int result = JOptionPane.showOptionDialog(
+                            GECompanionPanel.this,
+                            "<html><b>Reset Bank Value Data?</b><br><br>" +
+                                    "This will permanently delete all saved<br>" +
+                                    "bank value history. This cannot be undone.<br><br>" +
+                                    "Your data will begin rebuilding automatically<br>" +
+                                    "on your next bank scan.</html>",
+                            "Reset Bank Value Data",
+                            JOptionPane.DEFAULT_OPTION,
+                            JOptionPane.WARNING_MESSAGE,
+                            null,
+                            new Object[]{"Cancel", "Reset All Data"},
+                            "Cancel"
+                    );
+                    if (result == 1)
+                    {
+                        bankValueLog.clear();
+                        plugin.saveConfig("bankValueLog", "");
+                        showTab(activeTab);
+                    }
                 }
             });
 
             JPanel changeRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 0));
-            changeRow.setBackground(new Color(26, 23, 24));
+            changeRow.setBackground(BG_DARK);
             changeRow.setAlignmentX(Component.CENTER_ALIGNMENT);
             changeRow.add(bankChangeLabel);
             changeRow.add(resetBtn);
-            JLabel contextLabel = new JLabel("· " + activeTimeFrame + " · " + lastUpdatedStr);
+            JLabel contextLabel = new JLabel("· " + bankWealthTimeFrame + "  ·  " + lastUpdatedStr);
             contextLabel.setForeground(TEXT_DIM);
             contextLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
             contextLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-            hero.add(heroValue);
-            hero.add(Box.createVerticalStrut(2));
+            borderedSection.add(wealthTfRow1);
+            borderedSection.add(wealthTfRow2);
+            borderedSection.add(wealthSep);
+            borderedSection.add(Box.createVerticalStrut(4));
+            borderedSection.add(heroLabel);
+            borderedSection.add(Box.createVerticalStrut(2));
+            borderedSection.add(heroValue);
+            borderedSection.add(Box.createVerticalStrut(2));
             if (bankChangeStr.startsWith("─"))
-                hero.add(bankChangeLabel);
+                borderedSection.add(bankChangeLabel);
             else
-                hero.add(changeRow);
-            hero.add(contextLabel);
-            hero.add(Box.createVerticalStrut(4));
+                borderedSection.add(changeRow);
+            borderedSection.add(contextLabel);
+            borderedSection.add(Box.createVerticalStrut(6));
         }
         else
         {
-            hero.add(heroValue);
-            hero.add(Box.createVerticalStrut(4));
+            borderedSection.add(wealthTfRow1);
+            borderedSection.add(wealthTfRow2);
+            borderedSection.add(wealthSep);
+            borderedSection.add(Box.createVerticalStrut(4));
+            borderedSection.add(heroLabel);
+            borderedSection.add(Box.createVerticalStrut(2));
+            borderedSection.add(heroValue);
+            borderedSection.add(Box.createVerticalStrut(6));
         }
 
-        JPanel pillPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
-        pillPanel.setBackground(new Color(26, 23, 24));
-
-        hero.add(pillPanel);
+        hero.add(borderedSection);
         hero.add(Box.createVerticalStrut(4));
         hero.add(buildTimeFrameBar());
         panel.add(hero, BorderLayout.NORTH);
