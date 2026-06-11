@@ -570,6 +570,10 @@ private String openBankItemName = null;
             selectedItemName = null;
             selectedWatchlistItemName = null;
             selectedBankItemName = null;
+            searchReopenAction = null;
+            watchlistReopenAction = null;
+            bankReopenAction = null;
+            graphWasOpen = false;
         }
         switch (index)
         {
