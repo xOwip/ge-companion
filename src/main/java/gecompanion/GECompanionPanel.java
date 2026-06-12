@@ -1574,6 +1574,7 @@ private String openBankItemName = null;
                 currentOpenSearchInfo = info;
                 currentOpenSearchIconWrapper = iconWrapper;
                 currentOpenSearchDeltaRow = deltaLimitRow;
+                graphWasOpen = false;
                 suppressSearchChange = true;
                 searchField.setText(name);
                 searchField.selectAll();
