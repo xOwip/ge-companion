@@ -135,6 +135,7 @@ public class GECompanionPanel extends PluginPanel
     private boolean updateTooltipPinned = false;
     private boolean watchlistEditMode = false;
     private String bankWealthTimeFrame = "24H";
+    private javax.swing.Timer bankClockTimer = null;
 
     // Pinned/watched items
     private final java.util.Map<Integer, javax.swing.ImageIcon> iconCache = new java.util.HashMap<>();
@@ -2467,15 +2468,19 @@ private String openBankItemName = null;
         JPanel chartBtnRow = new JPanel(new BorderLayout(4, 0));
         chartBtnRow.setBackground(BG_DARK);
 
-        java.text.SimpleDateFormat timeFmt = new java.text.SimpleDateFormat("h:mm a");
-        java.text.SimpleDateFormat dateFmt = new java.text.SimpleDateFormat("MMM d, yyyy");
-        String lastScanTimeStr = lastScanTime > 0 ? "🕐 " + timeFmt.format(new java.util.Date(lastScanTime * 1000)) : "🕐 --:--";
-        String lastScanDateStr = lastScanTime > 0 ? "Last scanned " + dateFmt.format(new java.util.Date(lastScanTime * 1000)) : "Bank not yet scanned";
-        JLabel lastScanLabel = new JLabel(lastScanTimeStr);
+// Live clock label — shows current time, updates every minute
+        java.text.SimpleDateFormat clockFmt = new java.text.SimpleDateFormat("h:mm a");
+        JLabel lastScanLabel = new JLabel("🕐 " + clockFmt.format(new java.util.Date()));
         lastScanLabel.setForeground(TEXT_DIM);
         lastScanLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
-        lastScanLabel.setToolTipText(lastScanDateStr);
         lastScanLabel.setPreferredSize(new Dimension(80, 22));
+
+// Stop any existing clock timer before starting a new one
+        if (bankClockTimer != null) bankClockTimer.stop();
+        bankClockTimer = new javax.swing.Timer(60000, e -> {
+            lastScanLabel.setText("🕐 " + clockFmt.format(new java.util.Date()));
+        });
+        bankClockTimer.start();
 
         JButton chartBtn = new JButton("Chart >");
         chartBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
