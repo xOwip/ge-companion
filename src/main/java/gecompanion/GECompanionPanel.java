@@ -2474,6 +2474,8 @@ private String openBankItemName = null;
         lastScanLabel.setForeground(TEXT_DIM);
         lastScanLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
         lastScanLabel.setPreferredSize(new Dimension(80, 22));
+        java.text.SimpleDateFormat tooltipDateFmt = new java.text.SimpleDateFormat("MMM d, yyyy");
+        lastScanLabel.setToolTipText(tooltipDateFmt.format(new java.util.Date()));
 
 // Stop any existing clock timer before starting a new one
         if (bankClockTimer != null) bankClockTimer.stop();
