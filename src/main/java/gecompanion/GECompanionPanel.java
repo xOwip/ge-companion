@@ -2477,10 +2477,21 @@ private String openBankItemName = null;
 
 // Stop any existing clock timer before starting a new one
         if (bankClockTimer != null) bankClockTimer.stop();
-        bankClockTimer = new javax.swing.Timer(60000, e -> {
+        // Sync to exact minute boundary so clock updates match system clock
+        long nowMs = System.currentTimeMillis();
+        long msUntilNextMinute = 60000 - (nowMs % 60000);
+        javax.swing.Timer[] clockTimerRef = {null};
+        javax.swing.Timer syncTimer = new javax.swing.Timer((int) msUntilNextMinute, e -> {
             lastScanLabel.setText("🕐 " + clockFmt.format(new java.util.Date()));
+            if (bankClockTimer != null) bankClockTimer.stop();
+            bankClockTimer = new javax.swing.Timer(60000, ev -> {
+                lastScanLabel.setText("🕐 " + clockFmt.format(new java.util.Date()));
+            });
+            bankClockTimer.start();
         });
-        bankClockTimer.start();
+        syncTimer.setRepeats(false);
+        syncTimer.start();
+        bankClockTimer = syncTimer;
 
         JButton chartBtn = new JButton("Chart >");
         chartBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
