@@ -2222,6 +2222,9 @@ private String openBankItemName = null;
                 BorderFactory.createLineBorder(new Color(15, 13, 12), 3)
         ));
         borderedSection.setAlignmentX(Component.CENTER_ALIGNMENT);
+        borderedSection.setMinimumSize(new Dimension(218, 210));
+        borderedSection.setPreferredSize(new Dimension(218, 210));
+        borderedSection.setMaximumSize(new Dimension(218, 210));
 
 // Wealth timeframe buttons — row 1: 1H 6H 24H 7D 30D
         JPanel wealthTfRow1 = new JPanel(new GridLayout(1, 5, 3, 0));
@@ -2307,7 +2310,7 @@ private String openBankItemName = null;
         heroValue.setForeground(bankHidden ? TEXT_DIM : PRICE_GOLD);
 // Auto-scale font size to fit within bordered section
         int heroFontSize = 20;
-        int availableWidth = 230 - 16; // panel width minus border/padding
+        int availableWidth = 190; // bordered section width minus border, padding, and margins
         java.awt.FontMetrics fm;
         do {
             heroValue.setFont(new Font("Monospaced", Font.BOLD, heroFontSize));
@@ -2419,46 +2422,29 @@ private String openBankItemName = null;
             bankChangeLabel.setForeground(bankChangeColor);
             bankChangeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
             bankChangeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-            JLabel resetBtn = new JLabel("↺");
-            resetBtn.setForeground(TEXT_DIM);
-            resetBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_REFRESH));
-            resetBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            resetBtn.setToolTipText("<html>Reset all bank value history.<br>Use this if your bank change data<br>looks incorrect. Your next bank scan<br>will start fresh for all timeframes.</html>");
-            resetBtn.addMouseListener(new MouseAdapter()
+            if (closestEntry != null && !bankItems.isEmpty())
             {
-                public void mouseEntered(MouseEvent e) { resetBtn.setForeground(TEXT_PRIMARY); }
-                public void mouseExited(MouseEvent e) { resetBtn.setForeground(TEXT_DIM); }
-                public void mouseClicked(MouseEvent e)
-                {
-                    int result = JOptionPane.showOptionDialog(
-                            GECompanionPanel.this,
-                            "<html><b>Reset Bank Value Data?</b><br><br>" +
-                                    "This will permanently delete all saved<br>" +
-                                    "bank value history. This cannot be undone.<br><br>" +
-                                    "Your data will begin rebuilding automatically<br>" +
-                                    "on your next bank scan.</html>",
-                            "Reset Bank Value Data",
-                            JOptionPane.DEFAULT_OPTION,
-                            JOptionPane.WARNING_MESSAGE,
-                            null,
-                            new Object[]{"Cancel", "Reset All Data"},
-                            "Cancel"
-                    );
-                    if (result == 1)
-                    {
-                        bankValueLog.clear();
-                        plugin.saveConfig("bankValueLog", "");
-                        showTab(activeTab);
-                    }
-                }
-            });
+                long entryTs = closestEntry[0];
+                long entryWealth = closestEntry[2];
+                long nowSec = System.currentTimeMillis() / 1000;
+                long diffSec = nowSec - entryTs;
+                long diffH = diffSec / 3600;
+                long diffM = (diffSec % 3600) / 60;
+                String timeAgoStr = diffH > 0 ? diffH + "h " + diffM + "m ago" : diffM + "m ago";
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("MMM d 'at' h:mm a");
+                String dateStr = sdf.format(new java.util.Date(entryTs * 1000));
+                String wealthStr = formatFullPrice(String.valueOf(entryWealth)) + " gp";
+                bankChangeLabel.setToolTipText("<html>"
+                        + "⏱ Compared to " + timeAgoStr + "<br>"
+                        + "📅 " + dateStr + "<br>"
+                        + "💰 Wealth then: " + wealthStr
+                        + "</html>");
+            }
 
             JPanel changeRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 0));
             changeRow.setBackground(BG_DARK);
             changeRow.setAlignmentX(Component.CENTER_ALIGNMENT);
             changeRow.add(bankChangeLabel);
-            changeRow.add(resetBtn);
             JLabel contextLabel = new JLabel("· " + bankWealthTimeFrame + "  ·  " + lastUpdatedStr);
             contextLabel.setForeground(TEXT_DIM);
             contextLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
@@ -2467,29 +2453,64 @@ private String openBankItemName = null;
             borderedSection.add(wealthTfRow1);
             borderedSection.add(wealthTfRow2);
             borderedSection.add(wealthSep);
-            borderedSection.add(Box.createVerticalStrut(4));
+            borderedSection.add(Box.createVerticalStrut(8));
             borderedSection.add(heroLabel);
-            borderedSection.add(Box.createVerticalStrut(2));
+            borderedSection.add(Box.createVerticalStrut(4));
             borderedSection.add(heroValue);
-            borderedSection.add(Box.createVerticalStrut(2));
+            borderedSection.add(Box.createVerticalStrut(4));
             if (bankChangeStr.startsWith("─"))
                 borderedSection.add(bankChangeLabel);
             else
                 borderedSection.add(changeRow);
             borderedSection.add(contextLabel);
-            borderedSection.add(Box.createVerticalStrut(6));
+            borderedSection.add(Box.createVerticalStrut(8));
         }
         else
         {
             borderedSection.add(wealthTfRow1);
             borderedSection.add(wealthTfRow2);
             borderedSection.add(wealthSep);
-            borderedSection.add(Box.createVerticalStrut(4));
+            borderedSection.add(Box.createVerticalStrut(8));
             borderedSection.add(heroLabel);
-            borderedSection.add(Box.createVerticalStrut(2));
+            borderedSection.add(Box.createVerticalStrut(4));
             borderedSection.add(heroValue);
-            borderedSection.add(Box.createVerticalStrut(6));
+            borderedSection.add(Box.createVerticalStrut(8));
         }
+
+// Bottom button row: [🕐 last scan time] [📈 Chart ▶]
+        JPanel chartBtnRow = new JPanel(new BorderLayout(4, 0));
+        chartBtnRow.setBackground(BG_DARK);
+        chartBtnRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+        chartBtnRow.setBorder(new EmptyBorder(0, 6, 0, 6));
+
+        // Last scan time label (left)
+        java.text.SimpleDateFormat timeFmt = new java.text.SimpleDateFormat("h:mm a");
+        java.text.SimpleDateFormat dateFmt = new java.text.SimpleDateFormat("MMM d, yyyy");
+        String lastScanTimeStr = lastScanTime > 0 ? "🕐 " + timeFmt.format(new java.util.Date(lastScanTime * 1000)) : "🕐 --:--";
+        String lastScanDateStr = lastScanTime > 0 ? "Last scanned " + dateFmt.format(new java.util.Date(lastScanTime * 1000)) : "Bank not yet scanned";
+        JLabel lastScanLabel = new JLabel(lastScanTimeStr);
+        lastScanLabel.setForeground(TEXT_DIM);
+        lastScanLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
+        lastScanLabel.setToolTipText(lastScanDateStr);
+
+        // Chart button (right)
+        JButton chartBtn = new JButton("📈 Chart ▶");
+        chartBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
+        chartBtn.setFocusPainted(false);
+        chartBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        chartBtn.setBackground(new Color(14, 12, 13));
+        chartBtn.setForeground(TAB_INACTIVE);
+        chartBtn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+        chartBtn.addActionListener(e -> {
+            // Chart slide — to be implemented
+        });
+
+        chartBtnRow.setLayout(new BorderLayout(4, 0));
+        lastScanLabel.setPreferredSize(new Dimension(80, 22));
+        chartBtnRow.add(lastScanLabel, BorderLayout.WEST);
+        chartBtnRow.add(chartBtn, BorderLayout.CENTER);
+        borderedSection.add(chartBtnRow);
+        borderedSection.add(Box.createVerticalStrut(6));
 
         hero.add(borderedSection);
         hero.add(Box.createVerticalStrut(4));
