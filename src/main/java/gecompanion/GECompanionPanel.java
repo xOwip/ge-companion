@@ -2214,23 +2214,26 @@ private String openBankItemName = null;
         hero.setBorder(new EmptyBorder(6, 6, 4, 6));
 
 // OSRS-style bordered wealth section
-        JPanel borderedSection = new JPanel();
-        borderedSection.setLayout(new BoxLayout(borderedSection, BoxLayout.Y_AXIS));
+        JPanel borderedSection = new JPanel(new GridBagLayout());
         borderedSection.setBackground(BG_DARK);
         borderedSection.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(58, 53, 48), 1),
                 BorderFactory.createLineBorder(new Color(15, 13, 12), 3)
         ));
-        borderedSection.setAlignmentX(Component.CENTER_ALIGNMENT);
-        borderedSection.setMinimumSize(new Dimension(218, 210));
-        borderedSection.setPreferredSize(new Dimension(218, 210));
-        borderedSection.setMaximumSize(new Dimension(218, 210));
+        borderedSection.setMinimumSize(new Dimension(218, 265));
+        borderedSection.setPreferredSize(new Dimension(218, 265));
+        borderedSection.setMaximumSize(new Dimension(218, 265));
 
-// Wealth timeframe buttons — row 1: 1H 6H 24H 7D 30D
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        gbc.insets = new java.awt.Insets(0, 0, 0, 0);
+
+        // Row 1: Timeframe buttons row 1
         JPanel wealthTfRow1 = new JPanel(new GridLayout(1, 5, 3, 0));
         wealthTfRow1.setBackground(BG_DARK);
         wealthTfRow1.setBorder(new EmptyBorder(6, 6, 2, 6));
-        wealthTfRow1.setAlignmentX(Component.CENTER_ALIGNMENT);
         String[] wealthFrames1 = {"1H", "6H", "24H", "7D", "30D"};
         for (String frame : wealthFrames1)
         {
@@ -2249,12 +2252,13 @@ private String openBankItemName = null;
             });
             wealthTfRow1.add(btn);
         }
+        gbc.gridy = 0;
+        borderedSection.add(wealthTfRow1, gbc);
 
-// Wealth timeframe buttons — row 2: 3M 1Y All
+        // Row 2: Timeframe buttons row 2
         JPanel wealthTfRow2 = new JPanel(new GridLayout(1, 3, 3, 0));
         wealthTfRow2.setBackground(BG_DARK);
         wealthTfRow2.setBorder(new EmptyBorder(0, 6, 4, 6));
-        wealthTfRow2.setAlignmentX(Component.CENTER_ALIGNMENT);
         String[] wealthFrames2 = {"3M", "1Y", "All"};
         for (String frame : wealthFrames2)
         {
@@ -2273,19 +2277,28 @@ private String openBankItemName = null;
             });
             wealthTfRow2.add(btn);
         }
+        gbc.gridy = 1;
+        borderedSection.add(wealthTfRow2, gbc);
 
+        // Row 3: Separator
         JSeparator wealthSep = new JSeparator();
         wealthSep.setForeground(new Color(65, 55, 38));
         wealthSep.setBackground(new Color(65, 55, 38));
-        wealthSep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
-        wealthSep.setAlignmentX(Component.CENTER_ALIGNMENT);
+        gbc.gridy = 2;
+        gbc.insets = new java.awt.Insets(0, 6, 0, 6);
+        borderedSection.add(wealthSep, gbc);
+        gbc.insets = new java.awt.Insets(0, 0, 0, 0);
 
-        JLabel heroLabel = new JLabel("TOTAL BANK VALUE");
+        // Row 4: "TOTAL BANK VALUE" label
+        JLabel heroLabel = new JLabel("TOTAL BANK VALUE", SwingConstants.CENTER);
         heroLabel.setForeground(TEXT_DIM);
         heroLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
-        heroLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        gbc.gridy = 3;
+        gbc.insets = new java.awt.Insets(8, 6, 2, 6);
+        borderedSection.add(heroLabel, gbc);
+        gbc.insets = new java.awt.Insets(0, 0, 0, 0);
 
-// Calculate last updated time
+        // Calculate last updated time
         long lastScanTime = 0;
         for (long[] entry : bankValueLog)
         {
@@ -2303,14 +2316,14 @@ private String openBankItemName = null;
         else
             lastUpdatedStr = "Last updated " + (secondsAgo / 3600) + "h ago";
 
+        // Row 5: Bank value
         String bankValueStr = totalBankValue == 0 ? "No bank data" : formatFullPrice(String.valueOf(totalBankValue)) + " gp";
         boolean bankHidden = plugin.isBankValueHidden();
         String heroText = bankHidden ? "Click to reveal" : bankValueStr;
-        JLabel heroValue = new JLabel(heroText);
+        JLabel heroValue = new JLabel(heroText, SwingConstants.CENTER);
         heroValue.setForeground(bankHidden ? TEXT_DIM : PRICE_GOLD);
-// Auto-scale font size to fit within bordered section
         int heroFontSize = 20;
-        int availableWidth = 190; // bordered section width minus border, padding, and margins
+        int availableWidth = 190;
         java.awt.FontMetrics fm;
         do {
             heroValue.setFont(new Font("Monospaced", Font.BOLD, heroFontSize));
@@ -2318,7 +2331,6 @@ private String openBankItemName = null;
             if (fm.stringWidth(heroText) <= availableWidth) break;
             heroFontSize--;
         } while (heroFontSize > 10);
-        heroValue.setAlignmentX(Component.CENTER_ALIGNMENT);
         heroValue.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         heroValue.setToolTipText(bankHidden ? "Click to reveal bank value" : "Click to hide bank value");
         heroValue.addMouseListener(new MouseAdapter()
@@ -2328,15 +2340,15 @@ private String openBankItemName = null;
                 plugin.setBankValueHidden(!plugin.isBankValueHidden());
                 showTab(activeTab);
             }
-            public void mouseEntered(MouseEvent e)
-            {
-                heroValue.setForeground(TEXT_PRIMARY);
-            }
-            public void mouseExited(MouseEvent e)
-            {
-                heroValue.setForeground(bankHidden ? TEXT_DIM : PRICE_GOLD);
-            }
+            public void mouseEntered(MouseEvent e) { heroValue.setForeground(TEXT_PRIMARY); }
+            public void mouseExited(MouseEvent e) { heroValue.setForeground(bankHidden ? TEXT_DIM : PRICE_GOLD); }
         });
+        gbc.gridy = 4;
+        gbc.insets = new java.awt.Insets(0, 6, 2, 6);
+        borderedSection.add(heroValue, gbc);
+        gbc.insets = new java.awt.Insets(0, 0, 0, 0);
+
+        // Calculate change data
         long targetSeconds = nowSeconds;
         if (bankWealthTimeFrame.equals("1H")) targetSeconds = nowSeconds - 3600;
         else if (bankWealthTimeFrame.equals("6H")) targetSeconds = nowSeconds - 21600;
@@ -2345,7 +2357,6 @@ private String openBankItemName = null;
         else if (bankWealthTimeFrame.equals("30D")) targetSeconds = nowSeconds - 30 * 86400L;
         else if (bankWealthTimeFrame.equals("3M")) targetSeconds = nowSeconds - 90 * 86400L;
         else if (bankWealthTimeFrame.equals("1Y")) targetSeconds = nowSeconds - 365 * 86400L;
-// "All" uses earliest entry — handled below
 
         long tolerance = 1800;
         if (bankWealthTimeFrame.equals("6H")) tolerance = 7200;
@@ -2361,16 +2372,13 @@ private String openBankItemName = null;
         for (long[] entry : bankValueLog)
         {
             if (entry.length < 3) continue;
-            long diff = bankWealthTimeFrame.equals("All") ?
-                    (closestEntry == null ? Long.MAX_VALUE : entry[0] < closestEntry[0] ? 0 : Long.MAX_VALUE) :
-                    Math.abs(entry[0] - targetSeconds);
-            if (diff < closestDiff && (bankWealthTimeFrame.equals("All") || diff <= tolerance))
+            long diff = Math.abs(entry[0] - targetSeconds);
+            if (diff < closestDiff && diff <= tolerance)
             {
                 closestDiff = diff;
                 closestEntry = entry;
             }
         }
-// For "All", find the earliest valid entry
         if (bankWealthTimeFrame.equals("All"))
         {
             closestEntry = null;
@@ -2385,18 +2393,18 @@ private String openBankItemName = null;
         String bankChangeStr;
         Color bankChangeColor;
         String noDataMessage;
-        if (bankWealthTimeFrame.equals("1H")) noDataMessage = "Open your bank again in ~1H";
-        else if (bankWealthTimeFrame.equals("6H")) noDataMessage = "Open your bank again in ~6H";
-        else if (bankWealthTimeFrame.equals("24H")) noDataMessage = "Open your bank again in ~24H";
-        else if (bankWealthTimeFrame.equals("7D")) noDataMessage = "Open your bank again in ~7D";
-        else if (bankWealthTimeFrame.equals("30D")) noDataMessage = "Open your bank again in ~30D";
-        else if (bankWealthTimeFrame.equals("3M")) noDataMessage = "Open your bank again in ~3M";
-        else if (bankWealthTimeFrame.equals("1Y")) noDataMessage = "Open your bank again in ~1Y";
+        if (bankWealthTimeFrame.equals("1H")) noDataMessage = "Open bank again in ~1H";
+        else if (bankWealthTimeFrame.equals("6H")) noDataMessage = "Open bank again in ~6H";
+        else if (bankWealthTimeFrame.equals("24H")) noDataMessage = "Open bank again in ~24H";
+        else if (bankWealthTimeFrame.equals("7D")) noDataMessage = "Open bank again in ~7D";
+        else if (bankWealthTimeFrame.equals("30D")) noDataMessage = "Open bank again in ~30D";
+        else if (bankWealthTimeFrame.equals("3M")) noDataMessage = "Open bank again in ~3M";
+        else if (bankWealthTimeFrame.equals("1Y")) noDataMessage = "Open bank again in ~1Y";
         else noDataMessage = "No bank history yet";
 
         if (closestEntry == null || bankItems.isEmpty())
         {
-            bankChangeStr = "─ " + noDataMessage;
+            bankChangeStr = noDataMessage;
             bankChangeColor = TEXT_DIM;
         }
         else
@@ -2416,74 +2424,48 @@ private String openBankItemName = null;
                     bankGpChange < 0 ? RED_DOWN : TEXT_DIM;
         }
 
-        if (config.showBankValueChange() && !bankHidden)
+        // Row 6: Change label (always present, empty when no data)
+        boolean showChangeData = config.showBankValueChange() && !bankHidden
+                && closestEntry != null && !bankItems.isEmpty();
+        String changeDisplayStr = showChangeData ? bankChangeStr : " ";
+        JLabel bankChangeLabel = new JLabel(changeDisplayStr, SwingConstants.CENTER);
+        bankChangeLabel.setForeground(showChangeData ? bankChangeColor : TEXT_DIM);
+        bankChangeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
+        gbc.gridy = 5;
+        gbc.insets = new java.awt.Insets(0, 6, 0, 6);
+        if (!showChangeData)
         {
-            JLabel bankChangeLabel = new JLabel(bankItems.isEmpty() ? "" : bankChangeStr);
-            bankChangeLabel.setForeground(bankChangeColor);
-            bankChangeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
-            bankChangeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-            if (closestEntry != null && !bankItems.isEmpty())
-            {
-                long entryTs = closestEntry[0];
-                long entryWealth = closestEntry[2];
-                long nowSec = System.currentTimeMillis() / 1000;
-                long diffSec = nowSec - entryTs;
-                long diffH = diffSec / 3600;
-                long diffM = (diffSec % 3600) / 60;
-                String timeAgoStr = diffH > 0 ? diffH + "h " + diffM + "m ago" : diffM + "m ago";
-                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("MMM d 'at' h:mm a");
-                String dateStr = sdf.format(new java.util.Date(entryTs * 1000));
-                String wealthStr = formatFullPrice(String.valueOf(entryWealth)) + " gp";
-                bankChangeLabel.setToolTipText("<html>"
-                        + "⏱ Compared to " + timeAgoStr + "<br>"
-                        + "📅 " + dateStr + "<br>"
-                        + "💰 Wealth then: " + wealthStr
-                        + "</html>");
-            }
-
-            JPanel changeRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 0));
-            changeRow.setBackground(BG_DARK);
-            changeRow.setAlignmentX(Component.CENTER_ALIGNMENT);
-            changeRow.add(bankChangeLabel);
-            JLabel contextLabel = new JLabel("· " + bankWealthTimeFrame + "  ·  " + lastUpdatedStr);
-            contextLabel.setForeground(TEXT_DIM);
-            contextLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
-            contextLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-            borderedSection.add(wealthTfRow1);
-            borderedSection.add(wealthTfRow2);
-            borderedSection.add(wealthSep);
-            borderedSection.add(Box.createVerticalStrut(8));
-            borderedSection.add(heroLabel);
-            borderedSection.add(Box.createVerticalStrut(4));
-            borderedSection.add(heroValue);
-            borderedSection.add(Box.createVerticalStrut(4));
-            if (bankChangeStr.startsWith("─"))
-                borderedSection.add(bankChangeLabel);
-            else
-                borderedSection.add(changeRow);
-            borderedSection.add(contextLabel);
-            borderedSection.add(Box.createVerticalStrut(8));
+            gbc.ipady = 0;
+            bankChangeLabel.setPreferredSize(new Dimension(0, 0));
         }
+        borderedSection.add(bankChangeLabel, gbc);
+        gbc.ipady = 0;
+        bankChangeLabel.setPreferredSize(null);
+
+        // Row 7: Context label (always present)
+// Shorten lastUpdatedStr for context label
+        String shortUpdatedStr;
+        if (lastScanTime == 0)
+            shortUpdatedStr = "not yet scanned";
+        else if (secondsAgo < 60)
+            shortUpdatedStr = "just now";
+        else if (secondsAgo < 3600)
+            shortUpdatedStr = (secondsAgo / 60) + "min ago";
         else
-        {
-            borderedSection.add(wealthTfRow1);
-            borderedSection.add(wealthTfRow2);
-            borderedSection.add(wealthSep);
-            borderedSection.add(Box.createVerticalStrut(8));
-            borderedSection.add(heroLabel);
-            borderedSection.add(Box.createVerticalStrut(4));
-            borderedSection.add(heroValue);
-            borderedSection.add(Box.createVerticalStrut(8));
-        }
+            shortUpdatedStr = (secondsAgo / 3600) + "h ago";
+        String contextStr = config.showBankValueChange() && !bankHidden ?
+                "· " + bankWealthTimeFrame + "  ·  " + shortUpdatedStr : shortUpdatedStr;
+        JLabel contextLabel = new JLabel(contextStr, SwingConstants.CENTER);
+        contextLabel.setForeground(TEXT_DIM);
+        contextLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+        gbc.gridy = 6;
+        gbc.insets = new java.awt.Insets(0, 6, 4, 6);
+        borderedSection.add(contextLabel, gbc);
 
-// Bottom button row: [🕐 last scan time] [📈 Chart ▶]
+        // Row 8: Bottom button row — [🕐 time] [📈 Chart ▶]
         JPanel chartBtnRow = new JPanel(new BorderLayout(4, 0));
         chartBtnRow.setBackground(BG_DARK);
-        chartBtnRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-        chartBtnRow.setBorder(new EmptyBorder(0, 6, 0, 6));
 
-        // Last scan time label (left)
         java.text.SimpleDateFormat timeFmt = new java.text.SimpleDateFormat("h:mm a");
         java.text.SimpleDateFormat dateFmt = new java.text.SimpleDateFormat("MMM d, yyyy");
         String lastScanTimeStr = lastScanTime > 0 ? "🕐 " + timeFmt.format(new java.util.Date(lastScanTime * 1000)) : "🕐 --:--";
@@ -2492,9 +2474,9 @@ private String openBankItemName = null;
         lastScanLabel.setForeground(TEXT_DIM);
         lastScanLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
         lastScanLabel.setToolTipText(lastScanDateStr);
+        lastScanLabel.setPreferredSize(new Dimension(80, 22));
 
-        // Chart button (right)
-        JButton chartBtn = new JButton("📈 Chart ▶");
+        JButton chartBtn = new JButton("Chart >");
         chartBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
         chartBtn.setFocusPainted(false);
         chartBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -2505,12 +2487,92 @@ private String openBankItemName = null;
             // Chart slide — to be implemented
         });
 
-        chartBtnRow.setLayout(new BorderLayout(4, 0));
-        lastScanLabel.setPreferredSize(new Dimension(80, 22));
+        chartBtn.setPreferredSize(new Dimension(100, 22));
+        chartBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
         chartBtnRow.add(lastScanLabel, BorderLayout.WEST);
         chartBtnRow.add(chartBtn, BorderLayout.CENTER);
-        borderedSection.add(chartBtnRow);
-        borderedSection.add(Box.createVerticalStrut(6));
+
+// Row 8: Separator above comparison data
+        JSeparator compSep = new JSeparator();
+        compSep.setForeground(new Color(65, 55, 38));
+        compSep.setBackground(new Color(65, 55, 38));
+        gbc.gridy = 8;
+        gbc.weighty = 0.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new java.awt.Insets(4, 6, 4, 6);
+        borderedSection.add(compSep, gbc);
+
+        // Row 9: Comparison data (always present, dim when no data)
+        JPanel compPanel = new JPanel(new GridBagLayout());
+        compPanel.setBackground(BG_DARK);
+        GridBagConstraints cgbc = new GridBagConstraints();
+        cgbc.gridx = 0;
+        cgbc.fill = GridBagConstraints.HORIZONTAL;
+        cgbc.weightx = 1.0;
+
+        if (showChangeData && closestEntry != null)
+        {
+            long entryTs = closestEntry[0];
+            long entryWealth = closestEntry[2];
+            long nowSec = System.currentTimeMillis() / 1000;
+            long diffSec = nowSec - entryTs;
+            long diffH = diffSec / 3600;
+            long diffM = (diffSec % 3600) / 60;
+            String timeAgoStr = diffH > 0 ? diffH + "h " + diffM + "min ago" : diffM + "min ago";
+            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("MMM d 'at' h:mm a");
+            String dateStr = sdf.format(new java.util.Date(entryTs * 1000));
+            String wealthStr = formatFullPrice(String.valueOf(entryWealth)) + " gp";
+
+            JLabel compLine1 = new JLabel("⏱ " + timeAgoStr, SwingConstants.CENTER);
+            compLine1.setForeground(TEXT_DIM);
+            compLine1.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+            cgbc.gridy = 0;
+            cgbc.insets = new java.awt.Insets(0, 6, 1, 6);
+            compPanel.add(compLine1, cgbc);
+
+            JLabel compLine2 = new JLabel("📅 " + dateStr, SwingConstants.CENTER);
+            compLine2.setForeground(TEXT_DIM);
+            compLine2.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+            cgbc.gridy = 1;
+            compPanel.add(compLine2, cgbc);
+
+            JLabel compLine3 = new JLabel("💰 " + wealthStr, SwingConstants.CENTER);
+            compLine3.setForeground(TEXT_DIM);
+            compLine3.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+            cgbc.gridy = 2;
+            compPanel.add(compLine3, cgbc);
+        }
+        else
+        {
+            JLabel noDataLabel = new JLabel("No comparison data yet", SwingConstants.CENTER);
+            noDataLabel.setForeground(TEXT_DIM);
+            noDataLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+            cgbc.gridy = 0;
+            cgbc.insets = new java.awt.Insets(4, 6, 4, 6);
+            compPanel.add(noDataLabel, cgbc);
+        }
+
+        gbc.gridy = 9;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.insets = new java.awt.Insets(0, 0, 0, 0);
+        borderedSection.add(compPanel, gbc);
+
+// Separator above chart button row
+        JSeparator bottomSep = new JSeparator();
+        bottomSep.setForeground(new Color(65, 55, 38));
+        bottomSep.setBackground(new Color(65, 55, 38));
+        gbc.gridy = 10;
+        gbc.weighty = 0.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new java.awt.Insets(4, 6, 4, 6);
+        borderedSection.add(bottomSep, gbc);
+
+        gbc.gridy = 11;
+        gbc.weighty = 0.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new java.awt.Insets(0, 6, 6, 6);
+        borderedSection.add(chartBtnRow, gbc);
 
         hero.add(borderedSection);
         hero.add(Box.createVerticalStrut(4));
