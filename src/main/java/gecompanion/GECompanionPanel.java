@@ -136,6 +136,8 @@ public class GECompanionPanel extends PluginPanel
     private boolean watchlistEditMode = false;
     private String bankWealthTimeFrame = "24H";
     private javax.swing.Timer bankClockTimer = null;
+    private boolean bankMetadataExpanded = false;
+    private boolean bankChartOpen = false;
 
     // Pinned/watched items
     private final java.util.Map<Integer, javax.swing.ImageIcon> iconCache = new java.util.HashMap<>();
@@ -2511,19 +2513,39 @@ private String openBankItemName = null;
         chartBtnRow.add(lastScanLabel, BorderLayout.WEST);
         chartBtnRow.add(chartBtn, BorderLayout.CENTER);
 
-// Row 8: Separator above comparison data
-        JSeparator compSep = new JSeparator();
-        compSep.setForeground(new Color(65, 55, 38));
-        compSep.setBackground(new Color(65, 55, 38));
+// Row 8: Clickable toggle separator (▼/▲)
+        JPanel toggleSepRow = new JPanel(new BorderLayout());
+        toggleSepRow.setBackground(BG_DARK);
+        toggleSepRow.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        JSeparator sepLeft = new JSeparator();
+        sepLeft.setForeground(new Color(65, 55, 38));
+        sepLeft.setBackground(new Color(65, 55, 38));
+        JLabel toggleArrowLabel = new JLabel(bankMetadataExpanded ? "▲" : "▼", SwingConstants.CENTER);
+        toggleArrowLabel.setForeground(TEXT_DIM);
+        toggleArrowLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+        toggleArrowLabel.setPreferredSize(new Dimension(16, 14));
+        toggleSepRow.add(sepLeft, BorderLayout.CENTER);
+        toggleSepRow.add(toggleArrowLabel, BorderLayout.EAST);
+        toggleSepRow.addMouseListener(new MouseAdapter()
+        {
+            public void mouseClicked(MouseEvent e)
+            {
+                bankMetadataExpanded = !bankMetadataExpanded;
+                isRefreshing = true;
+                showTab(activeTab);
+                isRefreshing = false;
+            }
+        });
         gbc.gridy = 8;
         gbc.weighty = 0.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new java.awt.Insets(4, 6, 4, 6);
-        borderedSection.add(compSep, gbc);
+        borderedSection.add(toggleSepRow, gbc);
 
-        // Row 9: Comparison data (always present, dim when no data)
+        // Row 9: Comparison data
         JPanel compPanel = new JPanel(new GridBagLayout());
         compPanel.setBackground(BG_DARK);
+        compPanel.setVisible(bankMetadataExpanded);
         GridBagConstraints cgbc = new GridBagConstraints();
         cgbc.gridx = 0;
         cgbc.fill = GridBagConstraints.HORIZONTAL;
@@ -2542,23 +2564,25 @@ private String openBankItemName = null;
             String dateStr = sdf.format(new java.util.Date(entryTs * 1000));
             String wealthStr = formatFullPrice(String.valueOf(entryWealth)) + " gp";
 
-            JLabel compLine1 = new JLabel("⏱ " + timeAgoStr, SwingConstants.CENTER);
+            JLabel compLine1 = new JLabel("Comparing to:  " + timeAgoStr, SwingConstants.LEFT);
             compLine1.setForeground(TEXT_DIM);
             compLine1.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
             cgbc.gridy = 0;
-            cgbc.insets = new java.awt.Insets(0, 6, 1, 6);
+            cgbc.insets = new java.awt.Insets(2, 10, 1, 6);
             compPanel.add(compLine1, cgbc);
 
-            JLabel compLine2 = new JLabel("📅 " + dateStr, SwingConstants.CENTER);
+            JLabel compLine2 = new JLabel("Scan date:     " + dateStr, SwingConstants.LEFT);
             compLine2.setForeground(TEXT_DIM);
             compLine2.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
             cgbc.gridy = 1;
+            cgbc.insets = new java.awt.Insets(1, 10, 1, 6);
             compPanel.add(compLine2, cgbc);
 
-            JLabel compLine3 = new JLabel("💰 " + wealthStr, SwingConstants.CENTER);
+            JLabel compLine3 = new JLabel("Wealth then:   " + wealthStr, SwingConstants.LEFT);
             compLine3.setForeground(TEXT_DIM);
             compLine3.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
             cgbc.gridy = 2;
+            cgbc.insets = new java.awt.Insets(1, 10, 2, 6);
             compPanel.add(compLine3, cgbc);
         }
         else
@@ -2572,8 +2596,8 @@ private String openBankItemName = null;
         }
 
         gbc.gridy = 9;
-        gbc.weighty = 1.0;
-        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weighty = 0.0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new java.awt.Insets(0, 0, 0, 0);
         borderedSection.add(compPanel, gbc);
 
