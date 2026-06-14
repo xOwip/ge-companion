@@ -138,6 +138,10 @@ public class GECompanionPanel extends PluginPanel
     private javax.swing.Timer bankClockTimer = null;
     private boolean bankMetadataExpanded = false;
     private boolean bankChartOpen = false;
+    private JPanel bankCompPanel = null;
+    private JSeparator bankMetaBottomSep = null;
+    private javax.swing.Timer bankMetaTimer = null;
+    private javax.swing.JViewport bankMetaViewport = null;
 
     // Pinned/watched items
     private final java.util.Map<Integer, javax.swing.ImageIcon> iconCache = new java.util.HashMap<>();
@@ -2545,10 +2549,60 @@ private String openBankItemName = null;
         toggleSepRow.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
-                bankMetadataExpanded = !bankMetadataExpanded;
-                isRefreshing = true;
-                showTab(activeTab);
-                isRefreshing = false;
+                if (bankMetaTimer != null && bankMetaTimer.isRunning()) return;
+                if (!bankMetadataExpanded) {
+                    // Expand animation
+                    bankMetadataExpanded = true;
+                    toggleArrow.setText(" ▲");
+                    if (bankMetaViewport != null) {
+                        if (bankMetaBottomSep != null) bankMetaBottomSep.setVisible(true);
+                        int targetH = bankCompPanel.getPreferredSize().height;
+                        int[] curH = {0};
+                        bankMetaViewport.setPreferredSize(new java.awt.Dimension(1, 0));
+                        bankMetaViewport.setViewPosition(new java.awt.Point(0, targetH));
+                        bankMetaViewport.revalidate();
+                        bankMetaTimer = new javax.swing.Timer(16, null);
+                        bankMetaTimer.addActionListener(ev -> {
+                            curH[0] = Math.min(curH[0] + 30, targetH);
+                            bankMetaViewport.setPreferredSize(new java.awt.Dimension(1, curH[0]));
+                            bankMetaViewport.setViewPosition(new java.awt.Point(0, targetH - curH[0]));
+                            bankMetaViewport.revalidate();
+                            if (curH[0] >= targetH) {
+                                bankMetaTimer.stop();
+                                isRefreshing = true;
+                                showTab(activeTab);
+                                isRefreshing = false;
+                            }
+                        });
+                        bankMetaTimer.start();
+                    }
+                } else {
+                    // Collapse animation
+                    bankMetadataExpanded = false;
+                    toggleArrow.setText(" ▼");
+                    if (bankMetaViewport != null) {
+                        if (bankMetaBottomSep != null) bankMetaBottomSep.setVisible(false);
+                        int targetH = bankCompPanel.getPreferredSize().height;
+                        int[] curH = {targetH};
+                        bankMetaViewport.setPreferredSize(new java.awt.Dimension(1, targetH));
+                        bankMetaViewport.setViewPosition(new java.awt.Point(0, 0));
+                        bankMetaViewport.revalidate();
+                        bankMetaTimer = new javax.swing.Timer(16, null);
+                        bankMetaTimer.addActionListener(ev -> {
+                            curH[0] = Math.max(curH[0] - 30, 0);
+                            bankMetaViewport.setPreferredSize(new java.awt.Dimension(1, curH[0]));
+                            bankMetaViewport.setViewPosition(new java.awt.Point(0, targetH - curH[0]));
+                            bankMetaViewport.revalidate();
+                            if (curH[0] <= 0) {
+                                bankMetaTimer.stop();
+                                isRefreshing = true;
+                                showTab(activeTab);
+                                isRefreshing = false;
+                            }
+                        });
+                        bankMetaTimer.start();
+                    }
+                }
             }
         });
         gbc.gridy = 8;
@@ -2612,8 +2666,19 @@ private String openBankItemName = null;
         gbc.weighty = 0.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new java.awt.Insets(0, 0, 0, 0);
-        wealthCard.add(compPanel, gbc);
-        compPanel.setVisible(bankMetadataExpanded);
+        javax.swing.JViewport metaVp = new javax.swing.JViewport();
+        metaVp.setView(compPanel);
+        int compH = compPanel.getPreferredSize().height;
+        if (bankMetadataExpanded) {
+            metaVp.setPreferredSize(new java.awt.Dimension(1, compH));
+            metaVp.setViewPosition(new java.awt.Point(0, 0));
+        } else {
+            metaVp.setPreferredSize(new java.awt.Dimension(1, 0));
+            metaVp.setViewPosition(new java.awt.Point(0, compH));
+        }
+        wealthCard.add(metaVp, gbc);
+        bankCompPanel = compPanel;
+        bankMetaViewport = metaVp;
 
         JSeparator metaBottomSep = new JSeparator();
         metaBottomSep.setForeground(new Color(65, 55, 38));
@@ -2624,6 +2689,7 @@ private String openBankItemName = null;
         gbc.insets = new java.awt.Insets(4, 6, 4, 6);
         wealthCard.add(metaBottomSep, gbc);
         metaBottomSep.setVisible(bankMetadataExpanded);
+        bankMetaBottomSep = metaBottomSep;
 
         gbc.gridy = 11;
         gbc.weighty = 0.0;
