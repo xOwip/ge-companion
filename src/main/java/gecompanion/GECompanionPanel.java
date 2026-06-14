@@ -2218,12 +2218,16 @@ private String openBankItemName = null;
         hero.setBorder(new EmptyBorder(6, 6, 4, 6));
 
 // OSRS-style bordered wealth section
-        JPanel borderedSection = new JPanel(new GridBagLayout());
+        java.awt.CardLayout borderedCardLayout = new java.awt.CardLayout();
+        JPanel borderedSection = new JPanel(borderedCardLayout);
         borderedSection.setBackground(BG_DARK);
         borderedSection.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(58, 53, 48), 1),
                 BorderFactory.createLineBorder(new Color(15, 13, 12), 3)
         ));
+
+        JPanel wealthCard = new JPanel(new GridBagLayout());
+        wealthCard.setBackground(BG_DARK);
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -2254,7 +2258,7 @@ private String openBankItemName = null;
             wealthTfRow1.add(btn);
         }
         gbc.gridy = 0;
-        borderedSection.add(wealthTfRow1, gbc);
+        wealthCard.add(wealthTfRow1, gbc);
 
         // Row 2: Timeframe buttons row 2
         JPanel wealthTfRow2 = new JPanel(new GridLayout(1, 3, 3, 0));
@@ -2279,7 +2283,7 @@ private String openBankItemName = null;
             wealthTfRow2.add(btn);
         }
         gbc.gridy = 1;
-        borderedSection.add(wealthTfRow2, gbc);
+        wealthCard.add(wealthTfRow2, gbc);
 
         // Row 3: Separator
         JSeparator wealthSep = new JSeparator();
@@ -2287,7 +2291,7 @@ private String openBankItemName = null;
         wealthSep.setBackground(new Color(65, 55, 38));
         gbc.gridy = 2;
         gbc.insets = new java.awt.Insets(0, 6, 0, 6);
-        borderedSection.add(wealthSep, gbc);
+        wealthCard.add(wealthSep, gbc);
         gbc.insets = new java.awt.Insets(0, 0, 0, 0);
 
         // Row 4: "TOTAL BANK VALUE" label
@@ -2296,7 +2300,7 @@ private String openBankItemName = null;
         heroLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
         gbc.gridy = 3;
         gbc.insets = new java.awt.Insets(8, 6, 2, 6);
-        borderedSection.add(heroLabel, gbc);
+        wealthCard.add(heroLabel, gbc);
         gbc.insets = new java.awt.Insets(0, 0, 0, 0);
 
         // Calculate last updated time
@@ -2346,7 +2350,7 @@ private String openBankItemName = null;
         });
         gbc.gridy = 4;
         gbc.insets = new java.awt.Insets(0, 6, 2, 6);
-        borderedSection.add(heroValue, gbc);
+        wealthCard.add(heroValue, gbc);
         gbc.insets = new java.awt.Insets(0, 0, 0, 0);
 
         // Calculate change data
@@ -2439,7 +2443,7 @@ private String openBankItemName = null;
             gbc.ipady = 0;
             bankChangeLabel.setPreferredSize(new Dimension(0, 0));
         }
-        borderedSection.add(bankChangeLabel, gbc);
+        wealthCard.add(bankChangeLabel, gbc);
         gbc.ipady = 0;
         bankChangeLabel.setPreferredSize(null);
 
@@ -2461,7 +2465,7 @@ private String openBankItemName = null;
         contextLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
         gbc.gridy = 6;
         gbc.insets = new java.awt.Insets(0, 6, 4, 6);
-        borderedSection.add(contextLabel, gbc);
+        wealthCard.add(contextLabel, gbc);
 
         // Row 8: Bottom button row — [🕐 time] [📈 Chart ▶]
         JPanel chartBtnRow = new JPanel(new BorderLayout(4, 0));
@@ -2502,7 +2506,23 @@ private String openBankItemName = null;
         chartBtn.setForeground(TAB_INACTIVE);
         chartBtn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
         chartBtn.addActionListener(e -> {
-            // Chart slide — to be implemented
+            if (!bankMetadataExpanded) {
+                bankMetadataExpanded = true;
+                isRefreshing = true;
+                showTab(activeTab);
+                isRefreshing = false;
+                javax.swing.SwingUtilities.invokeLater(() -> {
+                    bankChartOpen = true;
+                    isRefreshing = true;
+                    showTab(activeTab);
+                    isRefreshing = false;
+                });
+            } else {
+                bankChartOpen = true;
+                isRefreshing = true;
+                showTab(activeTab);
+                isRefreshing = false;
+            }
         });
 
         chartBtn.setPreferredSize(new Dimension(100, 22));
@@ -2535,7 +2555,7 @@ private String openBankItemName = null;
         gbc.weighty = 0.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new java.awt.Insets(4, 6, 4, 6);
-        borderedSection.add(toggleSepRow, gbc);
+        wealthCard.add(toggleSepRow, gbc);
 
         // Row 9: Comparison data (always present, dim when no data)
         JPanel compPanel = new JPanel(new GridBagLayout());
@@ -2592,7 +2612,7 @@ private String openBankItemName = null;
         gbc.weighty = 0.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new java.awt.Insets(0, 0, 0, 0);
-        borderedSection.add(compPanel, gbc);
+        wealthCard.add(compPanel, gbc);
         compPanel.setVisible(bankMetadataExpanded);
 
         JSeparator metaBottomSep = new JSeparator();
@@ -2602,14 +2622,43 @@ private String openBankItemName = null;
         gbc.weighty = 0.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new java.awt.Insets(4, 6, 4, 6);
-        borderedSection.add(metaBottomSep, gbc);
+        wealthCard.add(metaBottomSep, gbc);
         metaBottomSep.setVisible(bankMetadataExpanded);
 
         gbc.gridy = 11;
         gbc.weighty = 0.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new java.awt.Insets(0, 6, 6, 6);
-        borderedSection.add(chartBtnRow, gbc);
+        wealthCard.add(chartBtnRow, gbc);
+
+// Build chart card (placeholder for now)
+        JPanel chartCard = new JPanel(new BorderLayout());
+        chartCard.setBackground(BG_DARK);
+        JPanel chartTopRow = new JPanel(new BorderLayout());
+        chartTopRow.setBackground(BG_DARK);
+        chartTopRow.setBorder(new EmptyBorder(6, 6, 4, 6));
+        JButton backBtn = new JButton("← Back");
+        backBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
+        backBtn.setFocusPainted(false);
+        backBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        backBtn.setBackground(new Color(14, 12, 13));
+        backBtn.setForeground(TAB_INACTIVE);
+        backBtn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+        backBtn.addActionListener(e -> {
+            bankChartOpen = false;
+            borderedCardLayout.show(borderedSection, "wealth");
+        });
+        JLabel chartHeader = new JLabel("WEALTH HISTORY", SwingConstants.CENTER);
+        chartHeader.setForeground(TEXT_DIM);
+        chartHeader.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+        chartTopRow.add(backBtn, BorderLayout.WEST);
+        chartTopRow.add(chartHeader, BorderLayout.CENTER);
+        chartCard.add(chartTopRow, BorderLayout.NORTH);
+
+        borderedSection.add(wealthCard, "wealth");
+        borderedSection.add(chartCard, "chart");
+        if (bankChartOpen) borderedCardLayout.show(borderedSection, "chart");
+        else borderedCardLayout.show(borderedSection, "wealth");
 
         hero.add(borderedSection);
         hero.add(Box.createVerticalStrut(4));
