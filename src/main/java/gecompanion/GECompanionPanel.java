@@ -2502,7 +2502,7 @@ private String openBankItemName = null;
         syncTimer.start();
         bankClockTimer = syncTimer;
 
-        boolean hasChartData = !bankValueLog.isEmpty() && !bankItems.isEmpty();
+        boolean hasChartData = !bankValueLog.isEmpty() && !bankItems.isEmpty() && !bankHidden;
         JButton chartBtn = new JButton("Chart >");
         chartBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
         chartBtn.setFocusPainted(false);
@@ -2511,7 +2511,7 @@ private String openBankItemName = null;
         chartBtn.setForeground(hasChartData ? TAB_INACTIVE : new Color(50, 45, 40));
         chartBtn.setBorder(BorderFactory.createLineBorder(hasChartData ? new Color(58, 53, 48) : new Color(35, 30, 25)));
         chartBtn.setEnabled(hasChartData);
-        if (!hasChartData) chartBtn.setToolTipText("Open your bank first to view wealth history");
+        if (!hasChartData) chartBtn.setToolTipText(bankHidden ? "Unhide your bank value to view wealth history" : "Open your bank first to view wealth history");
         chartBtn.addActionListener(e -> {
             if (!bankMetadataExpanded) {
                 // Step 1: animate metadata open, then flip to chart when done
