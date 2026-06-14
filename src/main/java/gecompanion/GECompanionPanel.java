@@ -2563,7 +2563,7 @@ private String openBankItemName = null;
                         bankMetaViewport.revalidate();
                         bankMetaTimer = new javax.swing.Timer(16, null);
                         bankMetaTimer.addActionListener(ev -> {
-                            curH[0] = Math.min(curH[0] + 30, targetH);
+                            curH[0] = Math.min(curH[0] + 12, targetH);
                             bankMetaViewport.setPreferredSize(new java.awt.Dimension(1, curH[0]));
                             bankMetaViewport.setViewPosition(new java.awt.Point(0, targetH - curH[0]));
                             bankMetaViewport.revalidate();
@@ -2589,7 +2589,7 @@ private String openBankItemName = null;
                         bankMetaViewport.revalidate();
                         bankMetaTimer = new javax.swing.Timer(16, null);
                         bankMetaTimer.addActionListener(ev -> {
-                            curH[0] = Math.max(curH[0] - 30, 0);
+                            curH[0] = Math.max(curH[0] - 12, 0);
                             bankMetaViewport.setPreferredSize(new java.awt.Dimension(1, curH[0]));
                             bankMetaViewport.setViewPosition(new java.awt.Point(0, targetH - curH[0]));
                             bankMetaViewport.revalidate();
