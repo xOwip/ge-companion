@@ -2463,7 +2463,7 @@ private String openBankItemName = null;
         else
             shortUpdatedStr = (secondsAgo / 3600) + "h ago";
         String contextStr = config.showBankValueChange() && !bankHidden ?
-                "· " + bankWealthTimeFrame + "  ·  " + shortUpdatedStr : shortUpdatedStr;
+                "· " + bankWealthTimeFrame + " · Last updated " + shortUpdatedStr : "Last updated " + shortUpdatedStr;
         JLabel contextLabel = new JLabel(contextStr, SwingConstants.CENTER);
         contextLabel.setForeground(TEXT_DIM);
         contextLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
