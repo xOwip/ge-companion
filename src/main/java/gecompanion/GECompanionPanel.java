@@ -2648,7 +2648,16 @@ private String openBankItemName = null;
             long diffSec = nowSec - entryTs;
             long diffH = diffSec / 3600;
             long diffM = (diffSec % 3600) / 60;
-            String timeAgoStr = diffH > 0 ? diffH + "h " + diffM + "min ago" : diffM + "min ago";
+            String timeAgoStr;
+            if (diffH >= 24) {
+                long diffD = diffH / 24;
+                long remH = diffH % 24;
+                timeAgoStr = remH > 0 ? diffD + "d " + remH + "h ago" : diffD + "d ago";
+            } else if (diffH > 0) {
+                timeAgoStr = diffH + "h " + diffM + "min ago";
+            } else {
+                timeAgoStr = diffM + "min ago";
+            }
             java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("MMM d 'at' h:mm a");
             String dateStr = sdf.format(new java.util.Date(entryTs * 1000));
             String wealthStr = formatFullPrice(String.valueOf(entryWealth)) + " gp";
