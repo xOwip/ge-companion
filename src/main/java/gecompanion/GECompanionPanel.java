@@ -2511,17 +2511,35 @@ private String openBankItemName = null;
         chartBtn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
         chartBtn.addActionListener(e -> {
             if (!bankMetadataExpanded) {
+                // Step 1: animate metadata open, then flip to chart when done
                 bankMetadataExpanded = true;
-                isRefreshing = true;
-                showTab(activeTab);
-                isRefreshing = false;
-                javax.swing.SwingUtilities.invokeLater(() -> {
-                    bankChartOpen = true;
-                    isRefreshing = true;
-                    showTab(activeTab);
-                    isRefreshing = false;
-                });
+                if (bankMetaViewport != null) {
+                    if (bankMetaBottomSep != null) bankMetaBottomSep.setVisible(true);
+                    int targetH = bankCompPanel.getPreferredSize().height;
+                    int[] curH = {0};
+                    bankMetaViewport.setPreferredSize(new java.awt.Dimension(1, 0));
+                    bankMetaViewport.setViewPosition(new java.awt.Point(0, targetH));
+                    bankMetaViewport.revalidate();
+                    if (bankMetaTimer != null && bankMetaTimer.isRunning()) bankMetaTimer.stop();
+                    bankMetaTimer = new javax.swing.Timer(16, null);
+                    bankMetaTimer.addActionListener(ev -> {
+                        curH[0] = Math.min(curH[0] + 12, targetH);
+                        bankMetaViewport.setPreferredSize(new java.awt.Dimension(1, curH[0]));
+                        bankMetaViewport.setViewPosition(new java.awt.Point(0, targetH - curH[0]));
+                        bankMetaViewport.revalidate();
+                        if (curH[0] >= targetH) {
+                            bankMetaTimer.stop();
+                            // Step 2: flip to chart card
+                            bankChartOpen = true;
+                            isRefreshing = true;
+                            showTab(activeTab);
+                            isRefreshing = false;
+                        }
+                    });
+                    bankMetaTimer.start();
+                }
             } else {
+                // Metadata already expanded — flip directly
                 bankChartOpen = true;
                 isRefreshing = true;
                 showTab(activeTab);
