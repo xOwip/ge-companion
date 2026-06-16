@@ -3904,6 +3904,8 @@ private String[] buildItemDataFromCache(String name)
         final int[] zoomStart = {0};
         final int[] zoomEnd = {-1};
         final int[] crosshairIdx = {-1};
+        final boolean[] currentLineHighlighted = {false};
+        final JPanel[] canvasHolder = {null};
 
         JPanel wrapper = new JPanel();
         wrapper.setLayout(new BoxLayout(wrapper, BoxLayout.Y_AXIS));
@@ -3913,12 +3915,14 @@ private String[] buildItemDataFromCache(String name)
         // timeframe buttons — 2 rows
         String[] frames1 = {"1H", "6H", "24H", "7D", "30D"};
         String[] frames2 = {"3M", "1Y", "All"};
-        JPanel tfRow1 = new JPanel(new GridLayout(1, 5, 2, 0));
+        JPanel tfRow1 = new JPanel(new GridLayout(1, 5, 3, 0));
         tfRow1.setBackground(new Color(14, 12, 13));
+        tfRow1.setBorder(new EmptyBorder(6, 6, 2, 6));
         tfRow1.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
         tfRow1.setAlignmentX(Component.LEFT_ALIGNMENT);
-        JPanel tfRow2 = new JPanel(new GridLayout(1, 3, 2, 0));
+        JPanel tfRow2 = new JPanel(new GridLayout(1, 3, 3, 0));
         tfRow2.setBackground(new Color(14, 12, 13));
+        tfRow2.setBorder(new EmptyBorder(0, 6, 4, 6));
         tfRow2.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
         tfRow2.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -3927,25 +3931,22 @@ private String[] buildItemDataFromCache(String name)
         for (int i = 0; i < allFrames.length; i++)
         {
             final String frame = allFrames[i];
+            boolean hasData = buildWealthPoints(frame).size() >= 2;
+            boolean active = frame.equals(bankWealthTimeFrame);
             JButton b = new JButton(frame);
             b.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
             b.setFocusPainted(false);
-            b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            b.setBackground(new Color(14, 12, 13));
-            boolean active = frame.equals(bankWealthTimeFrame);
-            b.setForeground(active ? GOLD : TAB_INACTIVE);
-            b.setBorder(active
-                    ? BorderFactory.createLineBorder(GOLD)
-                    : BorderFactory.createLineBorder(new Color(58, 53, 48)));
+            b.setEnabled(hasData);
+            b.setCursor(hasData ? Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) : Cursor.getDefaultCursor());
+            b.setBackground(active ? new Color(26, 21, 0) : new Color(14, 12, 13));
+            b.setForeground(active ? GOLD : hasData ? TAB_INACTIVE : new Color(50, 45, 40));
+            b.setBorder(BorderFactory.createLineBorder(active ? GOLD : hasData ? new Color(58, 53, 48) : new Color(35, 30, 25)));
             tfBtns[i] = b;
             if (i < 5) tfRow1.add(b); else tfRow2.add(b);
         }
 
-        wrapper.add(Box.createVerticalStrut(4));
         wrapper.add(tfRow1);
-        wrapper.add(Box.createVerticalStrut(2));
         wrapper.add(tfRow2);
-        wrapper.add(Box.createVerticalStrut(4));
 
         // legend
         JPanel legend = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
@@ -3960,7 +3961,23 @@ private String[] buildItemDataFromCache(String name)
         curLeg.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
         legend.add(wealthLeg);
         legend.add(curLeg);
+
+        long curWealth = bankValueLog.isEmpty() ? 0 : bankValueLog.get(bankValueLog.size() - 1)[2];
+        JLabel curWealthLabel = new JLabel(curWealth > 0 ? formatFullPrice(String.valueOf(curWealth)) + " gp" : "");
+        curWealthLabel.setForeground(new Color(0, 0, 0, 0));
+        curWealthLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
+        curWealthLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        curWealthLabel.setBorder(new EmptyBorder(0, 73, 0, 0));
+        curLeg.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) { currentLineHighlighted[0] = true; curWealthLabel.setForeground(new Color(185, 109, 222)); if (canvasHolder[0] != null) canvasHolder[0].repaint(); }
+            public void mouseExited(MouseEvent e)  { currentLineHighlighted[0] = false; curWealthLabel.setForeground(new Color(0, 0, 0, 0)); if (canvasHolder[0] != null) canvasHolder[0].repaint(); }
+        });
+        curWealthLabel.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) { currentLineHighlighted[0] = true; curWealthLabel.setForeground(new Color(185, 109, 222)); if (canvasHolder[0] != null) canvasHolder[0].repaint(); }
+            public void mouseExited(MouseEvent e)  { currentLineHighlighted[0] = false; curWealthLabel.setForeground(new Color(0, 0, 0, 0)); if (canvasHolder[0] != null) canvasHolder[0].repaint(); }
+        });
         wrapper.add(legend);
+        wrapper.add(curWealthLabel);
         wrapper.add(Box.createVerticalStrut(2));
 
         // build data points
@@ -4038,16 +4055,23 @@ private String[] buildItemDataFromCache(String name)
                 for (int i = 0; i < n - 1; i++)
                     g2.drawLine(wx[i], wy[i], wx[i + 1], wy[i + 1]);
 
-                // current value dashed purple line
+// current value dashed purple line
                 if (currentWealth > 0) {
                     int curY = h - (int)((currentWealth - fMin) * h / Math.max(fMax - fMin, 1));
-                    g2.setColor(new Color(155, 89, 182));
-                    g2.setStroke(new java.awt.BasicStroke(1f,
-                            java.awt.BasicStroke.CAP_BUTT,
-                            java.awt.BasicStroke.JOIN_MITER,
-                            10f, new float[]{4f, 4f}, 0f));
-                    g2.drawLine(0, curY, w, curY);
-                    g2.setStroke(new java.awt.BasicStroke(1.4f));
+                    boolean highlighted = currentLineHighlighted[0];
+                    g2.setColor(highlighted ? new Color(185, 109, 222) : new Color(155, 89, 182));
+                    if (highlighted) {
+                        g2.setStroke(new java.awt.BasicStroke(1.8f));
+                        g2.drawLine(0, curY, w, curY);
+                        g2.setStroke(new java.awt.BasicStroke(1.4f));
+                    } else {
+                        g2.setStroke(new java.awt.BasicStroke(1f,
+                                java.awt.BasicStroke.CAP_BUTT,
+                                java.awt.BasicStroke.JOIN_MITER,
+                                10f, new float[]{4f, 4f}, 0f));
+                        g2.drawLine(0, curY, w, curY);
+                        g2.setStroke(new java.awt.BasicStroke(1.4f));
+                    }
                 }
 
                 // game update markers
@@ -4104,6 +4128,7 @@ private String[] buildItemDataFromCache(String name)
         canvas.setPreferredSize(new Dimension(0, 140));
         canvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 140));
         canvas.setAlignmentX(Component.LEFT_ALIGNMENT);
+        canvasHolder[0] = canvas;
 
         canvas.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
             @Override
