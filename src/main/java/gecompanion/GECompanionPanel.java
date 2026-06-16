@@ -2443,13 +2443,17 @@ private String openBankItemName = null;
         // Row 6: Change label (always present, empty when no data)
         boolean showChangeData = config.showBankValueChange() && !bankHidden
                 && closestEntry != null && !bankItems.isEmpty();
-        boolean noDataYet = closestEntry == null || bankItems.isEmpty();
-        String changeDisplayStr = showChangeData ? bankChangeStr : (noDataYet && !bankHidden && config.showBankValueChange() ? "Building wealth history..." : " ");
+        String changeDisplayStr = showChangeData ? bankChangeStr : " ";
         JLabel bankChangeLabel = new JLabel(changeDisplayStr, SwingConstants.CENTER);
         bankChangeLabel.setForeground(showChangeData ? bankChangeColor : TEXT_DIM);
         bankChangeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
         gbc.gridy = 5;
         gbc.insets = new java.awt.Insets(0, 6, 0, 6);
+        if (!showChangeData)
+        {
+            gbc.ipady = 0;
+            bankChangeLabel.setPreferredSize(new Dimension(0, 0));
+        }
         wealthCard.add(bankChangeLabel, gbc);
         gbc.ipady = 0;
         bankChangeLabel.setPreferredSize(null);
