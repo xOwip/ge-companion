@@ -4301,6 +4301,28 @@ private String[] buildItemDataFromCache(String name)
         JLabel curLeg  = new JLabel("--- Current");
         curLeg.setForeground(new Color(155, 89, 182));
         curLeg.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
+// Item name label — right-aligned, above legend
+        String itemName = "";
+        for (java.util.Map.Entry<String, Integer> entry : nameToId.entrySet()) {
+            if (entry.getValue() == itemId) {
+                String[] words = entry.getKey().split(" ");
+                StringBuilder sb = new StringBuilder();
+                for (String word : words) {
+                    if (word.length() > 0)
+                        sb.append(Character.toUpperCase(word.charAt(0)))
+                                .append(word.substring(1)).append(" ");
+                }
+                itemName = sb.toString().trim();
+                break;
+            }
+        }
+        JLabel itemNameLabel = new JLabel(itemName, SwingConstants.LEFT);
+        itemNameLabel.setForeground(TEXT_DIM);
+        itemNameLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
+        itemNameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        itemNameLabel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 16));
+        wrapper.add(itemNameLabel);
+
         legend.add(buyLeg);
         legend.add(sellLeg);
         legend.add(curLeg);
