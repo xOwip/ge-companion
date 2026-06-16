@@ -341,7 +341,31 @@ private void fetchMapping()
 	@Subscribe
 	public void onConfigChanged(net.runelite.client.events.ConfigChanged event)
 	{
-		if (event.getGroup().equals("gecompanion") && !event.getKey().equals("recentSearches") && !event.getKey().equals("bankValueLog") && !event.getKey().equals("bankValue") && !event.getKey().equals("bankValueHidden") && !event.getKey().equals("pinnedItems"))
+		if (!event.getGroup().equals("gecompanion")) return;
+        if (event.getKey().equals("resetBankHistory"))
+        {
+            if ("true".equals(event.getNewValue()))
+            {
+                configManager.setConfiguration("gecompanion", "resetBankHistory", false);
+                int result = javax.swing.JOptionPane.showOptionDialog(
+                        panel,
+                        "This will permanently delete all saved bank value history.\nThis cannot be undone. Continue?",
+                        "Reset Bank Value History",
+                        javax.swing.JOptionPane.YES_NO_OPTION,
+                        javax.swing.JOptionPane.WARNING_MESSAGE,
+                        null,
+                        new Object[]{"Reset All Data", "Cancel"},
+                        "Cancel"
+                );
+                if (result == 0)
+                {
+                    saveConfig("bankValueLog", "");
+                    javax.swing.SwingUtilities.invokeLater(() -> panel.onBankHistoryReset());
+                }
+            }
+            return;
+        }
+        if (!event.getKey().equals("recentSearches") && !event.getKey().equals("bankValueLog") && !event.getKey().equals("bankValue") && !event.getKey().equals("bankValueHidden") && !event.getKey().equals("pinnedItems"))
 		{
 			javax.swing.SwingUtilities.invokeLater(() -> panel.showTab(panel.getActiveTab()));
 		}

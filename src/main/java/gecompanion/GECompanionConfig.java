@@ -123,6 +123,15 @@ public interface GECompanionConfig extends Config
 	)
 	default boolean showBankValueChange() { return true; }
 
+	@ConfigItem(
+			keyName = "resetBankHistory",
+			name = "Reset Bank Value History",
+			description = "Permanently deletes all saved bank value history. Cannot be undone. Your data will rebuild automatically on your next bank scan.",
+			section = bankSection,
+			position = 6
+	)
+	default boolean resetBankHistory() { return false; }
+
 	// ── DISPLAY ──
     @ConfigSection(
           name = "Display",

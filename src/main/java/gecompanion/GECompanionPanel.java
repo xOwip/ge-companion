@@ -250,6 +250,12 @@ private String openBankItemName = null;
         }
     }
 
+    public void onBankHistoryReset()
+    {
+        bankValueLog.clear();
+        showTab(activeTab);
+    }
+
     public void onPricesUpdated(java.util.Map<Integer, PriceData> priceCache, java.util.Map<String, Integer> nameToId, java.util.Map<Integer, Long> avgPrice24h, java.util.Map<Integer, Long> avgPrice1h, java.util.Map<Integer, Long> avgPrice6h, java.util.Map<Integer, Integer> itemLimits, java.util.Map<Integer, Long> buyVolume1h, java.util.Map<Integer, Long> sellVolume1h)
     {
         this.priceCache = priceCache;
