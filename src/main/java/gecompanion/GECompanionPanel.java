@@ -2734,18 +2734,31 @@ private String openBankItemName = null;
         wealthCard.add(chartBtnRow, gbc);
 
 // Build chart card (placeholder for now)
-        JPanel chartCard = new JPanel(new BorderLayout());
+        JPanel chartCard = new JPanel(new BorderLayout())
+        {
+            @Override
+            public Dimension getPreferredSize()
+            {
+                return wealthCard.getPreferredSize();
+            }
+            @Override
+            public Dimension getMinimumSize()
+            {
+                return wealthCard.getMinimumSize();
+            }
+        };
         chartCard.setBackground(BG_DARK);
         JPanel chartTopRow = new JPanel(new BorderLayout());
         chartTopRow.setBackground(BG_DARK);
-        chartTopRow.setBorder(new EmptyBorder(6, 6, 4, 6));
+        chartTopRow.setBorder(new EmptyBorder(4, 6, 2, 6));
         JButton backBtn = new JButton("← Back");
-        backBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
+        backBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
         backBtn.setFocusPainted(false);
         backBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        backBtn.setBackground(new Color(14, 12, 13));
         backBtn.setForeground(TAB_INACTIVE);
-        backBtn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+        backBtn.setBorderPainted(false);
+        backBtn.setContentAreaFilled(false);
+        backBtn.setMargin(new java.awt.Insets(0, 0, 0, 0));
         backBtn.addActionListener(e -> {
             bankChartOpen = false;
             borderedCardLayout.show(borderedSection, "wealth");
@@ -2756,6 +2769,7 @@ private String openBankItemName = null;
         chartTopRow.add(backBtn, BorderLayout.WEST);
         chartTopRow.add(chartHeader, BorderLayout.CENTER);
         chartCard.add(chartTopRow, BorderLayout.NORTH);
+        chartCard.add(buildWealthChartPanel(), BorderLayout.CENTER);
 
         borderedSection.add(wealthCard, "wealth");
         borderedSection.add(chartCard, "chart");
@@ -3881,6 +3895,326 @@ private String[] buildItemDataFromCache(String name)
         headerRow.add(namePrice, BorderLayout.CENTER);
 
         return headerRow;
+    }
+
+    private JPanel buildWealthChartPanel()
+    {
+        final boolean[] animating = {false};
+        final int[] revealW = {0};
+        final int[] zoomStart = {0};
+        final int[] zoomEnd = {-1};
+        final int[] crosshairIdx = {-1};
+
+        JPanel wrapper = new JPanel();
+        wrapper.setLayout(new BoxLayout(wrapper, BoxLayout.Y_AXIS));
+        wrapper.setBackground(new Color(14, 12, 13));
+        wrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        // timeframe buttons — 2 rows
+        String[] frames1 = {"1H", "6H", "24H", "7D", "30D"};
+        String[] frames2 = {"3M", "1Y", "All"};
+        JPanel tfRow1 = new JPanel(new GridLayout(1, 5, 2, 0));
+        tfRow1.setBackground(new Color(14, 12, 13));
+        tfRow1.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
+        tfRow1.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JPanel tfRow2 = new JPanel(new GridLayout(1, 3, 2, 0));
+        tfRow2.setBackground(new Color(14, 12, 13));
+        tfRow2.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
+        tfRow2.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JButton[] tfBtns = new JButton[8];
+        String[] allFrames = {"1H", "6H", "24H", "7D", "30D", "3M", "1Y", "All"};
+        for (int i = 0; i < allFrames.length; i++)
+        {
+            final String frame = allFrames[i];
+            JButton b = new JButton(frame);
+            b.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
+            b.setFocusPainted(false);
+            b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            b.setBackground(new Color(14, 12, 13));
+            boolean active = frame.equals(bankWealthTimeFrame);
+            b.setForeground(active ? GOLD : TAB_INACTIVE);
+            b.setBorder(active
+                    ? BorderFactory.createLineBorder(GOLD)
+                    : BorderFactory.createLineBorder(new Color(58, 53, 48)));
+            tfBtns[i] = b;
+            if (i < 5) tfRow1.add(b); else tfRow2.add(b);
+        }
+
+        wrapper.add(Box.createVerticalStrut(4));
+        wrapper.add(tfRow1);
+        wrapper.add(Box.createVerticalStrut(2));
+        wrapper.add(tfRow2);
+        wrapper.add(Box.createVerticalStrut(4));
+
+        // legend
+        JPanel legend = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        legend.setBackground(new Color(14, 12, 13));
+        legend.setMaximumSize(new Dimension(Integer.MAX_VALUE, 16));
+        legend.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JLabel wealthLeg = new JLabel("— Wealth");
+        wealthLeg.setForeground(GOLD);
+        wealthLeg.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
+        JLabel curLeg = new JLabel("--- Current");
+        curLeg.setForeground(new Color(155, 89, 182));
+        curLeg.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
+        legend.add(wealthLeg);
+        legend.add(curLeg);
+        wrapper.add(legend);
+        wrapper.add(Box.createVerticalStrut(2));
+
+        // build data points
+        final java.util.List<long[]> pts = buildWealthPoints(bankWealthTimeFrame);
+
+        // chart canvas
+        JPanel canvas = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                int w = getWidth(), h = getHeight();
+
+                if (animating[0] && revealW[0] < 100) {
+                    g2.setClip(0, 0, (int)(w * revealW[0] / 100.0), h);
+                }
+
+                g2.setColor(new Color(14, 12, 13));
+                g2.fillRect(0, 0, w, h);
+
+                if (pts == null || pts.size() < 2) {
+                    g2.setColor(new Color(110, 100, 90));
+                    g2.setFont(new Font("Monospaced", Font.PLAIN, 10));
+                    g2.drawString("Not enough data yet", w / 2 - 55, h / 2);
+                    g2.dispose();
+                    return;
+                }
+
+                int visStart = zoomStart[0];
+                int visEnd = zoomEnd[0] >= 0 ? zoomEnd[0] : pts.size() - 1;
+                visStart = Math.max(0, Math.min(visStart, pts.size() - 1));
+                visEnd = Math.max(visStart + 1, Math.min(visEnd, pts.size() - 1));
+                java.util.List<long[]> visPts = pts.subList(visStart, visEnd + 1);
+
+                long minV = Long.MAX_VALUE, maxV = Long.MIN_VALUE;
+                for (long[] p : visPts) {
+                    if (p[1] > 0) { minV = Math.min(minV, p[1]); maxV = Math.max(maxV, p[1]); }
+                }
+                long currentWealth = bankValueLog.isEmpty() ? 0 : bankValueLog.get(bankValueLog.size() - 1)[2];
+                if (currentWealth > 0) { minV = Math.min(minV, currentWealth); maxV = Math.max(maxV, currentWealth); }
+                if (minV == Long.MAX_VALUE) { g2.dispose(); return; }
+                long pad = Math.max((maxV - minV) / 4, 1);
+                minV -= pad; maxV += pad;
+                final long fMin = minV, fMax = maxV;
+
+                g2.setColor(new Color(40, 36, 34));
+                for (float pct : new float[]{0.25f, 0.5f, 0.75f}) {
+                    int y = (int)(h * pct);
+                    g2.drawLine(0, y, w, y);
+                }
+
+                int n = visPts.size();
+
+                // area fill
+                g2.setColor(new Color(212, 175, 55, 30));
+                int[] fillX = new int[n + 2];
+                int[] fillY = new int[n + 2];
+                for (int i = 0; i < n; i++) {
+                    fillX[i] = (int)(i * (w - 1.0) / (n - 1));
+                    fillY[i] = h - (int)((visPts.get(i)[1] - fMin) * h / Math.max(fMax - fMin, 1));
+                }
+                fillX[n] = w - 1; fillY[n] = h;
+                fillX[n + 1] = 0; fillY[n + 1] = h;
+                g2.fillPolygon(fillX, fillY, n + 2);
+
+                // wealth line
+                g2.setStroke(new java.awt.BasicStroke(1.4f));
+                g2.setColor(GOLD);
+                int[] wx = new int[n], wy = new int[n];
+                for (int i = 0; i < n; i++) {
+                    wx[i] = (int)(i * (w - 1.0) / (n - 1));
+                    wy[i] = h - (int)((visPts.get(i)[1] - fMin) * h / Math.max(fMax - fMin, 1));
+                }
+                for (int i = 0; i < n - 1; i++)
+                    g2.drawLine(wx[i], wy[i], wx[i + 1], wy[i + 1]);
+
+                // current value dashed purple line
+                if (currentWealth > 0) {
+                    int curY = h - (int)((currentWealth - fMin) * h / Math.max(fMax - fMin, 1));
+                    g2.setColor(new Color(155, 89, 182));
+                    g2.setStroke(new java.awt.BasicStroke(1f,
+                            java.awt.BasicStroke.CAP_BUTT,
+                            java.awt.BasicStroke.JOIN_MITER,
+                            10f, new float[]{4f, 4f}, 0f));
+                    g2.drawLine(0, curY, w, curY);
+                    g2.setStroke(new java.awt.BasicStroke(1.4f));
+                }
+
+                // game update markers
+                if (gameUpdates != null && visPts.size() >= 2) {
+                    long tMin = visPts.get(0)[0];
+                    long tMax = visPts.get(visPts.size() - 1)[0];
+                    int dotY = 8;
+                    for (int i = 0; i < gameUpdates.size(); i++) {
+                        UpdateMarker u = gameUpdates.get(i);
+                        if (config.gameUpdateMode() == GameUpdateMode.MAJOR_ONLY &&
+                                !u.category.contains("game")) continue;
+                        if (u.timestamp < tMin || u.timestamp > tMax) continue;
+                        int x = (int)((double)(u.timestamp - tMin) / (tMax - tMin) * (w - 1));
+                        g2.setColor(getUpdateColor(u.category));
+                        g2.fillOval(x - 3, dotY - 3, 6, 6);
+                    }
+                }
+
+                // crosshair
+                if (crosshairIdx[0] >= 0 && crosshairIdx[0] < visPts.size()) {
+                    int ci = crosshairIdx[0];
+                    int cx2 = wx[ci], cy2 = wy[ci];
+                    g2.setColor(new Color(180, 160, 80, 120));
+                    g2.setStroke(new java.awt.BasicStroke(1f));
+                    g2.drawLine(cx2, 0, cx2, h);
+                    g2.drawLine(0, cy2, w, cy2);
+
+                    long val = visPts.get(ci)[1];
+                    long ts = visPts.get(ci)[0];
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("MMM d, h:mm a");
+                    String dateStr = sdf.format(new java.util.Date(ts * 1000));
+                    String valStr = formatFullPrice(String.valueOf(val)) + " gp";
+                    g2.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+                    java.awt.FontMetrics fm2 = g2.getFontMetrics();
+                    int pad2 = 5;
+                    int boxW = Math.max(fm2.stringWidth(dateStr), fm2.stringWidth(valStr)) + pad2 * 2;
+                    int boxH = fm2.getHeight() * 2 + pad2;
+                    int bx2 = Math.min(cx2 + 8, w - boxW - 2);
+                    int by2 = Math.max(2, cy2 - boxH / 2);
+                    g2.setColor(new Color(30, 27, 25, 220));
+                    g2.fillRoundRect(bx2, by2, boxW, boxH, 4, 4);
+                    g2.setColor(new Color(65, 55, 38));
+                    g2.drawRoundRect(bx2, by2, boxW, boxH, 4, 4);
+                    g2.setColor(GOLD);
+                    g2.drawString(valStr, bx2 + pad2, by2 + fm2.getAscent() + 1);
+                    g2.setColor(TEXT_DIM);
+                    g2.drawString(dateStr, bx2 + pad2, by2 + fm2.getAscent() + fm2.getHeight() + 1);
+                }
+
+                g2.dispose();
+            }
+        };
+        canvas.setBackground(new Color(14, 12, 13));
+        canvas.setPreferredSize(new Dimension(0, 140));
+        canvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 140));
+        canvas.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        canvas.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(java.awt.event.MouseEvent e) {
+                if (pts == null || pts.size() < 2) return;
+                int visStart = zoomStart[0];
+                int visEnd = zoomEnd[0] >= 0 ? zoomEnd[0] : pts.size() - 1;
+                visStart = Math.max(0, Math.min(visStart, pts.size() - 1));
+                visEnd = Math.max(visStart + 1, Math.min(visEnd, pts.size() - 1));
+                int n = visEnd - visStart + 1;
+                int idx = (int)((double) e.getX() / canvas.getWidth() * (n - 1));
+                crosshairIdx[0] = Math.max(0, Math.min(idx, n - 1));
+                canvas.repaint();
+            }
+        });
+        canvas.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                crosshairIdx[0] = -1;
+                canvas.repaint();
+            }
+        });
+
+        wrapper.add(canvas);
+
+        // wire timeframe buttons
+        for (int i = 0; i < allFrames.length; i++) {
+            final String frame = allFrames[i];
+            final int fi = i;
+            tfBtns[i].addActionListener(e -> {
+                bankWealthTimeFrame = frame;
+                for (int j = 0; j < tfBtns.length; j++) {
+                    tfBtns[j].setForeground(j == fi ? GOLD : TAB_INACTIVE);
+                    tfBtns[j].setBorder(j == fi
+                            ? BorderFactory.createLineBorder(GOLD)
+                            : BorderFactory.createLineBorder(new Color(58, 53, 48)));
+                }
+                pts.clear();
+                pts.addAll(buildWealthPoints(frame));
+                zoomStart[0] = 0;
+                zoomEnd[0] = -1;
+                crosshairIdx[0] = -1;
+                animating[0] = true;
+                revealW[0] = 0;
+                javax.swing.Timer anim = new javax.swing.Timer(16, null);
+                anim.addActionListener(ev -> {
+                    revealW[0] = Math.min(revealW[0] + 5, 100);
+                    canvas.repaint();
+                    if (revealW[0] >= 100) { animating[0] = false; anim.stop(); }
+                });
+                anim.start();
+            });
+        }
+
+        // start draw animation
+        animating[0] = true;
+        revealW[0] = 0;
+        javax.swing.Timer anim = new javax.swing.Timer(16, null);
+        anim.addActionListener(ev -> {
+            revealW[0] = Math.min(revealW[0] + 5, 100);
+            canvas.repaint();
+            if (revealW[0] >= 100) { animating[0] = false; anim.stop(); }
+        });
+        anim.start();
+
+        return wrapper;
+    }
+
+    private java.util.List<long[]> buildWealthPoints(String timeframe)
+    {
+        java.util.List<long[]> result = new java.util.ArrayList<>();
+        if (bankValueLog.isEmpty()) return result;
+
+        long nowSec = System.currentTimeMillis() / 1000;
+        long windowStart;
+        if (timeframe.equals("1H")) windowStart = nowSec - 3600;
+        else if (timeframe.equals("6H")) windowStart = nowSec - 21600;
+        else if (timeframe.equals("24H")) windowStart = nowSec - 86400;
+        else if (timeframe.equals("7D")) windowStart = nowSec - 7 * 86400L;
+        else if (timeframe.equals("30D")) windowStart = nowSec - 30 * 86400L;
+        else if (timeframe.equals("3M")) windowStart = nowSec - 90 * 86400L;
+        else if (timeframe.equals("1Y")) windowStart = nowSec - 365 * 86400L;
+        else windowStart = 0;
+
+        java.util.List<long[]> filtered = new java.util.ArrayList<>();
+        for (long[] entry : bankValueLog) {
+            if (entry.length < 3) continue;
+            if (entry[0] >= windowStart) filtered.add(entry);
+        }
+        if (filtered.isEmpty()) return result;
+
+        if (timeframe.equals("1H") || timeframe.equals("6H") || timeframe.equals("24H")) {
+            for (long[] e : filtered) result.add(new long[]{e[0], e[2]});
+            return result;
+        }
+
+        long bucketSize = (timeframe.equals("7D") || timeframe.equals("30D"))
+                ? 86400L : 86400L * 7;
+
+        java.util.TreeMap<Long, java.util.List<Long>> buckets = new java.util.TreeMap<>();
+        for (long[] e : filtered) {
+            long bucket = (e[0] / bucketSize) * bucketSize;
+            buckets.computeIfAbsent(bucket, k -> new java.util.ArrayList<>()).add(e[2]);
+        }
+        for (java.util.Map.Entry<Long, java.util.List<Long>> entry : buckets.entrySet()) {
+            long avg = 0;
+            for (long v : entry.getValue()) avg += v;
+            avg /= entry.getValue().size();
+            result.add(new long[]{entry.getKey(), avg});
+        }
+        return result;
     }
 
     private JPanel buildGraphPanel(int itemId, long currentPrice, String initialTimeframe, JLabel[] statsLabels)
