@@ -138,6 +138,7 @@ public class GECompanionPanel extends PluginPanel
     private javax.swing.Timer bankClockTimer = null;
     private boolean bankMetadataExpanded = false;
     private boolean bankChartOpen = false;
+    private boolean bankMetadataWasExpanded = false;
     private JPanel bankCompPanel = null;
     private JSeparator bankMetaBottomSep = null;
     private javax.swing.Timer bankMetaTimer = null;
@@ -2520,7 +2521,8 @@ private String openBankItemName = null;
         if (!hasChartData) chartBtn.setToolTipText(bankHidden ? "Unhide your bank value to view wealth history" : "Open your bank first to view wealth history");
         chartBtn.addActionListener(e -> {
             if (!bankMetadataExpanded) {
-                // Step 1: animate metadata open, then flip to chart when done
+// Step 1: animate metadata open, then flip to chart when done
+                bankMetadataWasExpanded = false;
                 bankMetadataExpanded = true;
                 if (bankMetaViewport != null) {
                     if (bankMetaBottomSep != null) bankMetaBottomSep.setVisible(true);
@@ -2549,6 +2551,7 @@ private String openBankItemName = null;
                 }
             } else {
                 // Metadata already expanded — flip directly
+                bankMetadataWasExpanded = true;
                 bankChartOpen = true;
                 isRefreshing = true;
                 showTab(activeTab);
@@ -2762,6 +2765,33 @@ private String openBankItemName = null;
         backBtn.addActionListener(e -> {
             bankChartOpen = false;
             borderedCardLayout.show(borderedSection, "wealth");
+            if (!bankMetadataWasExpanded) {
+                // metadata was collapsed before chart opened — collapse it again
+                bankMetadataExpanded = false;
+                if (bankMetaViewport != null && bankMetaBottomSep != null) {
+                    bankMetaBottomSep.setVisible(false);
+                    int targetH = bankCompPanel.getPreferredSize().height;
+                    int[] curH = {targetH};
+                    bankMetaViewport.setPreferredSize(new java.awt.Dimension(1, targetH));
+                    bankMetaViewport.setViewPosition(new java.awt.Point(0, 0));
+                    bankMetaViewport.revalidate();
+                    if (bankMetaTimer != null && bankMetaTimer.isRunning()) bankMetaTimer.stop();
+                    bankMetaTimer = new javax.swing.Timer(16, null);
+                    bankMetaTimer.addActionListener(ev -> {
+                        curH[0] = Math.max(curH[0] - 12, 0);
+                        bankMetaViewport.setPreferredSize(new java.awt.Dimension(1, curH[0]));
+                        bankMetaViewport.setViewPosition(new java.awt.Point(0, targetH - curH[0]));
+                        bankMetaViewport.revalidate();
+                        if (curH[0] <= 0) {
+                            bankMetaTimer.stop();
+                            isRefreshing = true;
+                            showTab(activeTab);
+                            isRefreshing = false;
+                        }
+                    });
+                    bankMetaTimer.start();
+                }
+            }
         });
         JLabel chartHeader = new JLabel("WEALTH HISTORY", SwingConstants.CENTER);
         chartHeader.setForeground(TEXT_DIM);
