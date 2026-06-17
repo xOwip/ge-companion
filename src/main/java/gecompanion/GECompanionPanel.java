@@ -5075,7 +5075,7 @@ private String[] buildItemDataFromCache(String name)
                     int arrowW = 7;
                     Integer xPos = (Integer) getClientProperty("dateX");
                     int cx = xPos != null ? xPos : w / 2;
-                    int boxX = Math.max(0, Math.min(w - boxW, cx - boxW / 2));
+                    int boxX = Math.max(2, Math.min(w - boxW - 2, cx - boxW / 2));
                     int boxY = arrowH;
                     cx = Math.max(arrowW, Math.min(w - arrowW, cx));
                     // arrow
@@ -5167,7 +5167,7 @@ private String[] buildItemDataFromCache(String name)
                 java.time.Instant inst = java.time.Instant.ofEpochSecond(cp.timestamp);
                 java.time.LocalDateTime ldt = java.time.LocalDateTime.ofInstant(inst, java.time.ZoneId.systemDefault());
                 String fmt = (activeFrame[0].equals("1D") || activeFrame[0].equals("7D"))
-                        ? String.format("%s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
+                        ? String.format("%s %d %s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getDayOfMonth(), ldt.getMonth().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
                         : String.format("%d %s %d", ldt.getDayOfMonth(),
                         ldt.getMonth().toString().substring(0,3), ldt.getYear());
                 dateCanvas.putClientProperty("dateText", fmt);
@@ -5240,7 +5240,7 @@ private String[] buildItemDataFromCache(String name)
                 java.time.Instant inst = java.time.Instant.ofEpochSecond(cp.timestamp);
                 java.time.LocalDateTime ldt = java.time.LocalDateTime.ofInstant(inst, java.time.ZoneId.systemDefault());
                 String fmt = (activeFrame[0].equals("1D") || activeFrame[0].equals("7D"))
-                        ? String.format("%s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
+                        ? String.format("%s %d %s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getDayOfMonth(), ldt.getMonth().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
                         : String.format("%d %s %d", ldt.getDayOfMonth(),
                         ldt.getMonth().toString().substring(0,3), ldt.getYear());
                 dateCanvas.putClientProperty("dateText", fmt);
@@ -5334,7 +5334,7 @@ private String[] buildItemDataFromCache(String name)
                     java.time.Instant inst = java.time.Instant.ofEpochSecond(cp.timestamp);
                     java.time.LocalDateTime ldt = java.time.LocalDateTime.ofInstant(inst, java.time.ZoneId.systemDefault());
                     String fmt = (activeFrame[0].equals("1D") || activeFrame[0].equals("7D"))
-                            ? String.format("%s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
+                            ? String.format("%s %d %s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getDayOfMonth(), ldt.getMonth().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
                             : String.format("%d %s %d", ldt.getDayOfMonth(), ldt.getMonth().toString().substring(0,3), ldt.getYear());
                     dateCanvas.putClientProperty("dateText", fmt);
                     dateCanvas.putClientProperty("dateX", (int)(nearest * (priceCanvas.getWidth()-1.0) / Math.max(visN-1,1)));
@@ -5364,7 +5364,7 @@ private String[] buildItemDataFromCache(String name)
                         java.time.Instant inst = java.time.Instant.ofEpochSecond(cp.timestamp);
                         java.time.LocalDateTime ldt = java.time.LocalDateTime.ofInstant(inst, java.time.ZoneId.systemDefault());
                         String fmt = (activeFrame[0].equals("1D") || activeFrame[0].equals("7D"))
-                                ? String.format("%s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
+                                ? String.format("%s %d %s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getDayOfMonth(), ldt.getMonth().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
                                 : String.format("%d %s %d", ldt.getDayOfMonth(), ldt.getMonth().toString().substring(0,3), ldt.getYear());
                         dateCanvas.putClientProperty("dateText", fmt);
                         dateCanvas.putClientProperty("dateX", (int)(nearest * (priceCanvas.getWidth()-1.0) / Math.max(visN-1,1)));
@@ -5487,7 +5487,7 @@ private String[] buildItemDataFromCache(String name)
                 java.time.Instant inst = java.time.Instant.ofEpochSecond(cp.timestamp);
                 java.time.LocalDateTime ldt = java.time.LocalDateTime.ofInstant(inst, java.time.ZoneId.systemDefault());
                 String fmt = (activeFrame[0].equals("1D") || activeFrame[0].equals("7D"))
-                        ? String.format("%s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
+                        ? String.format("%s %d %s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getDayOfMonth(), ldt.getMonth().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
                         : String.format("%d %s %d", ldt.getDayOfMonth(),
                         ldt.getMonth().toString().substring(0,3), ldt.getYear());
                 dateCanvas.putClientProperty("dateText", fmt);
