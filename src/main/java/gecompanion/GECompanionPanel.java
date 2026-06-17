@@ -134,7 +134,7 @@ public class GECompanionPanel extends PluginPanel
     private boolean gameUpdatesFetching = false;
     private boolean updateTooltipPinned = false;
     private boolean watchlistEditMode = false;
-    private String bankWealthTimeFrame = "24H";
+    private String bankWealthTimeFrame = "7D";
     private javax.swing.Timer bankClockTimer = null;
     private boolean bankMetadataExpanded = false;
     private boolean bankChartOpen = false;
@@ -2509,7 +2509,9 @@ private String openBankItemName = null;
         syncTimer.start();
         bankClockTimer = syncTimer;
 
-        boolean hasChartData = !bankValueLog.isEmpty() && !bankItems.isEmpty() && !bankHidden;
+        boolean hasChartData = !bankValueLog.isEmpty() && !bankItems.isEmpty() && !bankHidden
+                && buildWealthPoints(bankWealthTimeFrame).size() >= 2
+                && closestEntry != null;
         JButton chartBtn = new JButton("Chart >");
         chartBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
         chartBtn.setFocusPainted(false);
@@ -2518,7 +2520,10 @@ private String openBankItemName = null;
         chartBtn.setForeground(hasChartData ? TAB_INACTIVE : new Color(50, 45, 40));
         chartBtn.setBorder(BorderFactory.createLineBorder(hasChartData ? new Color(58, 53, 48) : new Color(35, 30, 25)));
         chartBtn.setEnabled(hasChartData);
-        if (!hasChartData) chartBtn.setToolTipText(bankHidden ? "Unhide your bank value to view wealth history" : "Open your bank first to view wealth history");
+        if (!hasChartData) chartBtn.setToolTipText(
+                bankHidden ? "Unhide your bank value to view wealth history" :
+                        bankValueLog.isEmpty() || bankItems.isEmpty() ? "Open your bank first to view wealth history" :
+                        "Not enough data yet for " + bankWealthTimeFrame + " timeframe");
         chartBtn.addActionListener(e -> {
             if (!bankMetadataExpanded) {
 // Step 1: animate metadata open, then flip to chart when done
@@ -2644,6 +2649,7 @@ private String openBankItemName = null;
         // Row 9: Comparison data (always present, dim when no data)
         JPanel compPanel = new JPanel(new GridBagLayout());
         compPanel.setBackground(BG_DARK);
+        compPanel.setPreferredSize(new Dimension(218, 52));
         GridBagConstraints cgbc = new GridBagConstraints();
         cgbc.gridx = 0;
         cgbc.fill = GridBagConstraints.HORIZONTAL;
@@ -3943,21 +3949,14 @@ private String[] buildItemDataFromCache(String name)
         wrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         // timeframe buttons — 2 rows
-        String[] frames1 = {"1H", "6H", "24H", "7D", "30D"};
-        String[] frames2 = {"3M", "1Y", "All"};
         JPanel tfRow1 = new JPanel(new GridLayout(1, 5, 3, 0));
         tfRow1.setBackground(new Color(14, 12, 13));
-        tfRow1.setBorder(new EmptyBorder(6, 6, 2, 6));
+        tfRow1.setBorder(new EmptyBorder(6, 6, 4, 6));
         tfRow1.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
         tfRow1.setAlignmentX(Component.LEFT_ALIGNMENT);
-        JPanel tfRow2 = new JPanel(new GridLayout(1, 3, 3, 0));
-        tfRow2.setBackground(new Color(14, 12, 13));
-        tfRow2.setBorder(new EmptyBorder(0, 6, 4, 6));
-        tfRow2.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
-        tfRow2.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JButton[] tfBtns = new JButton[8];
-        String[] allFrames = {"1H", "6H", "24H", "7D", "30D", "3M", "1Y", "All"};
+        JButton[] tfBtns = new JButton[5];
+        String[] allFrames = {"7D", "30D", "3M", "1Y", "All"};
         for (int i = 0; i < allFrames.length; i++)
         {
             final String frame = allFrames[i];
@@ -3972,11 +3971,10 @@ private String[] buildItemDataFromCache(String name)
             b.setForeground(active ? GOLD : hasData ? TAB_INACTIVE : new Color(50, 45, 40));
             b.setBorder(BorderFactory.createLineBorder(active ? GOLD : hasData ? new Color(58, 53, 48) : new Color(35, 30, 25)));
             tfBtns[i] = b;
-            if (i < 5) tfRow1.add(b); else tfRow2.add(b);
+            tfRow1.add(b);
         }
 
         wrapper.add(tfRow1);
-        wrapper.add(tfRow2);
 
         // legend
         JPanel legend = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
