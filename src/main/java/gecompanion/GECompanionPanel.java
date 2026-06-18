@@ -3940,68 +3940,91 @@ private String[] buildItemDataFromCache(String name)
         final boolean[] currentLineHighlighted = {false};
         final JPanel[] canvasHolder = {null};
 
-        JPanel wrapper = new JPanel();
-        wrapper.setLayout(new BoxLayout(wrapper, BoxLayout.Y_AXIS));
-        wrapper.setBackground(new Color(14, 12, 13));
-        wrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
+        // ── outer wrapper (BorderLayout: header NORTH, canvas CENTER, footer SOUTH) ──
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.setBackground(BG_DARK);
 
-        // timeframe buttons — 2 rows
+// ── HEADER ──
+        JPanel header = new JPanel();
+        header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
+        header.setBackground(BG_DARK);
+
+        // Wealth summary
+        long curWealth = bankValueLog.isEmpty() ? 0 : bankValueLog.get(bankValueLog.size() - 1)[2];
+        String curWealthStr = curWealth > 0 ? formatFullPrice(String.valueOf(curWealth)) + " gp" : "No data";
+        JLabel wealthValueLabel = new JLabel(curWealthStr, SwingConstants.CENTER);
+        wealthValueLabel.setForeground(PRICE_GOLD);
+        wealthValueLabel.setFont(new Font("Monospaced", Font.BOLD, 16));
+        wealthValueLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        wealthValueLabel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
+
+        // Change label
+        String changeStr = " ";
+        Color changeColor = TEXT_DIM;
+        java.util.List<long[]> wpts = buildWealthPoints(bankWealthTimeFrame);
+        if (wpts.size() >= 2) {
+            long oldest = wpts.get(0)[1];
+            long newest = curWealth;
+            long gpChange = newest - oldest;
+            double pctChange = oldest > 0 ? ((double) gpChange / oldest) * 100.0 : 0;
+            String gpStr = (gpChange >= 0 ? "+" : "-") + formatPrice(String.valueOf(Math.abs(gpChange))) + " gp";
+            String pctStr = String.format("%+.2f%%", pctChange);
+            changeStr = gpStr + " (" + pctStr + ") · " + bankWealthTimeFrame;
+            changeColor = gpChange >= 0 ? GREEN_UP : RED_DOWN;
+        }
+        JLabel changeLabel = new JLabel(changeStr, SwingConstants.CENTER);
+        changeLabel.setForeground(changeColor);
+        changeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
+        changeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        changeLabel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 18));
+
+        // Timeframe buttons
+        JPanel tfWrapper = new JPanel(new BorderLayout());
+        tfWrapper.setBackground(BG_DARK);
+        tfWrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
         JPanel tfRow1 = new JPanel(new GridLayout(1, 5, 3, 0));
-        tfRow1.setBackground(new Color(14, 12, 13));
-        tfRow1.setBorder(new EmptyBorder(6, 6, 4, 6));
-        tfRow1.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
-        tfRow1.setAlignmentX(Component.LEFT_ALIGNMENT);
+        tfRow1.setBackground(BG_DARK);
+        tfRow1.setBorder(new EmptyBorder(4, 6, 4, 6));
+
+// Get oldest scan timestamp for enabling timeframes
+        long firstScanTs = Long.MAX_VALUE;
+        for (long[] entry : bankValueLog) {
+            if (entry.length >= 3 && entry[0] < firstScanTs) firstScanTs = entry[0];
+        }
+        long nowSec2 = System.currentTimeMillis() / 1000;
+        long dataAgeDays = firstScanTs == Long.MAX_VALUE ? 0 : (nowSec2 - firstScanTs) / 86400L;
 
         JButton[] tfBtns = new JButton[5];
         String[] allFrames = {"7D", "30D", "3M", "1Y", "All"};
+        long[] minDays = {7, 30, 90, 365, 0}; // 0 = always enabled for All
+        String[] tooltips = {"Need 7 days of data", "Need 30 days of data", "Need 90 days of data", "Need 365 days of data", ""};
         for (int i = 0; i < allFrames.length; i++)
         {
             final String frame = allFrames[i];
-            boolean active = frame.equals(bankWealthTimeFrame);
+            boolean enabled = frame.equals("All") || dataAgeDays >= minDays[i];
+            boolean active = frame.equals(bankWealthTimeFrame) && enabled;
             JButton b = new JButton(frame);
             b.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
             b.setFocusPainted(false);
-            b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            b.setBackground(active ? new Color(26, 21, 0) : new Color(14, 12, 13));
-            b.setForeground(active ? GOLD : TAB_INACTIVE);
-            b.setBorder(BorderFactory.createLineBorder(active ? GOLD : new Color(58, 53, 48)));
+            b.setEnabled(enabled);
+            b.setCursor(enabled ? Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) : Cursor.getDefaultCursor());
+            b.setBackground(active ? new Color(26, 21, 0) : new Color(20, 16, 10));
+            b.setForeground(active ? GOLD : enabled ? TAB_INACTIVE : new Color(50, 45, 40));
+            b.setBorder(BorderFactory.createLineBorder(active ? GOLD : enabled ? new Color(58, 53, 48) : new Color(35, 30, 25)));
+            if (!enabled) b.setToolTipText(tooltips[i]);
             tfBtns[i] = b;
             tfRow1.add(b);
         }
 
-        wrapper.add(tfRow1);
-
-        // legend
-        JPanel legend = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-        legend.setBackground(new Color(14, 12, 13));
-        legend.setMaximumSize(new Dimension(Integer.MAX_VALUE, 16));
-        legend.setAlignmentX(Component.LEFT_ALIGNMENT);
-        JLabel wealthLeg = new JLabel("— Wealth");
-        wealthLeg.setForeground(GOLD);
-        wealthLeg.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
-        JLabel curLeg = new JLabel("--- Current");
-        curLeg.setForeground(new Color(155, 89, 182));
-        curLeg.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
-        legend.add(wealthLeg);
-        legend.add(curLeg);
-
-        long curWealth = bankValueLog.isEmpty() ? 0 : bankValueLog.get(bankValueLog.size() - 1)[2];
-        JLabel curWealthLabel = new JLabel(curWealth > 0 ? formatFullPrice(String.valueOf(curWealth)) + " gp" : "");
-        curWealthLabel.setForeground(new Color(0, 0, 0, 0));
-        curWealthLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
-        curWealthLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        curWealthLabel.setBorder(new EmptyBorder(0, 73, 0, 0));
-        curLeg.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) { currentLineHighlighted[0] = true; curWealthLabel.setForeground(new Color(185, 109, 222)); if (canvasHolder[0] != null) canvasHolder[0].repaint(); }
-            public void mouseExited(MouseEvent e)  { currentLineHighlighted[0] = false; curWealthLabel.setForeground(new Color(0, 0, 0, 0)); if (canvasHolder[0] != null) canvasHolder[0].repaint(); }
-        });
-        curWealthLabel.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) { currentLineHighlighted[0] = true; curWealthLabel.setForeground(new Color(185, 109, 222)); if (canvasHolder[0] != null) canvasHolder[0].repaint(); }
-            public void mouseExited(MouseEvent e)  { currentLineHighlighted[0] = false; curWealthLabel.setForeground(new Color(0, 0, 0, 0)); if (canvasHolder[0] != null) canvasHolder[0].repaint(); }
-        });
-        wrapper.add(legend);
-        wrapper.add(curWealthLabel);
-        wrapper.add(Box.createVerticalStrut(2));
+        header.add(Box.createVerticalStrut(4));
+        header.add(wealthValueLabel);
+        header.add(Box.createVerticalStrut(2));
+        header.add(changeLabel);
+        header.add(Box.createVerticalStrut(4));
+        tfWrapper.add(tfRow1, BorderLayout.CENTER);
+        header.add(tfWrapper);
+        header.add(Box.createVerticalStrut(2));
+        wrapper.add(header, BorderLayout.NORTH);
 
         // build data points
         final java.util.List<long[]> pts = buildWealthPoints(bankWealthTimeFrame);
@@ -4149,9 +4172,9 @@ private String[] buildItemDataFromCache(String name)
         };
         canvas.setBackground(new Color(14, 12, 13));
         canvas.setPreferredSize(new Dimension(0, 140));
-        canvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 140));
-        canvas.setAlignmentX(Component.LEFT_ALIGNMENT);
+        canvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 500));
         canvasHolder[0] = canvas;
+        wrapper.add(canvas, BorderLayout.CENTER);
 
         canvas.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
             @Override
@@ -4175,7 +4198,48 @@ private String[] buildItemDataFromCache(String name)
             }
         });
 
-        wrapper.add(canvas);
+        // ── FOOTER ──
+        JPanel footer = new JPanel();
+        footer.setLayout(new BoxLayout(footer, BoxLayout.Y_AXIS));
+        footer.setBackground(BG_DARK);
+
+        JPanel legend = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
+        legend.setBackground(BG_DARK);
+        legend.setAlignmentX(Component.LEFT_ALIGNMENT);
+        legend.setMaximumSize(new Dimension(Integer.MAX_VALUE, 16));
+        JLabel wealthLeg = new JLabel("— Wealth");
+        wealthLeg.setForeground(GOLD);
+        wealthLeg.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
+        JLabel curLeg = new JLabel("--- Current");
+        curLeg.setForeground(new Color(155, 89, 182));
+        curLeg.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
+        JLabel updateLeg = new JLabel("● Update");
+        updateLeg.setForeground(new Color(212, 175, 55));
+        updateLeg.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
+        JLabel patchLeg = new JLabel("● Patch");
+        patchLeg.setForeground(new Color(74, 122, 191));
+        patchLeg.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
+        legend.add(wealthLeg);
+        legend.add(curLeg);
+        legend.add(updateLeg);
+        legend.add(patchLeg);
+
+        JLabel dragHint = new JLabel("Drag to zoom · dbl-click resets", SwingConstants.CENTER);
+        dragHint.setForeground(TEXT_DIM);
+        dragHint.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+        dragHint.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        curLeg.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) { currentLineHighlighted[0] = true; if (canvasHolder[0] != null) canvasHolder[0].repaint(); }
+            public void mouseExited(MouseEvent e)  { currentLineHighlighted[0] = false; if (canvasHolder[0] != null) canvasHolder[0].repaint(); }
+        });
+
+        footer.add(Box.createVerticalStrut(4));
+        footer.add(legend);
+        footer.add(Box.createVerticalStrut(2));
+        footer.add(dragHint);
+        footer.add(Box.createVerticalStrut(4));
+        wrapper.add(footer, BorderLayout.SOUTH);
 
         // wire timeframe buttons
         for (int i = 0; i < allFrames.length; i++) {
@@ -4188,12 +4252,28 @@ private String[] buildItemDataFromCache(String name)
                     tfBtns[j].setBorder(j == fi
                             ? BorderFactory.createLineBorder(GOLD)
                             : BorderFactory.createLineBorder(new Color(58, 53, 48)));
+                    tfBtns[j].setBackground(j == fi ? new Color(26, 21, 0) : new Color(20, 16, 10));
                 }
                 pts.clear();
                 pts.addAll(buildWealthPoints(frame));
                 zoomStart[0] = 0;
                 zoomEnd[0] = -1;
                 crosshairIdx[0] = -1;
+                // Update change label for new timeframe
+                java.util.List<long[]> newWpts = buildWealthPoints(frame);
+                if (newWpts.size() >= 2) {
+                    long oldest2 = newWpts.get(0)[1];
+                    long newest2 = curWealth;
+                    long gpChange2 = newest2 - oldest2;
+                    double pctChange2 = oldest2 > 0 ? ((double) gpChange2 / oldest2) * 100.0 : 0;
+                    String gpStr2 = (gpChange2 >= 0 ? "+" : "-") + formatPrice(String.valueOf(Math.abs(gpChange2))) + " gp";
+                    String pctStr2 = String.format("%+.2f%%", pctChange2);
+                    changeLabel.setText(gpStr2 + " (" + pctStr2 + ") · " + frame);
+                    changeLabel.setForeground(gpChange2 >= 0 ? GREEN_UP : RED_DOWN);
+                } else {
+                    changeLabel.setText(" ");
+                    changeLabel.setForeground(TEXT_DIM);
+                }
                 animating[0] = true;
                 revealW[0] = 0;
                 javax.swing.Timer anim = new javax.swing.Timer(16, null);
@@ -4227,14 +4307,11 @@ private String[] buildItemDataFromCache(String name)
 
         long nowSec = System.currentTimeMillis() / 1000;
         long windowStart;
-        if (timeframe.equals("1H")) windowStart = nowSec - 3600;
-        else if (timeframe.equals("6H")) windowStart = nowSec - 21600;
-        else if (timeframe.equals("24H")) windowStart = nowSec - 86400;
-        else if (timeframe.equals("7D")) windowStart = nowSec - 7 * 86400L;
+        if (timeframe.equals("7D")) windowStart = nowSec - 7 * 86400L;
         else if (timeframe.equals("30D")) windowStart = nowSec - 30 * 86400L;
         else if (timeframe.equals("3M")) windowStart = nowSec - 90 * 86400L;
         else if (timeframe.equals("1Y")) windowStart = nowSec - 365 * 86400L;
-        else windowStart = 0;
+        else windowStart = 0; // All
 
         java.util.List<long[]> filtered = new java.util.ArrayList<>();
         for (long[] entry : bankValueLog) {
@@ -4243,31 +4320,46 @@ private String[] buildItemDataFromCache(String name)
         }
         if (filtered.isEmpty()) return result;
 
-        if (timeframe.equals("1H") || timeframe.equals("6H") || timeframe.equals("24H")) {
+        // 7D — raw points (every scan)
+        if (timeframe.equals("7D")) {
             for (long[] e : filtered) result.add(new long[]{e[0], e[2]});
             return result;
         }
 
-        long bucketSize = (timeframe.equals("7D") || timeframe.equals("30D"))
-                ? 86400L : 86400L * 7;
+        // Determine bucket size and min buckets based on data range and timeframe
+        long dataRangeDays = filtered.isEmpty() ? 0 :
+                (filtered.get(filtered.size()-1)[0] - filtered.get(0)[0]) / 86400L;
+
+        long bucketSize;
+        int minBuckets;
+
+        if (timeframe.equals("All")) {
+            if (dataRangeDays >= 365) {
+                bucketSize = 86400L * 30; // monthly
+                minBuckets = 2;
+            } else if (dataRangeDays >= 30) {
+                bucketSize = 86400L * 7; // weekly
+                minBuckets = 2;
+            } else {
+                bucketSize = 86400L; // daily
+                minBuckets = 2;
+            }
+        } else if (timeframe.equals("30D") || timeframe.equals("3M")) {
+            bucketSize = 86400L; // daily
+            minBuckets = 3;
+        } else { // 1Y
+            bucketSize = 86400L * 7; // weekly
+            minBuckets = 4;
+        }
 
         java.util.TreeMap<Long, java.util.List<Long>> buckets = new java.util.TreeMap<>();
         for (long[] e : filtered) {
             long bucket = (e[0] / bucketSize) * bucketSize;
             buckets.computeIfAbsent(bucket, k -> new java.util.ArrayList<>()).add(e[2]);
         }
-// If All timeframe has fewer than 2 weekly buckets, fall back to daily
-        if (timeframe.equals("All") && buckets.size() < 2) {
-            buckets.clear();
-            for (long[] e : filtered) {
-                long bucket = (e[0] / 86400L) * 86400L;
-                buckets.computeIfAbsent(bucket, k -> new java.util.ArrayList<>()).add(e[2]);
-            }
-        }
-// If still fewer than 2 buckets, return empty (not enough data)
-        if (buckets.size() < 2) {
-            return result;
-        }
+
+        if (buckets.size() < minBuckets) return result;
+
         for (java.util.Map.Entry<Long, java.util.List<Long>> entry : buckets.entrySet()) {
             long avg = 0;
             for (long v : entry.getValue()) avg += v;
