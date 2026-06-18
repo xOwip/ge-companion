@@ -134,7 +134,7 @@ public class GECompanionPanel extends PluginPanel
     private boolean gameUpdatesFetching = false;
     private boolean updateTooltipPinned = false;
     private boolean watchlistEditMode = false;
-    private String bankWealthTimeFrame = "7D";
+    private String bankWealthTimeFrame = "All";
     private javax.swing.Timer bankClockTimer = null;
     private boolean bankMetadataExpanded = false;
     private boolean bankChartOpen = false;
@@ -3979,9 +3979,6 @@ private String[] buildItemDataFromCache(String name)
         changeLabel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 18));
 
         // Timeframe buttons
-        JPanel tfWrapper = new JPanel(new BorderLayout());
-        tfWrapper.setBackground(BG_DARK);
-        tfWrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
         JPanel tfRow1 = new JPanel(new GridLayout(1, 5, 3, 0));
         tfRow1.setBackground(BG_DARK);
         tfRow1.setBorder(new EmptyBorder(4, 6, 4, 6));
@@ -4021,13 +4018,18 @@ private String[] buildItemDataFromCache(String name)
         header.add(Box.createVerticalStrut(2));
         header.add(changeLabel);
         header.add(Box.createVerticalStrut(4));
-        tfWrapper.add(tfRow1, BorderLayout.CENTER);
-        header.add(tfWrapper);
-        header.add(Box.createVerticalStrut(2));
         wrapper.add(header, BorderLayout.NORTH);
 
-        // build data points
+// build data points
         final java.util.List<long[]> pts = buildWealthPoints(bankWealthTimeFrame);
+        // Add current wealth as final data point if not already the last point
+        if (!pts.isEmpty() && curWealth > 0) {
+            long nowTs = System.currentTimeMillis() / 1000;
+            long lastTs = pts.get(pts.size() - 1)[0];
+            if (nowTs - lastTs > 60) {
+                pts.add(new long[]{nowTs, curWealth});
+            }
+        }
 
         // chart canvas
         JPanel canvas = new JPanel() {
@@ -4203,43 +4205,38 @@ private String[] buildItemDataFromCache(String name)
         footer.setLayout(new BoxLayout(footer, BoxLayout.Y_AXIS));
         footer.setBackground(BG_DARK);
 
-        JPanel legend = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
-        legend.setBackground(BG_DARK);
-        legend.setAlignmentX(Component.LEFT_ALIGNMENT);
-        legend.setMaximumSize(new Dimension(Integer.MAX_VALUE, 16));
-        JLabel wealthLeg = new JLabel("— Wealth");
-        wealthLeg.setForeground(GOLD);
-        wealthLeg.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
         JLabel curLeg = new JLabel("--- Current");
         curLeg.setForeground(new Color(155, 89, 182));
         curLeg.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
-        JLabel updateLeg = new JLabel("● Update");
-        updateLeg.setForeground(new Color(212, 175, 55));
-        updateLeg.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
-        JLabel patchLeg = new JLabel("● Patch");
-        patchLeg.setForeground(new Color(74, 122, 191));
-        patchLeg.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
-        legend.add(wealthLeg);
-        legend.add(curLeg);
-        legend.add(updateLeg);
-        legend.add(patchLeg);
+        curLeg.addMouseListener(new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) { currentLineHighlighted[0] = true; if (canvasHolder[0] != null) canvasHolder[0].repaint(); }
+            public void mouseExited(MouseEvent e)  { currentLineHighlighted[0] = false; if (canvasHolder[0] != null) canvasHolder[0].repaint(); }
+        });
+
+        JLabel legendLabel = new JLabel("<html><font color='#d4af37'>— Wealth</font>  <font color='#9b59b6'>--- Current</font></html>", SwingConstants.CENTER);
+        legendLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
+        legendLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        legendLabel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 16));
+        JPanel legend = new JPanel(new BorderLayout());
+        legend.setBackground(BG_DARK);
+        legend.add(legendLabel, BorderLayout.CENTER);
 
         JLabel dragHint = new JLabel("Drag to zoom · dbl-click resets", SwingConstants.CENTER);
         dragHint.setForeground(TEXT_DIM);
         dragHint.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
         dragHint.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        curLeg.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) { currentLineHighlighted[0] = true; if (canvasHolder[0] != null) canvasHolder[0].repaint(); }
-            public void mouseExited(MouseEvent e)  { currentLineHighlighted[0] = false; if (canvasHolder[0] != null) canvasHolder[0].repaint(); }
-        });
+        dragHint.setMaximumSize(new Dimension(Integer.MAX_VALUE, 14));
 
         footer.add(Box.createVerticalStrut(4));
         footer.add(legend);
         footer.add(Box.createVerticalStrut(2));
         footer.add(dragHint);
         footer.add(Box.createVerticalStrut(4));
-        wrapper.add(footer, BorderLayout.SOUTH);
+        JPanel southPanel = new JPanel(new BorderLayout());
+        southPanel.setBackground(BG_DARK);
+        southPanel.add(tfRow1, BorderLayout.NORTH);
+        southPanel.add(footer, BorderLayout.SOUTH);
+        wrapper.add(southPanel, BorderLayout.SOUTH);
 
         // wire timeframe buttons
         for (int i = 0; i < allFrames.length; i++) {
