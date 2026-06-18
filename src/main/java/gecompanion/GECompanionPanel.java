@@ -134,7 +134,7 @@ public class GECompanionPanel extends PluginPanel
     private boolean gameUpdatesFetching = false;
     private boolean updateTooltipPinned = false;
     private boolean watchlistEditMode = false;
-    private String bankWealthTimeFrame = "All";
+    private String bankWealthTimeFrame = "24H";
     private boolean bankMetadataExpanded = false;
     private JPanel bankCompPanel = null;
     private JSeparator bankMetaBottomSep = null;
