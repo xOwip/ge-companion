@@ -2509,9 +2509,7 @@ private String openBankItemName = null;
         syncTimer.start();
         bankClockTimer = syncTimer;
 
-        boolean hasChartData = !bankValueLog.isEmpty() && !bankItems.isEmpty() && !bankHidden
-                && buildWealthPoints(bankWealthTimeFrame).size() >= 2
-                && closestEntry != null;
+        boolean hasChartData = !bankValueLog.isEmpty() && !bankItems.isEmpty() && !bankHidden;
         JButton chartBtn = new JButton("Chart >");
         chartBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
         chartBtn.setFocusPainted(false);
@@ -2522,8 +2520,7 @@ private String openBankItemName = null;
         chartBtn.setEnabled(hasChartData);
         if (!hasChartData) chartBtn.setToolTipText(
                 bankHidden ? "Unhide your bank value to view wealth history" :
-                        bankValueLog.isEmpty() || bankItems.isEmpty() ? "Open your bank first to view wealth history" :
-                        "Not enough data yet for " + bankWealthTimeFrame + " timeframe");
+                        "Open your bank first to view wealth history");
         chartBtn.addActionListener(e -> {
             if (!bankMetadataExpanded) {
 // Step 1: animate metadata open, then flip to chart when done
@@ -3960,16 +3957,14 @@ private String[] buildItemDataFromCache(String name)
         for (int i = 0; i < allFrames.length; i++)
         {
             final String frame = allFrames[i];
-            boolean hasData = buildWealthPoints(frame).size() >= 2;
             boolean active = frame.equals(bankWealthTimeFrame);
             JButton b = new JButton(frame);
             b.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
             b.setFocusPainted(false);
-            b.setEnabled(hasData);
-            b.setCursor(hasData ? Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) : Cursor.getDefaultCursor());
+            b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             b.setBackground(active ? new Color(26, 21, 0) : new Color(14, 12, 13));
-            b.setForeground(active ? GOLD : hasData ? TAB_INACTIVE : new Color(50, 45, 40));
-            b.setBorder(BorderFactory.createLineBorder(active ? GOLD : hasData ? new Color(58, 53, 48) : new Color(35, 30, 25)));
+            b.setForeground(active ? GOLD : TAB_INACTIVE);
+            b.setBorder(BorderFactory.createLineBorder(active ? GOLD : new Color(58, 53, 48)));
             tfBtns[i] = b;
             tfRow1.add(b);
         }
@@ -4260,6 +4255,18 @@ private String[] buildItemDataFromCache(String name)
         for (long[] e : filtered) {
             long bucket = (e[0] / bucketSize) * bucketSize;
             buckets.computeIfAbsent(bucket, k -> new java.util.ArrayList<>()).add(e[2]);
+        }
+// If All timeframe has fewer than 2 weekly buckets, fall back to daily
+        if (timeframe.equals("All") && buckets.size() < 2) {
+            buckets.clear();
+            for (long[] e : filtered) {
+                long bucket = (e[0] / 86400L) * 86400L;
+                buckets.computeIfAbsent(bucket, k -> new java.util.ArrayList<>()).add(e[2]);
+            }
+        }
+// If still fewer than 2 buckets, return empty (not enough data)
+        if (buckets.size() < 2) {
+            return result;
         }
         for (java.util.Map.Entry<Long, java.util.List<Long>> entry : buckets.entrySet()) {
             long avg = 0;
