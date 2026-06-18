@@ -135,10 +135,7 @@ public class GECompanionPanel extends PluginPanel
     private boolean updateTooltipPinned = false;
     private boolean watchlistEditMode = false;
     private String bankWealthTimeFrame = "All";
-    private javax.swing.Timer bankClockTimer = null;
     private boolean bankMetadataExpanded = false;
-    private boolean bankChartOpen = false;
-    private boolean bankMetadataWasExpanded = false;
     private JPanel bankCompPanel = null;
     private JSeparator bankMetaBottomSep = null;
     private javax.swing.Timer bankMetaTimer = null;
@@ -2229,16 +2226,12 @@ private String openBankItemName = null;
         hero.setBorder(new EmptyBorder(6, 6, 4, 6));
 
 // OSRS-style bordered wealth section
-        java.awt.CardLayout borderedCardLayout = new java.awt.CardLayout();
-        JPanel borderedSection = new JPanel(borderedCardLayout);
+        JPanel borderedSection = new JPanel(new GridBagLayout());
         borderedSection.setBackground(BG_DARK);
         borderedSection.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(58, 53, 48), 1),
                 BorderFactory.createLineBorder(new Color(15, 13, 12), 3)
         ));
-
-        JPanel wealthCard = new JPanel(new GridBagLayout());
-        wealthCard.setBackground(BG_DARK);
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -2269,7 +2262,7 @@ private String openBankItemName = null;
             wealthTfRow1.add(btn);
         }
         gbc.gridy = 0;
-        wealthCard.add(wealthTfRow1, gbc);
+        borderedSection.add(wealthTfRow1, gbc);
 
         // Row 2: Timeframe buttons row 2
         JPanel wealthTfRow2 = new JPanel(new GridLayout(1, 3, 3, 0));
@@ -2294,7 +2287,7 @@ private String openBankItemName = null;
             wealthTfRow2.add(btn);
         }
         gbc.gridy = 1;
-        wealthCard.add(wealthTfRow2, gbc);
+        borderedSection.add(wealthTfRow2, gbc);
 
         // Row 3: Separator
         JSeparator wealthSep = new JSeparator();
@@ -2302,7 +2295,7 @@ private String openBankItemName = null;
         wealthSep.setBackground(new Color(65, 55, 38));
         gbc.gridy = 2;
         gbc.insets = new java.awt.Insets(0, 6, 0, 6);
-        wealthCard.add(wealthSep, gbc);
+        borderedSection.add(wealthSep, gbc);
         gbc.insets = new java.awt.Insets(0, 0, 0, 0);
 
         // Row 4: "TOTAL BANK VALUE" label
@@ -2311,7 +2304,7 @@ private String openBankItemName = null;
         heroLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
         gbc.gridy = 3;
         gbc.insets = new java.awt.Insets(8, 6, 2, 6);
-        wealthCard.add(heroLabel, gbc);
+        borderedSection.add(heroLabel, gbc);
         gbc.insets = new java.awt.Insets(0, 0, 0, 0);
 
         // Calculate last updated time
@@ -2361,7 +2354,7 @@ private String openBankItemName = null;
         });
         gbc.gridy = 4;
         gbc.insets = new java.awt.Insets(0, 6, 2, 6);
-        wealthCard.add(heroValue, gbc);
+        borderedSection.add(heroValue, gbc);
         gbc.insets = new java.awt.Insets(0, 0, 0, 0);
 
         // Calculate change data
@@ -2454,7 +2447,7 @@ private String openBankItemName = null;
             gbc.ipady = 0;
             bankChangeLabel.setPreferredSize(new Dimension(0, 0));
         }
-        wealthCard.add(bankChangeLabel, gbc);
+        borderedSection.add(bankChangeLabel, gbc);
         gbc.ipady = 0;
         bankChangeLabel.setPreferredSize(null);
 
@@ -2476,95 +2469,7 @@ private String openBankItemName = null;
         contextLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
         gbc.gridy = 6;
         gbc.insets = new java.awt.Insets(0, 6, 4, 6);
-        wealthCard.add(contextLabel, gbc);
-
-        // Row 8: Bottom button row — [🕐 time] [📈 Chart ▶]
-        JPanel chartBtnRow = new JPanel(new BorderLayout(4, 0));
-        chartBtnRow.setBackground(BG_DARK);
-
-// Live clock label — shows current time, updates every minute
-        java.text.SimpleDateFormat clockFmt = new java.text.SimpleDateFormat("h:mm a");
-        JLabel lastScanLabel = new JLabel("🕐 " + clockFmt.format(new java.util.Date()));
-        lastScanLabel.setForeground(TEXT_DIM);
-        lastScanLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
-        lastScanLabel.setPreferredSize(new Dimension(80, 22));
-        java.text.SimpleDateFormat tooltipDateFmt = new java.text.SimpleDateFormat("MMM d, yyyy");
-        lastScanLabel.setToolTipText(tooltipDateFmt.format(new java.util.Date()));
-
-// Stop any existing clock timer before starting a new one
-        if (bankClockTimer != null) bankClockTimer.stop();
-        // Sync to exact minute boundary so clock updates match system clock
-        long nowMs = System.currentTimeMillis();
-        long msUntilNextMinute = 60000 - (nowMs % 60000);
-        javax.swing.Timer[] clockTimerRef = {null};
-        javax.swing.Timer syncTimer = new javax.swing.Timer((int) msUntilNextMinute, e -> {
-            lastScanLabel.setText("🕐 " + clockFmt.format(new java.util.Date()));
-            if (bankClockTimer != null) bankClockTimer.stop();
-            bankClockTimer = new javax.swing.Timer(60000, ev -> {
-                lastScanLabel.setText("🕐 " + clockFmt.format(new java.util.Date()));
-            });
-            bankClockTimer.start();
-        });
-        syncTimer.setRepeats(false);
-        syncTimer.start();
-        bankClockTimer = syncTimer;
-
-        boolean hasChartData = !bankValueLog.isEmpty() && !bankItems.isEmpty() && !bankHidden;
-        JButton chartBtn = new JButton("Chart >");
-        chartBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
-        chartBtn.setFocusPainted(false);
-        chartBtn.setCursor(hasChartData ? Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) : Cursor.getDefaultCursor());
-        chartBtn.setBackground(new Color(14, 12, 13));
-        chartBtn.setForeground(hasChartData ? TAB_INACTIVE : new Color(50, 45, 40));
-        chartBtn.setBorder(BorderFactory.createLineBorder(hasChartData ? new Color(58, 53, 48) : new Color(35, 30, 25)));
-        chartBtn.setEnabled(hasChartData);
-        if (!hasChartData) chartBtn.setToolTipText(
-                bankHidden ? "Unhide your bank value to view wealth history" :
-                        "Open your bank first to view wealth history");
-        chartBtn.addActionListener(e -> {
-            if (!bankMetadataExpanded) {
-// Step 1: animate metadata open, then flip to chart when done
-                bankMetadataWasExpanded = false;
-                bankMetadataExpanded = true;
-                if (bankMetaViewport != null) {
-                    if (bankMetaBottomSep != null) bankMetaBottomSep.setVisible(true);
-                    int targetH = bankCompPanel.getPreferredSize().height;
-                    int[] curH = {0};
-                    bankMetaViewport.setPreferredSize(new java.awt.Dimension(1, 0));
-                    bankMetaViewport.setViewPosition(new java.awt.Point(0, targetH));
-                    bankMetaViewport.revalidate();
-                    if (bankMetaTimer != null && bankMetaTimer.isRunning()) bankMetaTimer.stop();
-                    bankMetaTimer = new javax.swing.Timer(16, null);
-                    bankMetaTimer.addActionListener(ev -> {
-                        curH[0] = Math.min(curH[0] + 12, targetH);
-                        bankMetaViewport.setPreferredSize(new java.awt.Dimension(1, curH[0]));
-                        bankMetaViewport.setViewPosition(new java.awt.Point(0, targetH - curH[0]));
-                        bankMetaViewport.revalidate();
-                        if (curH[0] >= targetH) {
-                            bankMetaTimer.stop();
-                            // Step 2: flip to chart card
-                            bankChartOpen = true;
-                            isRefreshing = true;
-                            showTab(activeTab);
-                            isRefreshing = false;
-                        }
-                    });
-                    bankMetaTimer.start();
-                }
-            } else {
-                // Metadata already expanded — flip directly
-                bankMetadataWasExpanded = true;
-                bankChartOpen = true;
-                isRefreshing = true;
-                showTab(activeTab);
-                isRefreshing = false;
-            }
-        });
-
-        chartBtn.setPreferredSize(new Dimension(100, 22));
-        chartBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
-        chartBtnRow.add(lastScanLabel, BorderLayout.WEST);
-        chartBtnRow.add(chartBtn, BorderLayout.CENTER);
+        borderedSection.add(contextLabel, gbc);
 
 // Row 8: Clickable toggle separator
         JPanel toggleSepRow = new JPanel(new BorderLayout());
@@ -2641,7 +2546,7 @@ private String openBankItemName = null;
         gbc.weighty = 0.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new java.awt.Insets(4, 6, 4, 6);
-        wealthCard.add(toggleSepRow, gbc);
+        borderedSection.add(toggleSepRow, gbc);
 
         // Row 9: Comparison data (always present, dim when no data)
         JPanel compPanel = new JPanel(new GridBagLayout());
@@ -2718,7 +2623,7 @@ private String openBankItemName = null;
             metaVp.setPreferredSize(new java.awt.Dimension(1, 0));
             metaVp.setViewPosition(new java.awt.Point(0, compH));
         }
-        wealthCard.add(metaVp, gbc);
+        borderedSection.add(metaVp, gbc);
         bankCompPanel = compPanel;
         bankMetaViewport = metaVp;
 
@@ -2729,85 +2634,9 @@ private String openBankItemName = null;
         gbc.weighty = 0.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.insets = new java.awt.Insets(4, 6, 4, 6);
-        wealthCard.add(metaBottomSep, gbc);
+        borderedSection.add(metaBottomSep, gbc);
         metaBottomSep.setVisible(bankMetadataExpanded);
         bankMetaBottomSep = metaBottomSep;
-
-        gbc.gridy = 11;
-        gbc.weighty = 0.0;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new java.awt.Insets(0, 6, 6, 6);
-        wealthCard.add(chartBtnRow, gbc);
-
-// Build chart card (placeholder for now)
-        JPanel chartCard = new JPanel(new BorderLayout())
-        {
-            @Override
-            public Dimension getPreferredSize()
-            {
-                return wealthCard.getPreferredSize();
-            }
-            @Override
-            public Dimension getMinimumSize()
-            {
-                return wealthCard.getMinimumSize();
-            }
-        };
-        chartCard.setBackground(BG_DARK);
-        JPanel chartTopRow = new JPanel(new BorderLayout());
-        chartTopRow.setBackground(BG_DARK);
-        chartTopRow.setBorder(new EmptyBorder(4, 6, 2, 6));
-        JButton backBtn = new JButton("← Back");
-        backBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
-        backBtn.setFocusPainted(false);
-        backBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        backBtn.setForeground(TAB_INACTIVE);
-        backBtn.setBorderPainted(false);
-        backBtn.setContentAreaFilled(false);
-        backBtn.setMargin(new java.awt.Insets(0, 0, 0, 0));
-        backBtn.addActionListener(e -> {
-            bankChartOpen = false;
-            borderedCardLayout.show(borderedSection, "wealth");
-            if (!bankMetadataWasExpanded) {
-                // metadata was collapsed before chart opened — collapse it again
-                bankMetadataExpanded = false;
-                if (bankMetaViewport != null && bankMetaBottomSep != null) {
-                    bankMetaBottomSep.setVisible(false);
-                    int targetH = bankCompPanel.getPreferredSize().height;
-                    int[] curH = {targetH};
-                    bankMetaViewport.setPreferredSize(new java.awt.Dimension(1, targetH));
-                    bankMetaViewport.setViewPosition(new java.awt.Point(0, 0));
-                    bankMetaViewport.revalidate();
-                    if (bankMetaTimer != null && bankMetaTimer.isRunning()) bankMetaTimer.stop();
-                    bankMetaTimer = new javax.swing.Timer(16, null);
-                    bankMetaTimer.addActionListener(ev -> {
-                        curH[0] = Math.max(curH[0] - 12, 0);
-                        bankMetaViewport.setPreferredSize(new java.awt.Dimension(1, curH[0]));
-                        bankMetaViewport.setViewPosition(new java.awt.Point(0, targetH - curH[0]));
-                        bankMetaViewport.revalidate();
-                        if (curH[0] <= 0) {
-                            bankMetaTimer.stop();
-                            isRefreshing = true;
-                            showTab(activeTab);
-                            isRefreshing = false;
-                        }
-                    });
-                    bankMetaTimer.start();
-                }
-            }
-        });
-        JLabel chartHeader = new JLabel("WEALTH HISTORY", SwingConstants.CENTER);
-        chartHeader.setForeground(TEXT_DIM);
-        chartHeader.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
-        chartTopRow.add(backBtn, BorderLayout.WEST);
-        chartTopRow.add(chartHeader, BorderLayout.CENTER);
-        chartCard.add(chartTopRow, BorderLayout.NORTH);
-        chartCard.add(buildWealthChartPanel(), BorderLayout.CENTER);
-
-        borderedSection.add(wealthCard, "wealth");
-        borderedSection.add(chartCard, "chart");
-        if (bankChartOpen) borderedCardLayout.show(borderedSection, "chart");
-        else borderedCardLayout.show(borderedSection, "wealth");
 
         hero.add(borderedSection);
         hero.add(Box.createVerticalStrut(4));
@@ -3928,442 +3757,6 @@ private String[] buildItemDataFromCache(String name)
         headerRow.add(namePrice, BorderLayout.CENTER);
 
         return headerRow;
-    }
-
-    private JPanel buildWealthChartPanel()
-    {
-        final boolean[] animating = {false};
-        final int[] revealW = {0};
-        final int[] zoomStart = {0};
-        final int[] zoomEnd = {-1};
-        final int[] crosshairIdx = {-1};
-        final boolean[] currentLineHighlighted = {false};
-        final JPanel[] canvasHolder = {null};
-
-        // ── outer wrapper (BorderLayout: header NORTH, canvas CENTER, footer SOUTH) ──
-        JPanel wrapper = new JPanel(new BorderLayout());
-        wrapper.setBackground(BG_DARK);
-
-// ── HEADER ──
-        JPanel header = new JPanel();
-        header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
-        header.setBackground(BG_DARK);
-
-        // Wealth summary
-        long curWealth = bankValueLog.isEmpty() ? 0 : bankValueLog.get(bankValueLog.size() - 1)[2];
-        String curWealthStr = curWealth > 0 ? formatFullPrice(String.valueOf(curWealth)) + " gp" : "No data";
-        JLabel wealthValueLabel = new JLabel(curWealthStr, SwingConstants.CENTER);
-        wealthValueLabel.setForeground(PRICE_GOLD);
-        wealthValueLabel.setFont(new Font("Monospaced", Font.BOLD, 16));
-        wealthValueLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        wealthValueLabel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
-
-        // Change label
-        String changeStr = " ";
-        Color changeColor = TEXT_DIM;
-        java.util.List<long[]> wpts = buildWealthPoints(bankWealthTimeFrame);
-        if (wpts.size() >= 2) {
-            long oldest = wpts.get(0)[1];
-            long newest = curWealth;
-            long gpChange = newest - oldest;
-            double pctChange = oldest > 0 ? ((double) gpChange / oldest) * 100.0 : 0;
-            String gpStr = (gpChange >= 0 ? "+" : "-") + formatPrice(String.valueOf(Math.abs(gpChange))) + " gp";
-            String pctStr = String.format("%+.2f%%", pctChange);
-            changeStr = gpStr + " (" + pctStr + ") · " + bankWealthTimeFrame;
-            changeColor = gpChange >= 0 ? GREEN_UP : RED_DOWN;
-        }
-        JLabel changeLabel = new JLabel(changeStr, SwingConstants.CENTER);
-        changeLabel.setForeground(changeColor);
-        changeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
-        changeLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        changeLabel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 18));
-
-        // Timeframe buttons
-        JPanel tfRow1 = new JPanel(new GridLayout(1, 5, 3, 0));
-        tfRow1.setBackground(BG_DARK);
-        tfRow1.setBorder(new EmptyBorder(4, 6, 4, 6));
-
-// Get oldest scan timestamp for enabling timeframes
-        long firstScanTs = Long.MAX_VALUE;
-        for (long[] entry : bankValueLog) {
-            if (entry.length >= 3 && entry[0] < firstScanTs) firstScanTs = entry[0];
-        }
-        long nowSec2 = System.currentTimeMillis() / 1000;
-        long dataAgeDays = firstScanTs == Long.MAX_VALUE ? 0 : (nowSec2 - firstScanTs) / 86400L;
-
-        JButton[] tfBtns = new JButton[5];
-        String[] allFrames = {"7D", "30D", "3M", "1Y", "All"};
-        long[] minDays = {7, 30, 90, 364, 0}; // 0 = always enabled for All
-        String[] tooltips = {"Need 7 days of data", "Need 30 days of data", "Need 90 days of data", "Need 365 days of data", ""};
-        for (int i = 0; i < allFrames.length; i++)
-        {
-            final String frame = allFrames[i];
-            boolean enabled = frame.equals("All") || dataAgeDays >= minDays[i];
-            boolean active = frame.equals(bankWealthTimeFrame) && enabled;
-            JButton b = new JButton(frame);
-            b.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
-            b.setFocusPainted(false);
-            b.setEnabled(enabled);
-            b.setCursor(enabled ? Cursor.getPredefinedCursor(Cursor.HAND_CURSOR) : Cursor.getDefaultCursor());
-            b.setBackground(active ? new Color(26, 21, 0) : new Color(20, 16, 10));
-            b.setForeground(active ? GOLD : enabled ? TAB_INACTIVE : new Color(50, 45, 40));
-            b.setBorder(BorderFactory.createLineBorder(active ? GOLD : enabled ? new Color(58, 53, 48) : new Color(35, 30, 25)));
-            if (!enabled) b.setToolTipText(tooltips[i]);
-            tfBtns[i] = b;
-            tfRow1.add(b);
-        }
-
-        header.add(Box.createVerticalStrut(4));
-        header.add(wealthValueLabel);
-        header.add(Box.createVerticalStrut(2));
-        header.add(changeLabel);
-        header.add(Box.createVerticalStrut(4));
-        wrapper.add(header, BorderLayout.NORTH);
-
-// build data points
-        final java.util.List<long[]> pts = buildWealthPoints(bankWealthTimeFrame);
-        // Add current wealth as final data point if not already the last point
-        if (!pts.isEmpty() && curWealth > 0) {
-            long nowTs = System.currentTimeMillis() / 1000;
-            long lastTs = pts.get(pts.size() - 1)[0];
-            if (nowTs - lastTs > 60) {
-                pts.add(new long[]{nowTs, curWealth});
-            }
-        }
-
-        // chart canvas
-        JPanel canvas = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                int w = getWidth(), h = getHeight();
-
-                if (animating[0] && revealW[0] < 100) {
-                    g2.setClip(0, 0, (int)(w * revealW[0] / 100.0), h);
-                }
-
-                g2.setColor(new Color(14, 12, 13));
-                g2.fillRect(0, 0, w, h);
-
-                if (pts == null || pts.size() < 2) {
-                    g2.setColor(new Color(110, 100, 90));
-                    g2.setFont(new Font("Monospaced", Font.PLAIN, 10));
-                    g2.drawString("Not enough data yet", w / 2 - 55, h / 2);
-                    g2.dispose();
-                    return;
-                }
-
-                int visStart = zoomStart[0];
-                int visEnd = zoomEnd[0] >= 0 ? zoomEnd[0] : pts.size() - 1;
-                visStart = Math.max(0, Math.min(visStart, pts.size() - 1));
-                visEnd = Math.max(visStart + 1, Math.min(visEnd, pts.size() - 1));
-                java.util.List<long[]> visPts = pts.subList(visStart, visEnd + 1);
-
-                long minV = Long.MAX_VALUE, maxV = Long.MIN_VALUE;
-                for (long[] p : visPts) {
-                    if (p[1] > 0) { minV = Math.min(minV, p[1]); maxV = Math.max(maxV, p[1]); }
-                }
-                long currentWealth = bankValueLog.isEmpty() ? 0 : bankValueLog.get(bankValueLog.size() - 1)[2];
-                if (currentWealth > 0) { minV = Math.min(minV, currentWealth); maxV = Math.max(maxV, currentWealth); }
-                if (minV == Long.MAX_VALUE) { g2.dispose(); return; }
-                long pad = Math.max((maxV - minV) / 4, 1);
-                minV -= pad; maxV += pad;
-                final long fMin = minV, fMax = maxV;
-
-                g2.setColor(new Color(40, 36, 34));
-                for (float pct : new float[]{0.25f, 0.5f, 0.75f}) {
-                    int y = (int)(h * pct);
-                    g2.drawLine(0, y, w, y);
-                }
-
-                int n = visPts.size();
-
-                // area fill
-                g2.setColor(new Color(212, 175, 55, 30));
-                int[] fillX = new int[n + 2];
-                int[] fillY = new int[n + 2];
-                for (int i = 0; i < n; i++) {
-                    fillX[i] = (int)(i * (w - 1.0) / (n - 1));
-                    fillY[i] = h - (int)((visPts.get(i)[1] - fMin) * h / Math.max(fMax - fMin, 1));
-                }
-                fillX[n] = w - 1; fillY[n] = h;
-                fillX[n + 1] = 0; fillY[n + 1] = h;
-                g2.fillPolygon(fillX, fillY, n + 2);
-
-                // wealth line
-                g2.setStroke(new java.awt.BasicStroke(1.4f));
-                g2.setColor(GOLD);
-                int[] wx = new int[n], wy = new int[n];
-                for (int i = 0; i < n; i++) {
-                    wx[i] = (int)(i * (w - 1.0) / (n - 1));
-                    wy[i] = h - (int)((visPts.get(i)[1] - fMin) * h / Math.max(fMax - fMin, 1));
-                }
-                for (int i = 0; i < n - 1; i++)
-                    g2.drawLine(wx[i], wy[i], wx[i + 1], wy[i + 1]);
-
-// current value dashed purple line
-                if (currentWealth > 0) {
-                    int curY = h - (int)((currentWealth - fMin) * h / Math.max(fMax - fMin, 1));
-                    boolean highlighted = currentLineHighlighted[0];
-                    g2.setColor(highlighted ? new Color(185, 109, 222) : new Color(155, 89, 182));
-                    if (highlighted) {
-                        g2.setStroke(new java.awt.BasicStroke(1.8f));
-                        g2.drawLine(0, curY, w, curY);
-                        g2.setStroke(new java.awt.BasicStroke(1.4f));
-                    } else {
-                        g2.setStroke(new java.awt.BasicStroke(1f,
-                                java.awt.BasicStroke.CAP_BUTT,
-                                java.awt.BasicStroke.JOIN_MITER,
-                                10f, new float[]{4f, 4f}, 0f));
-                        g2.drawLine(0, curY, w, curY);
-                        g2.setStroke(new java.awt.BasicStroke(1.4f));
-                    }
-                }
-
-                // game update markers
-                if (gameUpdates != null && visPts.size() >= 2) {
-                    long tMin = visPts.get(0)[0];
-                    long tMax = visPts.get(visPts.size() - 1)[0];
-                    int dotY = 8;
-                    for (int i = 0; i < gameUpdates.size(); i++) {
-                        UpdateMarker u = gameUpdates.get(i);
-                        if (config.gameUpdateMode() == GameUpdateMode.MAJOR_ONLY &&
-                                !u.category.contains("game")) continue;
-                        if (u.timestamp < tMin || u.timestamp > tMax) continue;
-                        int x = (int)((double)(u.timestamp - tMin) / (tMax - tMin) * (w - 1));
-                        g2.setColor(getUpdateColor(u.category));
-                        g2.fillOval(x - 3, dotY - 3, 6, 6);
-                    }
-                }
-
-                // crosshair
-                if (crosshairIdx[0] >= 0 && crosshairIdx[0] < visPts.size()) {
-                    int ci = crosshairIdx[0];
-                    int cx2 = wx[ci], cy2 = wy[ci];
-                    g2.setColor(new Color(180, 160, 80, 120));
-                    g2.setStroke(new java.awt.BasicStroke(1f));
-                    g2.drawLine(cx2, 0, cx2, h);
-                    g2.drawLine(0, cy2, w, cy2);
-
-                    long val = visPts.get(ci)[1];
-                    long ts = visPts.get(ci)[0];
-                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("MMM d, h:mm a");
-                    String dateStr = sdf.format(new java.util.Date(ts * 1000));
-                    String valStr = formatFullPrice(String.valueOf(val)) + " gp";
-                    g2.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
-                    java.awt.FontMetrics fm2 = g2.getFontMetrics();
-                    int pad2 = 5;
-                    int boxW = Math.max(fm2.stringWidth(dateStr), fm2.stringWidth(valStr)) + pad2 * 2;
-                    int boxH = fm2.getHeight() * 2 + pad2;
-                    int bx2 = Math.min(cx2 + 8, w - boxW - 2);
-                    int by2 = Math.max(2, cy2 - boxH / 2);
-                    g2.setColor(new Color(30, 27, 25, 220));
-                    g2.fillRoundRect(bx2, by2, boxW, boxH, 4, 4);
-                    g2.setColor(new Color(65, 55, 38));
-                    g2.drawRoundRect(bx2, by2, boxW, boxH, 4, 4);
-                    g2.setColor(GOLD);
-                    g2.drawString(valStr, bx2 + pad2, by2 + fm2.getAscent() + 1);
-                    g2.setColor(TEXT_DIM);
-                    g2.drawString(dateStr, bx2 + pad2, by2 + fm2.getAscent() + fm2.getHeight() + 1);
-                }
-
-                g2.dispose();
-            }
-        };
-        canvas.setBackground(new Color(14, 12, 13));
-        canvas.setPreferredSize(new Dimension(0, 140));
-        canvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 500));
-        canvasHolder[0] = canvas;
-        wrapper.add(canvas, BorderLayout.CENTER);
-
-        canvas.addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
-            @Override
-            public void mouseMoved(java.awt.event.MouseEvent e) {
-                if (pts == null || pts.size() < 2) return;
-                int visStart = zoomStart[0];
-                int visEnd = zoomEnd[0] >= 0 ? zoomEnd[0] : pts.size() - 1;
-                visStart = Math.max(0, Math.min(visStart, pts.size() - 1));
-                visEnd = Math.max(visStart + 1, Math.min(visEnd, pts.size() - 1));
-                int n = visEnd - visStart + 1;
-                int idx = (int)((double) e.getX() / canvas.getWidth() * (n - 1));
-                crosshairIdx[0] = Math.max(0, Math.min(idx, n - 1));
-                canvas.repaint();
-            }
-        });
-        canvas.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseExited(java.awt.event.MouseEvent e) {
-                crosshairIdx[0] = -1;
-                canvas.repaint();
-            }
-        });
-
-        // ── FOOTER ──
-        JPanel footer = new JPanel();
-        footer.setLayout(new BoxLayout(footer, BoxLayout.Y_AXIS));
-        footer.setBackground(BG_DARK);
-
-        JLabel curLeg = new JLabel("--- Current");
-        curLeg.setForeground(new Color(155, 89, 182));
-        curLeg.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
-        curLeg.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) { currentLineHighlighted[0] = true; if (canvasHolder[0] != null) canvasHolder[0].repaint(); }
-            public void mouseExited(MouseEvent e)  { currentLineHighlighted[0] = false; if (canvasHolder[0] != null) canvasHolder[0].repaint(); }
-        });
-
-        JLabel legendLabel = new JLabel("<html><font color='#d4af37'>— Wealth</font>  <font color='#9b59b6'>--- Current</font></html>", SwingConstants.CENTER);
-        legendLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
-        legendLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        legendLabel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 16));
-        JPanel legend = new JPanel(new BorderLayout());
-        legend.setBackground(BG_DARK);
-        legend.add(legendLabel, BorderLayout.CENTER);
-
-        JLabel dragHint = new JLabel("Drag to zoom · dbl-click resets", SwingConstants.CENTER);
-        dragHint.setForeground(TEXT_DIM);
-        dragHint.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
-        dragHint.setAlignmentX(Component.CENTER_ALIGNMENT);
-        dragHint.setMaximumSize(new Dimension(Integer.MAX_VALUE, 14));
-
-        footer.add(Box.createVerticalStrut(4));
-        footer.add(legend);
-        footer.add(Box.createVerticalStrut(2));
-        footer.add(dragHint);
-        footer.add(Box.createVerticalStrut(4));
-        JPanel southPanel = new JPanel(new BorderLayout());
-        southPanel.setBackground(BG_DARK);
-        southPanel.add(tfRow1, BorderLayout.NORTH);
-        southPanel.add(footer, BorderLayout.SOUTH);
-        wrapper.add(southPanel, BorderLayout.SOUTH);
-
-        // wire timeframe buttons
-        for (int i = 0; i < allFrames.length; i++) {
-            final String frame = allFrames[i];
-            final int fi = i;
-            tfBtns[i].addActionListener(e -> {
-                bankWealthTimeFrame = frame;
-                for (int j = 0; j < tfBtns.length; j++) {
-                    tfBtns[j].setForeground(j == fi ? GOLD : TAB_INACTIVE);
-                    tfBtns[j].setBorder(j == fi
-                            ? BorderFactory.createLineBorder(GOLD)
-                            : BorderFactory.createLineBorder(new Color(58, 53, 48)));
-                    tfBtns[j].setBackground(j == fi ? new Color(26, 21, 0) : new Color(20, 16, 10));
-                }
-                pts.clear();
-                pts.addAll(buildWealthPoints(frame));
-                zoomStart[0] = 0;
-                zoomEnd[0] = -1;
-                crosshairIdx[0] = -1;
-                // Update change label for new timeframe
-                java.util.List<long[]> newWpts = buildWealthPoints(frame);
-                if (newWpts.size() >= 2) {
-                    long oldest2 = newWpts.get(0)[1];
-                    long newest2 = curWealth;
-                    long gpChange2 = newest2 - oldest2;
-                    double pctChange2 = oldest2 > 0 ? ((double) gpChange2 / oldest2) * 100.0 : 0;
-                    String gpStr2 = (gpChange2 >= 0 ? "+" : "-") + formatPrice(String.valueOf(Math.abs(gpChange2))) + " gp";
-                    String pctStr2 = String.format("%+.2f%%", pctChange2);
-                    changeLabel.setText(gpStr2 + " (" + pctStr2 + ") · " + frame);
-                    changeLabel.setForeground(gpChange2 >= 0 ? GREEN_UP : RED_DOWN);
-                } else {
-                    changeLabel.setText(" ");
-                    changeLabel.setForeground(TEXT_DIM);
-                }
-                animating[0] = true;
-                revealW[0] = 0;
-                javax.swing.Timer anim = new javax.swing.Timer(16, null);
-                anim.addActionListener(ev -> {
-                    revealW[0] = Math.min(revealW[0] + 5, 100);
-                    canvas.repaint();
-                    if (revealW[0] >= 100) { animating[0] = false; anim.stop(); }
-                });
-                anim.start();
-            });
-        }
-
-        // start draw animation
-        animating[0] = true;
-        revealW[0] = 0;
-        javax.swing.Timer anim = new javax.swing.Timer(16, null);
-        anim.addActionListener(ev -> {
-            revealW[0] = Math.min(revealW[0] + 5, 100);
-            canvas.repaint();
-            if (revealW[0] >= 100) { animating[0] = false; anim.stop(); }
-        });
-        anim.start();
-
-        return wrapper;
-    }
-
-    private java.util.List<long[]> buildWealthPoints(String timeframe)
-    {
-        java.util.List<long[]> result = new java.util.ArrayList<>();
-        if (bankValueLog.isEmpty()) return result;
-
-        long nowSec = System.currentTimeMillis() / 1000;
-        long windowStart;
-        if (timeframe.equals("7D")) windowStart = nowSec - 7 * 86400L;
-        else if (timeframe.equals("30D")) windowStart = nowSec - 30 * 86400L;
-        else if (timeframe.equals("3M")) windowStart = nowSec - 90 * 86400L;
-        else if (timeframe.equals("1Y")) windowStart = nowSec - 365 * 86400L;
-        else windowStart = 0; // All
-
-        java.util.List<long[]> filtered = new java.util.ArrayList<>();
-        for (long[] entry : bankValueLog) {
-            if (entry.length < 3) continue;
-            if (entry[0] >= windowStart) filtered.add(entry);
-        }
-        if (filtered.isEmpty()) return result;
-
-        // 7D — raw points (every scan)
-        if (timeframe.equals("7D")) {
-            for (long[] e : filtered) result.add(new long[]{e[0], e[2]});
-            return result;
-        }
-
-        // Determine bucket size and min buckets based on data range and timeframe
-        long dataRangeDays = filtered.isEmpty() ? 0 :
-                (filtered.get(filtered.size()-1)[0] - filtered.get(0)[0]) / 86400L;
-
-        long bucketSize;
-        int minBuckets;
-
-        if (timeframe.equals("All")) {
-            if (dataRangeDays >= 365) {
-                bucketSize = 86400L * 30; // monthly
-                minBuckets = 2;
-            } else if (dataRangeDays >= 30) {
-                bucketSize = 86400L * 7; // weekly
-                minBuckets = 2;
-            } else {
-                bucketSize = 86400L; // daily
-                minBuckets = 2;
-            }
-        } else if (timeframe.equals("30D") || timeframe.equals("3M")) {
-            bucketSize = 86400L; // daily
-            minBuckets = 3;
-        } else { // 1Y
-            bucketSize = 86400L * 7; // weekly
-            minBuckets = 4;
-        }
-
-        java.util.TreeMap<Long, java.util.List<Long>> buckets = new java.util.TreeMap<>();
-        for (long[] e : filtered) {
-            long bucket = (e[0] / bucketSize) * bucketSize;
-            buckets.computeIfAbsent(bucket, k -> new java.util.ArrayList<>()).add(e[2]);
-        }
-
-        if (buckets.size() < minBuckets) return result;
-
-        for (java.util.Map.Entry<Long, java.util.List<Long>> entry : buckets.entrySet()) {
-            long avg = 0;
-            for (long v : entry.getValue()) avg += v;
-            avg /= entry.getValue().size();
-            result.add(new long[]{entry.getKey(), avg});
-        }
-        return result;
     }
 
     private JPanel buildGraphPanel(int itemId, long currentPrice, String initialTimeframe, JLabel[] statsLabels)
