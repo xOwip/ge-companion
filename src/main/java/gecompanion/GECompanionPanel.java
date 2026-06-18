@@ -3993,7 +3993,7 @@ private String[] buildItemDataFromCache(String name)
 
         JButton[] tfBtns = new JButton[5];
         String[] allFrames = {"7D", "30D", "3M", "1Y", "All"};
-        long[] minDays = {7, 30, 90, 365, 0}; // 0 = always enabled for All
+        long[] minDays = {7, 30, 90, 364, 0}; // 0 = always enabled for All
         String[] tooltips = {"Need 7 days of data", "Need 30 days of data", "Need 90 days of data", "Need 365 days of data", ""};
         for (int i = 0; i < allFrames.length; i++)
         {
