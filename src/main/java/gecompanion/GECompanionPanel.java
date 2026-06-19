@@ -171,25 +171,6 @@ private JPanel currentOpenBankInfo = null;
 private JPanel currentOpenBankDeltaRow = null;
 private String openBankItemName = null;
 
-    // Mock item database
-    private static final String[][] ITEMS = {
-            {"Twisted bow", "1,585,016,000", "+1,482,000", "7", "7", "-0.21"},
-            {"Tumeken's shadow", "867,000,000", "+320,000", "7", "5", "+0.10"},
-            {"Scythe of vitur", "1,469,092,000", "-890,000", "2", "2", "-0.41"},
-            {"Saradomin brew(4)", "8,189", "+26", "19,449", "18,200", "+0.33"},
-            {"Runite bar", "12,387", "-240", "22,064", "20,000", "-1.94"},
-            {"Zaryte crossbow", "362,653,000", "+44,000", "5", "4", "0.00"},
-            {"Bandos chestplate", "18,200,000", "+44,000", "22", "18", "+0.15"},
-            {"Amulet of torture", "88,200,000", "+95,000", "8", "7", "+0.11"},
-            {"Abyssal whip", "2,850", "+12", "18,200", "16,000", "-0.07"},
-            {"Dragon dagger", "17,800", "+90", "5,800", "5,200", "+0.03"},
-            {"Armadyl crossbow", "42,500,000", "+120,000", "8", "7", "+0.28"},
-            {"Berserker ring", "3,200,000", "-15,000", "70", "65", "-0.47"},
-            {"Dragon warhammer", "49,000,000", "+200,000", "8", "7", "+0.41"},
-            {"Ancestral robe top", "74,000,000", "+350,000", "8", "6", "+0.47"},
-            {"Kodai wand", "88,000,000", "-100,000", "8", "7", "-0.11"},
-    };
-
     public GECompanionPanel(GECompanionConfig config, GECompanionPlugin plugin)
     {
         this.config = config;
