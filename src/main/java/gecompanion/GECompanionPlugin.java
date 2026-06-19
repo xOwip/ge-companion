@@ -72,7 +72,6 @@ public class GECompanionPlugin extends Plugin
 	private net.runelite.client.game.ItemManager itemManager;
 
 	public net.runelite.client.game.ItemManager getItemManager() { return itemManager; }
-	public okhttp3.OkHttpClient getOkHttpClient() { return okHttpClient; }
 	private GECompanionPanel panel;
 	private NavigationButton navButton;
 	private ScheduledExecutorService scheduler;
