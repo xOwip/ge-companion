@@ -72,6 +72,7 @@ public class GECompanionPlugin extends Plugin
 	private net.runelite.client.game.ItemManager itemManager;
 
 	public net.runelite.client.game.ItemManager getItemManager() { return itemManager; }
+	public okhttp3.OkHttpClient getOkHttpClient() { return okHttpClient; }
 	private GECompanionPanel panel;
 	private NavigationButton navButton;
 	private ScheduledExecutorService scheduler;
@@ -385,24 +386,30 @@ private void fetchMapping()
 		{
 			if (item.getId() <= 0 || item.getQuantity() <= 0) continue;
 
+// Check if item ID exists directly in nameToId
+			int lookupId = panel.getItemVariantMap().getOrDefault(item.getId(), item.getId());
+			String foundName = null;
 			for (java.util.Map.Entry<String, Integer> entry : nameToId.entrySet())
 			{
-				if (entry.getValue() == item.getId())
+				if (entry.getValue() == lookupId)
 				{
-					String name = entry.getKey();
-					String[] words = name.split(" ");
-					StringBuilder sb = new StringBuilder();
-					for (String word : words)
-					{
-						if (word.length() > 0)
-							sb.append(Character.toUpperCase(word.charAt(0)))
-									.append(word.substring(1)).append(" ");
-					}
-					String displayName = sb.toString().trim();
-					newBankItems.add(displayName);
-					newBankQuantities.put(displayName, item.getQuantity());
+					foundName = entry.getKey();
 					break;
 				}
+			}
+			if (foundName != null)
+			{
+				String[] words = foundName.split(" ");
+				StringBuilder sb = new StringBuilder();
+				for (String word : words)
+				{
+					if (word.length() > 0)
+						sb.append(Character.toUpperCase(word.charAt(0)))
+								.append(word.substring(1)).append(" ");
+				}
+				String displayName = sb.toString().trim();
+				newBankItems.add(displayName);
+				newBankQuantities.put(displayName, item.getQuantity());
 			}
 		}
 
@@ -411,7 +418,8 @@ private void fetchMapping()
 		for (Item item : bankContainer.getItems())
 		{
 			if (item.getId() <= 0 || item.getQuantity() <= 0) continue;
-			long price = itemManager.getItemPrice(item.getId());
+			int lookupId = panel.getItemVariantMap().getOrDefault(item.getId(), item.getId());
+			long price = itemManager.getItemPrice(lookupId);
 			bankOnlyValue += price * item.getQuantity();
 		}
 
