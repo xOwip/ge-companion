@@ -418,8 +418,7 @@ private void fetchMapping()
 		for (Item item : bankContainer.getItems())
 		{
 			if (item.getId() <= 0 || item.getQuantity() <= 0) continue;
-			int lookupId = panel.getItemVariantMap().getOrDefault(item.getId(), item.getId());
-			long price = itemManager.getItemPrice(lookupId);
+			long price = itemManager.getItemPrice(item.getId());
 			bankOnlyValue += price * item.getQuantity();
 		}
 
