@@ -835,6 +835,10 @@ private String openBankItemName = null;
             {
                 public void mouseClicked(MouseEvent e)
                 {
+                    // Collapse bank metadata when leaving the bank tab
+                    if (activeTab == 2 && idx != 2 && bankMetadataExpanded) {
+                        bankMetadataExpanded = false;
+                    }
                     activeTab = idx;
                     for (int j = 0; j < 3; j++)
                         updateTabStyle(tabLabels[j], j == idx);
@@ -874,7 +878,7 @@ private String openBankItemName = null;
 
     public void showTab(int index)
     {
-        // Save search text before rebuild
+// Save search text before rebuild
         String savedSearch = (searchField != null && index == 1) ? searchField.getText() : "";
 
         tabContentPanel.removeAll();
