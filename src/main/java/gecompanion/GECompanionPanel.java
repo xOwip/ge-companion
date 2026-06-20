@@ -287,17 +287,6 @@ private String openBankItemName = null;
         itemVariantMap.put(25545, 25543); // Celestial signet (charged) → uncharged
         itemVariantMap.put(26969, 26967); // Circlet of water (charged) → uncharged
         itemVariantMap.put(22550, 22547); // Craw's bow (charged) → uncharged
-        itemVariantMap.put(23673, 23675); // Crystal axe (active) → inactive
-        itemVariantMap.put(23975, 23977); // Crystal body (active) → inactive
-        itemVariantMap.put(23983, 23985); // Crystal bow (active) → inactive
-        itemVariantMap.put(28220, 28223); // Crystal felling axe (active) → inactive
-        itemVariantMap.put(23987, 23989); // Crystal halberd (active) → inactive
-        itemVariantMap.put(23762, 23764); // Crystal harpoon (active) → inactive
-        itemVariantMap.put(23971, 23973); // Crystal helm (active) → inactive
-        itemVariantMap.put(23979, 23981); // Crystal legs (active) → inactive
-        itemVariantMap.put(23680, 23682); // Crystal pickaxe (active) → inactive
-        itemVariantMap.put(23991, 23993); // Crystal shield (active) → inactive
-        itemVariantMap.put(28951, 28947); // Dizana's quiver (charged) → uncharged
         itemVariantMap.put(11283, 11284); // Dragonfire shield (charged) → uncharged
         itemVariantMap.put(22002, 22003); // Dragonfire ward (charged) → uncharged
         itemVariantMap.put(31113, 31115); // Eye of ayak (charged) → uncharged
@@ -309,7 +298,6 @@ private String openBankItemName = null;
         itemVariantMap.put(26948, 26945); // Pharaoh's sceptre (charged) → uncharged
         itemVariantMap.put(26950, 26945); // Pharaoh's sceptre (charged) → uncharged
         itemVariantMap.put(24736, 24844); // Ring of endurance (charged) → uncharged
-        itemVariantMap.put(28327, 28329); // Ring of shadows (charged) → uncharged
         itemVariantMap.put(26818, 26815); // Ring of the elements (charged) → uncharged
         itemVariantMap.put(22323, 22481); // Sanguinesti staff (charged) → uncharged
         itemVariantMap.put(22325, 22486); // Scythe of vitur (charged) → uncharged
@@ -333,6 +321,8 @@ private String openBankItemName = null;
         itemVariantMap.put(20714, 20716); // Tome of fire (charged) → empty
         itemVariantMap.put(25574, 25576); // Tome of water (charged) → empty
         itemVariantMap.put(12926, 12924); // Toxic blowpipe (charged) → empty
+        itemVariantMap.put(28688, 12924); // Blazing blowpipe (charged) → Toxic blowpipe (empty)
+        itemVariantMap.put(28687, 12924); // Blazing blowpipe (empty) → Toxic blowpipe (empty)
         // Cosmetic charge variants
         itemVariantMap.put(28543, 22486); // Corrupted scythe of vitur (charged) → Scythe of vitur (uncharged)
         itemVariantMap.put(28545, 22486); // Corrupted scythe of vitur (uncharged) → Scythe of vitur (uncharged)
@@ -348,7 +338,7 @@ private String openBankItemName = null;
         itemVariantMap.put(25741, 22486); // Sanguine scythe of vitur (uncharged) → Scythe of vitur (uncharged)
         itemVariantMap.put(13197, 12929); // Tanzanite helm (charged) → Serpentine helm (uncharged)
         itemVariantMap.put(13196, 12929); // Tanzanite helm (uncharged) → Serpentine helm (uncharged)
-        // Crystal blade/bow recolours → base inactive item
+        // Crystal blade/bow recolours → base inactive item (tradeable-style lookup targets)
         itemVariantMap.put(23995, 23997); // Blade of saeldor (charged) → inactive
         itemVariantMap.put(25865, 25862); // Bow of faerdhinen (charged) → inactive
         itemVariantMap.put(24551, 23997); // Blade of saeldor (c) → inactive
@@ -367,31 +357,43 @@ private String openBankItemName = null;
         itemVariantMap.put(25892, 25862); // Bow of faerdhinen (c) (Crwys) → inactive
         itemVariantMap.put(25894, 25862); // Bow of faerdhinen (c) (Meilyr) → inactive
         itemVariantMap.put(25896, 25862); // Bow of faerdhinen (c) (Amlodd) → inactive
-        // Crystal armor recolours
-        itemVariantMap.put(27709, 23977); itemVariantMap.put(27711, 23977); // Crystal body (Ithell) active/inactive
-        itemVariantMap.put(27721, 23977); itemVariantMap.put(27723, 23977); // Crystal body (Iorwerth)
-        itemVariantMap.put(27733, 23977); itemVariantMap.put(27735, 23977); // Crystal body (Trahaearn)
-        itemVariantMap.put(27745, 23977); itemVariantMap.put(27747, 23977); // Crystal body (Cadarn)
-        itemVariantMap.put(27757, 23977); itemVariantMap.put(27759, 23977); // Crystal body (Crwys)
-        itemVariantMap.put(27697, 23977); itemVariantMap.put(27699, 23977); // Crystal body (Hefin)
-        itemVariantMap.put(27769, 23977); itemVariantMap.put(27771, 23977); // Crystal body (Amlodd)
-        itemVariantMap.put(33023, 23977); itemVariantMap.put(33025, 23977); // Crystal body (deadman)
-        itemVariantMap.put(27717, 23973); itemVariantMap.put(27719, 23973); // Crystal helm (Ithell)
-        itemVariantMap.put(27729, 23973); itemVariantMap.put(27731, 23973); // Crystal helm (Iorwerth)
-        itemVariantMap.put(27741, 23973); itemVariantMap.put(27743, 23973); // Crystal helm (Trahaearn)
-        itemVariantMap.put(27753, 23973); itemVariantMap.put(27755, 23973); // Crystal helm (Cadarn)
-        itemVariantMap.put(27765, 23973); itemVariantMap.put(27767, 23973); // Crystal helm (Crwys)
-        itemVariantMap.put(27705, 23973); itemVariantMap.put(27707, 23973); // Crystal helm (Hefin)
-        itemVariantMap.put(27777, 23973); itemVariantMap.put(27779, 23973); // Crystal helm (Amlodd)
-        itemVariantMap.put(33031, 23973); itemVariantMap.put(33033, 23973); // Crystal helm (deadman)
-        itemVariantMap.put(27713, 23981); itemVariantMap.put(27715, 23981); // Crystal legs (Ithell)
-        itemVariantMap.put(27725, 23981); itemVariantMap.put(27727, 23981); // Crystal legs (Iorwerth)
-        itemVariantMap.put(27737, 23981); itemVariantMap.put(27739, 23981); // Crystal legs (Trahaearn)
-        itemVariantMap.put(27749, 23981); itemVariantMap.put(27751, 23981); // Crystal legs (Cadarn)
-        itemVariantMap.put(27761, 23981); itemVariantMap.put(27763, 23981); // Crystal legs (Crwys)
-        itemVariantMap.put(27701, 23981); itemVariantMap.put(27703, 23981); // Crystal legs (Hefin)
-        itemVariantMap.put(27773, 23981); itemVariantMap.put(27775, 23981); // Crystal legs (Amlodd)
-        itemVariantMap.put(33027, 23981); itemVariantMap.put(33029, 23981); // Crystal legs (deadman)
+        // Crystal tools → Crystal tool seed (23953)
+        itemVariantMap.put(23673, 23953); itemVariantMap.put(23675, 23953); // Crystal axe
+        itemVariantMap.put(23762, 23953); itemVariantMap.put(23764, 23953); // Crystal harpoon
+        itemVariantMap.put(23680, 23953); itemVariantMap.put(23682, 23953); // Crystal pickaxe
+        itemVariantMap.put(28220, 23953); itemVariantMap.put(28223, 23953); // Crystal felling axe
+        // Crystal weapons → Crystal weapon seed (4207)
+        itemVariantMap.put(23983, 4207); itemVariantMap.put(23985, 4207); // Crystal bow
+        itemVariantMap.put(23987, 4207); itemVariantMap.put(23989, 4207); // Crystal halberd
+        itemVariantMap.put(23991, 4207); itemVariantMap.put(23993, 4207); // Crystal shield
+        // Crystal armor (base + all recolours) → Crystal armour seed (23956)
+        itemVariantMap.put(23975, 23956); itemVariantMap.put(23977, 23956); // Crystal body
+        itemVariantMap.put(23971, 23956); itemVariantMap.put(23973, 23956); // Crystal helm
+        itemVariantMap.put(23979, 23956); itemVariantMap.put(23981, 23956); // Crystal legs
+        itemVariantMap.put(27709, 23956); itemVariantMap.put(27711, 23956); // Crystal body (Ithell)
+        itemVariantMap.put(27721, 23956); itemVariantMap.put(27723, 23956); // Crystal body (Iorwerth)
+        itemVariantMap.put(27733, 23956); itemVariantMap.put(27735, 23956); // Crystal body (Trahaearn)
+        itemVariantMap.put(27745, 23956); itemVariantMap.put(27747, 23956); // Crystal body (Cadarn)
+        itemVariantMap.put(27757, 23956); itemVariantMap.put(27759, 23956); // Crystal body (Crwys)
+        itemVariantMap.put(27697, 23956); itemVariantMap.put(27699, 23956); // Crystal body (Hefin)
+        itemVariantMap.put(27769, 23956); itemVariantMap.put(27771, 23956); // Crystal body (Amlodd)
+        itemVariantMap.put(33023, 23956); itemVariantMap.put(33025, 23956); // Crystal body (Deadman)
+        itemVariantMap.put(27717, 23956); itemVariantMap.put(27719, 23956); // Crystal helm (Ithell)
+        itemVariantMap.put(27729, 23956); itemVariantMap.put(27731, 23956); // Crystal helm (Iorwerth)
+        itemVariantMap.put(27741, 23956); itemVariantMap.put(27743, 23956); // Crystal helm (Trahaearn)
+        itemVariantMap.put(27753, 23956); itemVariantMap.put(27755, 23956); // Crystal helm (Cadarn)
+        itemVariantMap.put(27765, 23956); itemVariantMap.put(27767, 23956); // Crystal helm (Crwys)
+        itemVariantMap.put(27705, 23956); itemVariantMap.put(27707, 23956); // Crystal helm (Hefin)
+        itemVariantMap.put(27777, 23956); itemVariantMap.put(27779, 23956); // Crystal helm (Amlodd)
+        itemVariantMap.put(33031, 23956); itemVariantMap.put(33033, 23956); // Crystal helm (Deadman)
+        itemVariantMap.put(27713, 23956); itemVariantMap.put(27715, 23956); // Crystal legs (Ithell)
+        itemVariantMap.put(27725, 23956); itemVariantMap.put(27727, 23956); // Crystal legs (Iorwerth)
+        itemVariantMap.put(27737, 23956); itemVariantMap.put(27739, 23956); // Crystal legs (Trahaearn)
+        itemVariantMap.put(27749, 23956); itemVariantMap.put(27751, 23956); // Crystal legs (Cadarn)
+        itemVariantMap.put(27761, 23956); itemVariantMap.put(27763, 23956); // Crystal legs (Crwys)
+        itemVariantMap.put(27701, 23956); itemVariantMap.put(27703, 23956); // Crystal legs (Hefin)
+        itemVariantMap.put(27773, 23956); itemVariantMap.put(27775, 23956); // Crystal legs (Amlodd)
+        itemVariantMap.put(33027, 23956); itemVariantMap.put(33029, 23956); // Crystal legs (Deadman)
         // Ornament kit items
         itemVariantMap.put(26484, 4151);   // Abyssal tentacle (or) → Abyssal whip (tentacle is whip + kraken tentacle, not tradeable on its own)
         itemVariantMap.put(12006, 4151);   // Abyssal tentacle → Abyssal whip (tentacle is whip + kraken tentacle, not tradeable on its own)
@@ -402,7 +404,6 @@ private String openBankItemName = null;
         itemVariantMap.put(20368, 11802);  // Armadyl godsword (or) → Armadyl godsword
         itemVariantMap.put(20370, 11804);  // Bandos godsword (or) → Bandos godsword
         itemVariantMap.put(23240, 11128);  // Berserker necklace (or) → Berserker necklace
-        itemVariantMap.put(28688, 12926);  // Blazing blowpipe (charged) → Toxic blowpipe (charged)
         itemVariantMap.put(26488, 3844);   // Book of balance (or) → Book of balance
         itemVariantMap.put(26490, 12612);  // Book of darkness (or) → Book of darkness
         itemVariantMap.put(26492, 12610);  // Book of law (or) → Book of law
@@ -457,37 +458,7 @@ private String openBankItemName = null;
         itemVariantMap.put(27115, 20517);  // Elder chaos top (or) → Elder chaos top
         itemVariantMap.put(27100, 21003);  // Elder maul (or) → Elder maul
         itemVariantMap.put(27253, 27251);  // Elidinis' ward (or) → Elidinis' ward (f)
-        itemVariantMap.put(27004, 13073);  // Elite void robe (or) locked → Elite void robe
-        itemVariantMap.put(26471, 13073);  // Elite void robe (or) → Elite void robe
-        itemVariantMap.put(27003, 13072);  // Elite void top (or) locked → Elite void top
-        itemVariantMap.put(26469, 13072);  // Elite void top (or) → Elite void top
-        itemVariantMap.put(28069, 10551);  // Fighter torso (or) locked → Fighter torso
-        itemVariantMap.put(28067, 10551);  // Fighter torso (or) → Fighter torso
         itemVariantMap.put(12774, 4151);   // Frozen abyssal whip → Abyssal whip
-        itemVariantMap.put(24758, 11860);  // Graceful boots (Hallowed) inv → Graceful boots
-        itemVariantMap.put(24760, 11860);  // Graceful boots (Hallowed) worn → Graceful boots
-        itemVariantMap.put(25084, 11860);  // Graceful boots (Trailblazer) inv → Graceful boots
-        itemVariantMap.put(25086, 11860);  // Graceful boots (Trailblazer) worn → Graceful boots
-        itemVariantMap.put(24746, 11852);  // Graceful cape (Hallowed) inv → Graceful cape
-        itemVariantMap.put(24748, 11852);  // Graceful cape (Hallowed) worn → Graceful cape
-        itemVariantMap.put(25072, 11852);  // Graceful cape (Trailblazer) inv → Graceful cape
-        itemVariantMap.put(25074, 11852);  // Graceful cape (Trailblazer) worn → Graceful cape
-        itemVariantMap.put(24755, 11858);  // Graceful gloves (Hallowed) inv → Graceful gloves
-        itemVariantMap.put(24757, 11858);  // Graceful gloves (Hallowed) worn → Graceful gloves
-        itemVariantMap.put(25081, 11858);  // Graceful gloves (Trailblazer) inv → Graceful gloves
-        itemVariantMap.put(25083, 11858);  // Graceful gloves (Trailblazer) worn → Graceful gloves
-        itemVariantMap.put(24743, 11850);  // Graceful hood (Hallowed) inv → Graceful hood
-        itemVariantMap.put(24745, 11850);  // Graceful hood (Hallowed) worn → Graceful hood
-        itemVariantMap.put(25069, 11850);  // Graceful hood (Trailblazer) inv → Graceful hood
-        itemVariantMap.put(25071, 11850);  // Graceful hood (Trailblazer) worn → Graceful hood
-        itemVariantMap.put(24752, 11856);  // Graceful legs (Hallowed) inv → Graceful legs
-        itemVariantMap.put(24754, 11856);  // Graceful legs (Hallowed) worn → Graceful legs
-        itemVariantMap.put(25078, 11856);  // Graceful legs (Trailblazer) inv → Graceful legs
-        itemVariantMap.put(25080, 11856);  // Graceful legs (Trailblazer) worn → Graceful legs
-        itemVariantMap.put(24749, 11854);  // Graceful top (Hallowed) inv → Graceful top
-        itemVariantMap.put(24751, 11854);  // Graceful top (Hallowed) worn → Graceful top
-        itemVariantMap.put(25075, 11854);  // Graceful top (Trailblazer) inv → Graceful top
-        itemVariantMap.put(25077, 11854);  // Graceful top (Trailblazer) worn → Graceful top
         itemVariantMap.put(26712, 19481);  // Heavy ballista (or) → Heavy ballista
         itemVariantMap.put(28070, 10828);  // Helm of neitiznot (or) → Helm of neitiznot
         itemVariantMap.put(26496, 3840);   // Holy book (or) → Holy book
@@ -507,9 +478,6 @@ private String openBankItemName = null;
         itemVariantMap.put(12419, 6918);   // Light infinity hat → Infinity hat
         itemVariantMap.put(12420, 6916);   // Light infinity top → Infinity top
         itemVariantMap.put(12806, 11924);  // Malediction ward (or) → Malediction ward
-        itemVariantMap.put(27359, 22109);  // Masori assembler (broken) → Ava's assembler
-        itemVariantMap.put(27376, 22109);  // Masori assembler (locked) → Ava's assembler
-        itemVariantMap.put(27374, 22109);  // Masori assembler → Ava's assembler
         itemVariantMap.put(26539, 4097);   // Mystic boots (or) → Mystic boots
         itemVariantMap.put(26537, 4095);   // Mystic gloves (or) → Mystic gloves
         itemVariantMap.put(26531, 4089);   // Mystic hat (or) → Mystic hat
@@ -552,18 +520,6 @@ private String openBankItemName = null;
         itemVariantMap.put(24666, 21021);  // Twisted ancestral robe top → Ancestral robe top
         itemVariantMap.put(23235, 6528);   // Tzhaar-ket-om (t) → Tzhaar-ket-om
         itemVariantMap.put(26498, 3842);   // Unholy book (or) → Unholy book
-        itemVariantMap.put(27002, 8842);   // Void knight gloves (or) locked → Void knight gloves
-        itemVariantMap.put(26467, 8842);   // Void knight gloves (or) → Void knight gloves
-        itemVariantMap.put(27001, 8840);   // Void knight robe (or) locked → Void knight robe
-        itemVariantMap.put(26465, 8840);   // Void knight robe (or) → Void knight robe
-        itemVariantMap.put(27000, 8839);   // Void knight top (or) locked → Void knight top
-        itemVariantMap.put(26463, 8839);   // Void knight top (or) → Void knight top
-        itemVariantMap.put(27005, 11663);  // Void mage helm (or) locked → Void mage helm
-        itemVariantMap.put(26473, 11663);  // Void mage helm (or) → Void mage helm
-        itemVariantMap.put(27007, 11665);  // Void melee helm (or) locked → Void melee helm
-        itemVariantMap.put(26477, 11665);  // Void melee helm (or) → Void melee helm
-        itemVariantMap.put(27006, 11664);  // Void ranger helm (or) locked → Void ranger helm
-        itemVariantMap.put(26475, 11664);  // Void ranger helm (or) → Void ranger helm
         itemVariantMap.put(29607, 27690);  // Voidwaker (deadman) → Voidwaker
         itemVariantMap.put(29609, 24424);  // Volatile nightmare staff (deadman) → Volatile nightmare staff
         itemVariantMap.put(12773, 4151);   // Volcanic abyssal whip → Abyssal whip
@@ -637,6 +593,10 @@ private String openBankItemName = null;
         itemVariantMap.put(29031, 29004); itemVariantMap.put(29049, 29004); itemVariantMap.put(29840, 29004); // Eclipse moon chestplate
         itemVariantMap.put(29035, 29010); itemVariantMap.put(29055, 29010); itemVariantMap.put(29842, 29010); // Eclipse moon helm
         itemVariantMap.put(29033, 29007); itemVariantMap.put(29052, 29007); itemVariantMap.put(29841, 29007); // Eclipse moon tassets
+        // Tormented synapse variants
+        itemVariantMap.put(29589, 29580); // Emberlight → Tormented synapse
+        itemVariantMap.put(29594, 29580); // Purging staff → Tormented synapse
+        itemVariantMap.put(29591, 29580); // Scorching bow → Tormented synapse
     }
 
     public void onBankHistoryReset()
