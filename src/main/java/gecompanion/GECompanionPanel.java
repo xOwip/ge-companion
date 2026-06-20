@@ -437,6 +437,7 @@ private String openBankItemName = null;
         itemVariantMap.put(30437, 26241);  // Echo virtus mask → Virtus mask
         itemVariantMap.put(30441, 26245);  // Echo virtus robe bottom → Virtus robe bottom
         itemVariantMap.put(30439, 26243);  // Echo virtus robe top → Virtus robe top
+        itemVariantMap.put(28945, 28942);  // Echo boots → Echo crystal
         itemVariantMap.put(27119, 20595);  // Elder chaos hood (or) → Elder chaos hood
         itemVariantMap.put(27117, 20520);  // Elder chaos robe (or) → Elder chaos robe
         itemVariantMap.put(27115, 20517);  // Elder chaos top (or) → Elder chaos top
