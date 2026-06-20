@@ -20,6 +20,10 @@ import net.runelite.api.ItemContainer;
 import net.runelite.api.InventoryID;
 import net.runelite.api.Item;
 import net.runelite.api.events.ItemContainerChanged;
+import net.runelite.api.events.MenuEntryAdded;
+import net.runelite.api.MenuEntry;
+import net.runelite.api.MenuAction;
+import net.runelite.client.input.KeyManager;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.config.ConfigManager;
@@ -370,6 +374,34 @@ private void fetchMapping()
 			javax.swing.SwingUtilities.invokeLater(() -> panel.showTab(panel.getActiveTab()));
 		}
 	}
+	@Subscribe
+	public void onMenuEntryAdded(MenuEntryAdded event)
+	{
+		if (!config.rightClickLookup()) return;
+
+		String option = event.getOption();
+		if (option == null || !option.equals("Examine")) return;
+
+		MenuEntry[] entries = client.getMenuEntries();
+		MenuEntry lastEntry = entries[entries.length - 1];
+		int itemId = lastEntry.getItemId();
+		if (itemId <= 0) return;
+
+		boolean shiftPressed = client.isKeyPressed(java.awt.event.KeyEvent.VK_SHIFT);
+		boolean shouldShow = config.lookupMenuType() == LookupMenuType.ALWAYS || shiftPressed;
+		if (!shouldShow) return;
+
+		final int finalItemId = itemId;
+		client.createMenuEntry(-1)
+				.setOption("Price Check")
+				.setTarget(event.getTarget())
+				.setType(MenuAction.RUNELITE)
+				.onClick(e -> {
+					int lookupId = panel.getItemVariantMap().getOrDefault(finalItemId, finalItemId);
+					panel.openItemLookup(lookupId);
+				});
+	}
+
 	@Subscribe
 	public void onItemContainerChanged(ItemContainerChanged event)
 	{

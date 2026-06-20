@@ -48,6 +48,39 @@ public class GECompanionPanel extends PluginPanel
 
     private int activeTab = 1;
     public int getActiveTab() { return activeTab; }
+    public void openItemLookup(int itemId)
+    {
+        // Reverse-lookup item name from ID
+        String foundName = null;
+        for (java.util.Map.Entry<String, Integer> entry : nameToId.entrySet()) {
+            if (entry.getValue() == itemId) {
+                foundName = entry.getKey();
+                break;
+            }
+        }
+        if (foundName == null) return;
+
+        // Capitalize first letter of each word
+        String[] words = foundName.split(" ");
+        StringBuilder sb = new StringBuilder();
+        for (String word : words) {
+            if (word.length() > 0)
+                sb.append(Character.toUpperCase(word.charAt(0)))
+                        .append(word.substring(1)).append(" ");
+        }
+        String displayName = sb.toString().trim();
+
+        activeTab = 1;
+        for (int j = 0; j < 3; j++)
+            updateTabStyle(tabLabels[j], j == 1);
+        showTab(1);
+
+        javax.swing.SwingUtilities.invokeLater(() -> {
+            if (searchField != null) {
+                searchField.setText(displayName);
+            }
+        });
+    }
     public java.util.Map<Integer, Integer> getItemVariantMap() { return itemVariantMap; }
     private String activeTimeFrame = "24H";
     private boolean bankAllItemsCollapsed = true;
