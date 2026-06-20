@@ -82,6 +82,11 @@ public class GECompanionPanel extends PluginPanel
         });
     }
     public java.util.Map<Integer, Integer> getItemVariantMap() { return itemVariantMap; }
+    public boolean isItemPriceable(int itemId)
+    {
+        if (itemVariantMap.containsKey(itemId)) return true;
+        return nameToId.containsValue(itemId);
+    }
     private String activeTimeFrame = "24H";
     private boolean bankAllItemsCollapsed = true;
     private boolean graphWasOpen = false;
@@ -388,7 +393,8 @@ private String openBankItemName = null;
         itemVariantMap.put(27773, 23981); itemVariantMap.put(27775, 23981); // Crystal legs (Amlodd)
         itemVariantMap.put(33027, 23981); itemVariantMap.put(33029, 23981); // Crystal legs (deadman)
         // Ornament kit items
-        itemVariantMap.put(26484, 12006);  // Abyssal tentacle (or) → Abyssal tentacle
+        itemVariantMap.put(26484, 4151);   // Abyssal tentacle (or) → Abyssal whip (tentacle is whip + kraken tentacle, not tradeable on its own)
+        itemVariantMap.put(12006, 4151);   // Abyssal tentacle → Abyssal whip (tentacle is whip + kraken tentacle, not tradeable on its own)
         itemVariantMap.put(26482, 4151);   // Abyssal whip (or) → Abyssal whip
         itemVariantMap.put(12436, 6585);   // Amulet of fury (or) → Amulet of fury
         itemVariantMap.put(20366, 19553);  // Amulet of torture (or) → Amulet of torture

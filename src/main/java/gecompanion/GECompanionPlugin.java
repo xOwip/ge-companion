@@ -386,6 +386,7 @@ private void fetchMapping()
 		MenuEntry lastEntry = entries[entries.length - 1];
 		int itemId = lastEntry.getItemId();
 		if (itemId <= 0) return;
+		if (!panel.isItemPriceable(itemId)) return;
 
 		boolean shiftPressed = client.isKeyPressed(java.awt.event.KeyEvent.VK_SHIFT);
 		boolean shouldShow = config.lookupMenuType() == LookupMenuType.ALWAYS || shiftPressed;
