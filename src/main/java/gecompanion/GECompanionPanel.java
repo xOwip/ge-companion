@@ -586,6 +586,51 @@ private String openBankItemName = null;
         itemVariantMap.put(31095, 31088);  // Avernic treads (pr)(et) → Avernic treads
         itemVariantMap.put(31096, 31088);  // Avernic treads (pe)(et) → Avernic treads
         itemVariantMap.put(31097, 31088);  // Avernic treads (max) → Avernic treads
+        // Ring of suffering variants
+        itemVariantMap.put(20655, 19550);  // Ring of suffering (recoil) → Ring of suffering (uncharged)
+        itemVariantMap.put(19710, 19550);  // Ring of suffering (i) (uncharged) → Ring of suffering (uncharged)
+        itemVariantMap.put(25246, 19550);  // Ring of suffering (i) (uncharged) variant → Ring of suffering (uncharged)
+        itemVariantMap.put(26761, 19550);  // Ring of suffering (i) (uncharged) variant → Ring of suffering (uncharged)
+        itemVariantMap.put(20657, 19550);  // Ring of suffering (i) (recoil) → Ring of suffering (uncharged)
+        itemVariantMap.put(25248, 19550);  // Ring of suffering (i) (recoil) variant → Ring of suffering (uncharged)
+        itemVariantMap.put(26762, 19550);  // Ring of suffering (i) (recoil) variant → Ring of suffering (uncharged)
+        // Barrows armor degradation variants (all map to Undamaged tradeable ID)
+        itemVariantMap.put(4856, 4708); itemVariantMap.put(4857, 4708); itemVariantMap.put(4858, 4708); itemVariantMap.put(4859, 4708); itemVariantMap.put(4860, 4708); // Ahrim's hood
+        itemVariantMap.put(4862, 4710); itemVariantMap.put(4863, 4710); itemVariantMap.put(4864, 4710); itemVariantMap.put(4865, 4710); itemVariantMap.put(4866, 4710); // Ahrim's staff
+        itemVariantMap.put(4868, 4712); itemVariantMap.put(4869, 4712); itemVariantMap.put(4870, 4712); itemVariantMap.put(4871, 4712); itemVariantMap.put(4872, 4712); // Ahrim's robetop
+        itemVariantMap.put(4874, 4714); itemVariantMap.put(4875, 4714); itemVariantMap.put(4876, 4714); itemVariantMap.put(4877, 4714); itemVariantMap.put(4878, 4714); // Ahrim's robeskirt
+        itemVariantMap.put(4880, 4716); itemVariantMap.put(4881, 4716); itemVariantMap.put(4882, 4716); itemVariantMap.put(4883, 4716); itemVariantMap.put(4884, 4716); // Dharok's helm
+        itemVariantMap.put(4886, 4718); itemVariantMap.put(4887, 4718); itemVariantMap.put(4888, 4718); itemVariantMap.put(4889, 4718); itemVariantMap.put(4890, 4718); // Dharok's greataxe
+        itemVariantMap.put(4892, 4720); itemVariantMap.put(4893, 4720); itemVariantMap.put(4894, 4720); itemVariantMap.put(4895, 4720); itemVariantMap.put(4896, 4720); // Dharok's platebody
+        itemVariantMap.put(4898, 4722); itemVariantMap.put(4899, 4722); itemVariantMap.put(4900, 4722); itemVariantMap.put(4901, 4722); itemVariantMap.put(4902, 4722); // Dharok's platelegs
+        itemVariantMap.put(4904, 4724); itemVariantMap.put(4905, 4724); itemVariantMap.put(4906, 4724); itemVariantMap.put(4907, 4724); itemVariantMap.put(4908, 4724); // Guthan's helm
+        itemVariantMap.put(4910, 4726); itemVariantMap.put(4911, 4726); itemVariantMap.put(4912, 4726); itemVariantMap.put(4913, 4726); itemVariantMap.put(4914, 4726); // Guthan's warspear
+        itemVariantMap.put(4916, 4728); itemVariantMap.put(4917, 4728); itemVariantMap.put(4918, 4728); itemVariantMap.put(4919, 4728); itemVariantMap.put(4920, 4728); // Guthan's platebody
+        itemVariantMap.put(4922, 4730); itemVariantMap.put(4923, 4730); itemVariantMap.put(4924, 4730); itemVariantMap.put(4925, 4730); itemVariantMap.put(4926, 4730); // Guthan's chainskirt
+        itemVariantMap.put(4928, 4732); itemVariantMap.put(4929, 4732); itemVariantMap.put(4930, 4732); itemVariantMap.put(4931, 4732); itemVariantMap.put(4932, 4732); // Karil's coif
+        itemVariantMap.put(4934, 4734); itemVariantMap.put(4935, 4734); itemVariantMap.put(4936, 4734); itemVariantMap.put(4937, 4734); itemVariantMap.put(4938, 4734); // Karil's crossbow
+        itemVariantMap.put(4940, 4736); itemVariantMap.put(4941, 4736); itemVariantMap.put(4942, 4736); itemVariantMap.put(4943, 4736); itemVariantMap.put(4944, 4736); // Karil's leathertop
+        itemVariantMap.put(4946, 4738); itemVariantMap.put(4947, 4738); itemVariantMap.put(4948, 4738); itemVariantMap.put(4949, 4738); itemVariantMap.put(4950, 4738); // Karil's leatherskirt
+        itemVariantMap.put(4952, 4745); itemVariantMap.put(4953, 4745); itemVariantMap.put(4954, 4745); itemVariantMap.put(4955, 4745); itemVariantMap.put(4956, 4745); // Torag's helm
+        itemVariantMap.put(4958, 4747); itemVariantMap.put(4959, 4747); itemVariantMap.put(4960, 4747); itemVariantMap.put(4961, 4747); itemVariantMap.put(4962, 4747); // Torag's hammers
+        itemVariantMap.put(4964, 4749); itemVariantMap.put(4965, 4749); itemVariantMap.put(4966, 4749); itemVariantMap.put(4967, 4749); itemVariantMap.put(4968, 4749); // Torag's platebody
+        itemVariantMap.put(4970, 4751); itemVariantMap.put(4971, 4751); itemVariantMap.put(4972, 4751); itemVariantMap.put(4973, 4751); itemVariantMap.put(4974, 4751); // Torag's platelegs
+        itemVariantMap.put(4976, 4753); itemVariantMap.put(4977, 4753); itemVariantMap.put(4978, 4753); itemVariantMap.put(4979, 4753); itemVariantMap.put(4980, 4753); // Verac's helm
+        itemVariantMap.put(4982, 4755); itemVariantMap.put(4983, 4755); itemVariantMap.put(4984, 4755); itemVariantMap.put(4985, 4755); itemVariantMap.put(4986, 4755); // Verac's flail
+        itemVariantMap.put(4988, 4757); itemVariantMap.put(4989, 4757); itemVariantMap.put(4990, 4757); itemVariantMap.put(4991, 4757); itemVariantMap.put(4992, 4757); // Verac's brassard
+        itemVariantMap.put(4994, 4759); itemVariantMap.put(4995, 4759); itemVariantMap.put(4996, 4759); itemVariantMap.put(4997, 4759); itemVariantMap.put(4998, 4759); // Verac's plateskirt
+        // Blue moon, Blood moon, Eclipse moon armor (Used/Broken/LMS → New tradeable ID)
+        itemVariantMap.put(29037, 29013); itemVariantMap.put(29058, 29013); itemVariantMap.put(29843, 29013); // Blue moon chestplate
+        itemVariantMap.put(29041, 29019); itemVariantMap.put(29064, 29019); itemVariantMap.put(29845, 29019); // Blue moon helm
+        itemVariantMap.put(29039, 29016); itemVariantMap.put(29061, 29016); itemVariantMap.put(29844, 29016); // Blue moon tassets
+        itemVariantMap.put(29849, 28988); // Blue moon spear (LMS)
+        itemVariantMap.put(29043, 29022); itemVariantMap.put(29067, 29022); itemVariantMap.put(29846, 29022); // Blood moon chestplate
+        itemVariantMap.put(29047, 29028); itemVariantMap.put(29073, 29028); itemVariantMap.put(29848, 29028); // Blood moon helm
+        itemVariantMap.put(29045, 29025); itemVariantMap.put(29070, 29025); itemVariantMap.put(29847, 29025); // Blood moon tassets
+        itemVariantMap.put(29851, 29000); // Eclipse atlatl (LMS)
+        itemVariantMap.put(29031, 29004); itemVariantMap.put(29049, 29004); itemVariantMap.put(29840, 29004); // Eclipse moon chestplate
+        itemVariantMap.put(29035, 29010); itemVariantMap.put(29055, 29010); itemVariantMap.put(29842, 29010); // Eclipse moon helm
+        itemVariantMap.put(29033, 29007); itemVariantMap.put(29052, 29007); itemVariantMap.put(29841, 29007); // Eclipse moon tassets
     }
 
     public void onBankHistoryReset()

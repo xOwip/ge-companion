@@ -398,7 +398,10 @@ private void fetchMapping()
 				.setType(MenuAction.RUNELITE)
 				.onClick(e -> {
 					int lookupId = panel.getItemVariantMap().getOrDefault(finalItemId, finalItemId);
-					panel.openItemLookup(lookupId);
+					javax.swing.SwingUtilities.invokeLater(() -> {
+						clientToolbar.openPanel(navButton);
+						panel.openItemLookup(lookupId);
+					});
 				});
 	}
 
