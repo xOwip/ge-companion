@@ -97,7 +97,7 @@ public class GECompanionPlugin extends Plugin
 	{
 		panel = new GECompanionPanel(config, this);
 
-		final BufferedImage icon = ImageUtil.loadImageResource(getClass(), "/ge_companion_icon.png");
+		final BufferedImage icon = ImageUtil.loadImageResource(getClass(), "/ge_companion_icon_32_v2.png");
 
 		navButton = NavigationButton.builder()
 				.tooltip("GE Companion")
