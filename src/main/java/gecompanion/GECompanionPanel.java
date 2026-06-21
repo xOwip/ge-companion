@@ -42,6 +42,7 @@ public class GECompanionPanel extends PluginPanel
     private static final Color RED_DOWN = new Color(192, 57, 43);
     private static final Color BG_ROW_HOVER = new Color(45, 40, 38);
     private static final Color BG_ROW_SELECTED = new Color(26, 24, 20);
+    private static final Color STAT_BLUE = new Color(74, 122, 191);
 
     private final GECompanionConfig config;
     private final GECompanionPlugin plugin;
@@ -1078,7 +1079,7 @@ private String openBankItemName = null;
         sellPriceLabelComp.setMaximumSize(new Dimension(Integer.MAX_VALUE, 16));
 
         JLabel sellPriceValueComp = new JLabel(sellPriceDisplay, SwingConstants.CENTER);
-        sellPriceValueComp.setForeground(STAT_GOLD);
+        sellPriceValueComp.setForeground(STAT_BLUE);
         sellPriceValueComp.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_VALUE));
         sellPriceValueComp.setAlignmentX(Component.CENTER_ALIGNMENT);
         sellPriceValueComp.setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
@@ -1096,7 +1097,7 @@ private String openBankItemName = null;
         grid.setMaximumSize(new Dimension(225, 45));
 
         grid.add(buildStatBox("Buy Qty/hr", item.length > 8 ? item[8] : "?", STAT_GOLD, null));
-        grid.add(buildStatBox("Sell Qty/hr", item.length > 9 ? item[9] : "?", STAT_GOLD, null));
+        grid.add(buildStatBox("Sell Qty/hr", item.length > 9 ? item[9] : "?", STAT_BLUE, null));
         liveStatGrid = grid;
 
         inner.add(grid);
@@ -5476,7 +5477,7 @@ private String[] buildItemDataFromCache(String name)
         box.setBorder(new EmptyBorder(5, 5, 5, 5));
 
         JLabel labelText = new JLabel(label.toUpperCase());
-        labelText.setForeground(TEXT_PRIMARY);
+        labelText.setForeground(TEXT_DIM);
         labelText.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
         labelText.setAlignmentX(Component.LEFT_ALIGNMENT);
 
