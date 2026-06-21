@@ -1133,11 +1133,11 @@ private String openBankItemName = null;
         });
         footer.add(watchBtn);
 
-        JButton trackerBtn = buildFooterBtn("Tracker ↗", false);
+        JButton trackerBtn = buildFooterBtn("Prices ↗", false);
         trackerBtn.addActionListener(e -> {
             try {
-                String urlName = name.toLowerCase().replace("'", "-").replace(" ", "-").replace("(", "-").replace(")", "").replace("--", "-");
-                java.awt.Desktop.getDesktop().browse(new java.net.URI("https://www.ge-tracker.com/item/" + urlName));
+                int trackerItemId = item.length > 12 ? Integer.parseInt(item[12]) : -1;
+                java.awt.Desktop.getDesktop().browse(new java.net.URI("https://prices.runescape.wiki/osrs/item/" + trackerItemId));
             } catch (Exception ex) { }
         });
         footer.add(trackerBtn);
