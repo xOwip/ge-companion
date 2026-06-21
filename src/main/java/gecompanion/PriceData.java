@@ -27,12 +27,26 @@ public class PriceData
 
     public String getTimeSince()
     {
+        return getTimeSince(Math.max(highTime, lowTime));
+    }
+
+    public String getTimeSince(long timestamp)
+    {
         long now = System.currentTimeMillis() / 1000;
-        long latest = Math.max(highTime, lowTime);
-        if (latest == 0) return "unknown";
-        long diff = now - latest;
+        if (timestamp == 0) return "unknown";
+        long diff = now - timestamp;
         if (diff < 60) return diff + "s ago";
         if (diff < 3600) return (diff / 60) + "m ago";
         return (diff / 3600) + "h ago";
+    }
+
+    public String getBuyTimeSince()
+    {
+        return getTimeSince(highTime);
+    }
+
+    public String getSellTimeSince()
+    {
+        return getTimeSince(lowTime);
     }
 }

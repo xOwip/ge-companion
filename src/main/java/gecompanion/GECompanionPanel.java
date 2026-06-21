@@ -118,8 +118,10 @@ public class GECompanionPanel extends PluginPanel
     private String[] currentOpenBankItem = null;
     // Live label references for zero-disruption refresh
     private JLabel liveHeaderPriceLabel = null;
-    private JLabel liveLastTradedValueLabel = null;
-    private JLabel liveLastTradedHeaderLabel = null;
+    private JLabel liveBuyPriceValueLabel = null;
+    private JLabel liveBuyPriceHeaderLabel = null;
+    private JLabel liveSellPriceValueLabel = null;
+    private JLabel liveSellPriceHeaderLabel = null;
     private JPanel liveStatGrid = null;
     private JLabel[] liveStatsLabels = null;
     private int liveOpenItemId = -1;
@@ -950,34 +952,30 @@ private String openBankItemName = null;
             liveHeaderPriceLabel.setText(formatFullPrice(String.valueOf(mid)) + " gp");
         }
 
-        // Update last traded
-        if (liveLastTradedValueLabel != null)
+// Update Buy Price box
+        if (liveBuyPriceValueLabel != null)
         {
-            String lastTradedPrice = item.length > 10 ? item[10] : "0";
-            String lastTradedDisplay = lastTradedPrice.equals("0") ? "?" : formatFullPrice(lastTradedPrice) + " gp";
-            liveLastTradedValueLabel.setText(lastTradedDisplay);
+            String buyPriceDisplay = pd.high <= 0 ? "?" : formatFullPrice(String.valueOf(pd.high)) + " gp";
+            liveBuyPriceValueLabel.setText(buyPriceDisplay);
         }
-        if (liveLastTradedHeaderLabel != null)
+        if (liveBuyPriceHeaderLabel != null)
         {
-            String lastTradedTime = item.length > 11 ? item[11] : "";
-            String lastTradedLabel = "LAST TRADED" + (lastTradedTime.isEmpty() || lastTradedTime.equals("unknown") ? "" : "  ·  " + lastTradedTime);
-            liveLastTradedHeaderLabel.setText(lastTradedLabel);
-        }
-
-        // Update stat grid (Buy Price, Sell Price, Buy Qty/hr, Sell Qty/hr)
-        if (liveStatGrid != null && liveStatGrid.getComponentCount() == 4)
-        {
-            updateStatBox((JPanel) liveStatGrid.getComponent(0), pd.high == 0 ? "?" : formatPrice(String.valueOf(pd.high)), pd.high == 0 ? null : formatFullPrice(String.valueOf(pd.high)) + " gp");
-            updateStatBox((JPanel) liveStatGrid.getComponent(1), pd.low == 0 ? "?" : formatPrice(String.valueOf(pd.low)), pd.low == 0 ? null : formatFullPrice(String.valueOf(pd.low)) + " gp");
+            String buyTimeStr = pd.getBuyTimeSince();
+            String buyPriceLabel = "BUY PRICE" + (buyTimeStr.equals("unknown") ? "" : "  ·  " + buyTimeStr);
+            liveBuyPriceHeaderLabel.setText(buyPriceLabel);
         }
 
-        // Update last traded time (recalculated from live data)
-        if (liveLastTradedHeaderLabel != null)
+// Update Sell Price box
+        if (liveSellPriceValueLabel != null)
         {
-            String freshTime = pd.getTimeSince();
-            String lastTradedPrice = liveOpenItemData.length > 10 ? liveOpenItemData[10] : "0";
-            String lastTradedLabel = "LAST TRADED" + (freshTime.equals("unknown") ? "" : "  ·  " + freshTime);
-            liveLastTradedHeaderLabel.setText(lastTradedLabel);
+            String sellPriceDisplay = pd.low <= 0 ? "?" : formatFullPrice(String.valueOf(pd.low)) + " gp";
+            liveSellPriceValueLabel.setText(sellPriceDisplay);
+        }
+        if (liveSellPriceHeaderLabel != null)
+        {
+            String sellTimeStr = pd.getSellTimeSince();
+            String sellPriceLabel = "SELL PRICE" + (sellTimeStr.equals("unknown") ? "" : "  ·  " + sellTimeStr);
+            liveSellPriceHeaderLabel.setText(sellPriceLabel);
         }
 
         // Repaint graph if open
@@ -1022,47 +1020,81 @@ private String openBankItemName = null;
         inner.add(buildDetailHeader(name, price, item.length > 6 ? item[6] : "?"));
         inner.add(Box.createVerticalStrut(6));
 
-// Full width Last Traded stat box
-        String lastTradedPrice = item.length > 10 ? item[10] : "0";
-        String lastTradedTime = item.length > 11 ? item[11] : "";
-        String lastTradedLabel = "LAST TRADED" + (lastTradedTime.isEmpty() || lastTradedTime.equals("unknown") ? "" : "  ·  " + lastTradedTime);
-        String lastTradedDisplay = lastTradedPrice.equals("0") ? "?" : formatFullPrice(lastTradedPrice) + " gp";
+// Buy Price stat box
+        int detailItemId = item.length > 12 ? Integer.parseInt(item[12]) : -1;
+        PriceData pdForDetail = priceCache.get(detailItemId);
+        long buyPriceVal = pdForDetail != null ? pdForDetail.high : 0;
+        String buyTimeStr = pdForDetail != null ? pdForDetail.getBuyTimeSince() : "unknown";
+        String buyPriceLabel = "BUY PRICE" + (buyTimeStr.equals("unknown") ? "" : "  ·  " + buyTimeStr);
+        String buyPriceDisplay = buyPriceVal <= 0 ? "?" : formatFullPrice(String.valueOf(buyPriceVal)) + " gp";
 
-        JPanel lastTradedBox = new JPanel();
-        lastTradedBox.setLayout(new BoxLayout(lastTradedBox, BoxLayout.Y_AXIS));
-        lastTradedBox.setBackground(new Color(14, 12, 13));
-        lastTradedBox.setBorder(new EmptyBorder(6, 5, 6, 5));
-        lastTradedBox.setAlignmentX(Component.LEFT_ALIGNMENT);
-        lastTradedBox.setMaximumSize(new Dimension(225, 52));
-        lastTradedBox.setMinimumSize(new Dimension(225, 52));
-        lastTradedBox.setPreferredSize(new Dimension(225, 52));
+        JPanel buyPriceBox = new JPanel();
+        buyPriceBox.setLayout(new BoxLayout(buyPriceBox, BoxLayout.Y_AXIS));
+        buyPriceBox.setBackground(new Color(14, 12, 13));
+        buyPriceBox.setBorder(new EmptyBorder(6, 5, 6, 5));
+        buyPriceBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        buyPriceBox.setMaximumSize(new Dimension(225, 52));
+        buyPriceBox.setMinimumSize(new Dimension(225, 52));
+        buyPriceBox.setPreferredSize(new Dimension(225, 52));
 
-        JLabel lastTradedLabelComp = new JLabel(lastTradedLabel, SwingConstants.CENTER);
-        lastTradedLabelComp.setForeground(TEXT_DIM);
-        lastTradedLabelComp.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
-        lastTradedLabelComp.setAlignmentX(Component.CENTER_ALIGNMENT);
-        lastTradedLabelComp.setMaximumSize(new Dimension(Integer.MAX_VALUE, 16));
+        JLabel buyPriceLabelComp = new JLabel(buyPriceLabel, SwingConstants.CENTER);
+        buyPriceLabelComp.setForeground(TEXT_DIM);
+        buyPriceLabelComp.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+        buyPriceLabelComp.setAlignmentX(Component.CENTER_ALIGNMENT);
+        buyPriceLabelComp.setMaximumSize(new Dimension(Integer.MAX_VALUE, 16));
 
-        JLabel lastTradedValueComp = new JLabel(lastTradedDisplay, SwingConstants.CENTER);
-        lastTradedValueComp.setForeground(STAT_GOLD);
-        lastTradedValueComp.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_VALUE));
-        lastTradedValueComp.setAlignmentX(Component.CENTER_ALIGNMENT);
-        lastTradedValueComp.setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
-        liveLastTradedValueLabel = lastTradedValueComp;
-        liveLastTradedHeaderLabel = lastTradedLabelComp;
+        JLabel buyPriceValueComp = new JLabel(buyPriceDisplay, SwingConstants.CENTER);
+        buyPriceValueComp.setForeground(STAT_GOLD);
+        buyPriceValueComp.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_VALUE));
+        buyPriceValueComp.setAlignmentX(Component.CENTER_ALIGNMENT);
+        buyPriceValueComp.setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
+        liveBuyPriceValueLabel = buyPriceValueComp;
+        liveBuyPriceHeaderLabel = buyPriceLabelComp;
 
-        lastTradedBox.add(lastTradedLabelComp);
-        lastTradedBox.add(lastTradedValueComp);
-        inner.add(lastTradedBox);
+        buyPriceBox.add(buyPriceLabelComp);
+        buyPriceBox.add(buyPriceValueComp);
+        inner.add(buyPriceBox);
         inner.add(Box.createVerticalStrut(4));
 
-        JPanel grid = new JPanel(new GridLayout(2, 2, 2, 2));
+        // Sell Price stat box
+        long sellPriceVal = pdForDetail != null ? pdForDetail.low : 0;
+        String sellTimeStr = pdForDetail != null ? pdForDetail.getSellTimeSince() : "unknown";
+        String sellPriceLabel = "SELL PRICE" + (sellTimeStr.equals("unknown") ? "" : "  ·  " + sellTimeStr);
+        String sellPriceDisplay = sellPriceVal <= 0 ? "?" : formatFullPrice(String.valueOf(sellPriceVal)) + " gp";
+
+        JPanel sellPriceBox = new JPanel();
+        sellPriceBox.setLayout(new BoxLayout(sellPriceBox, BoxLayout.Y_AXIS));
+        sellPriceBox.setBackground(new Color(14, 12, 13));
+        sellPriceBox.setBorder(new EmptyBorder(6, 5, 6, 5));
+        sellPriceBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        sellPriceBox.setMaximumSize(new Dimension(225, 52));
+        sellPriceBox.setMinimumSize(new Dimension(225, 52));
+        sellPriceBox.setPreferredSize(new Dimension(225, 52));
+
+        JLabel sellPriceLabelComp = new JLabel(sellPriceLabel, SwingConstants.CENTER);
+        sellPriceLabelComp.setForeground(TEXT_DIM);
+        sellPriceLabelComp.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+        sellPriceLabelComp.setAlignmentX(Component.CENTER_ALIGNMENT);
+        sellPriceLabelComp.setMaximumSize(new Dimension(Integer.MAX_VALUE, 16));
+
+        JLabel sellPriceValueComp = new JLabel(sellPriceDisplay, SwingConstants.CENTER);
+        sellPriceValueComp.setForeground(STAT_GOLD);
+        sellPriceValueComp.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_VALUE));
+        sellPriceValueComp.setAlignmentX(Component.CENTER_ALIGNMENT);
+        sellPriceValueComp.setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
+        liveSellPriceValueLabel = sellPriceValueComp;
+        liveSellPriceHeaderLabel = sellPriceLabelComp;
+
+        sellPriceBox.add(sellPriceLabelComp);
+        sellPriceBox.add(sellPriceValueComp);
+        inner.add(sellPriceBox);
+        inner.add(Box.createVerticalStrut(4));
+
+        JPanel grid = new JPanel(new GridLayout(1, 2, 2, 2));
         grid.setBackground(BG_DETAIL);
         grid.setAlignmentX(Component.LEFT_ALIGNMENT);
-        grid.setMaximumSize(new Dimension(225, 90));
+        grid.setMaximumSize(new Dimension(225, 45));
 
-        grid.add(buildStatBox("Buy Price", item[2].equals("0") ? "?" : formatPrice(item[2]), STAT_GOLD, item[2].equals("0") ? null : formatFullPrice(item[2]) + " gp"));
-        grid.add(buildStatBox("Sell Price", item[3].equals("0") ? "?" : formatPrice(item[3]), STAT_GOLD, item[3].equals("0") ? null : formatFullPrice(item[3]) + " gp"));
         grid.add(buildStatBox("Buy Qty/hr", item.length > 8 ? item[8] : "?", STAT_GOLD, null));
         grid.add(buildStatBox("Sell Qty/hr", item.length > 9 ? item[9] : "?", STAT_GOLD, null));
         liveStatGrid = grid;
@@ -1840,8 +1872,10 @@ private String openBankItemName = null;
                     searchReopenAction = null;
                     graphWasOpen = false;
                     liveHeaderPriceLabel = null;
-                    liveLastTradedValueLabel = null;
-                    liveLastTradedHeaderLabel = null;
+                    liveBuyPriceValueLabel = null;
+                    liveBuyPriceHeaderLabel = null;
+                    liveSellPriceValueLabel = null;
+                    liveSellPriceHeaderLabel = null;
                     liveStatGrid = null;
                     liveStatsLabels = null;
                     liveOpenItemId = -1;
@@ -2370,8 +2404,10 @@ private String openBankItemName = null;
                     watchlistReopenAction = null;
                     graphWasOpen = false;
                     liveHeaderPriceLabel = null;
-                    liveLastTradedValueLabel = null;
-                    liveLastTradedHeaderLabel = null;
+                    liveBuyPriceValueLabel = null;
+                    liveBuyPriceHeaderLabel = null;
+                    liveSellPriceValueLabel = null;
+                    liveSellPriceHeaderLabel = null;
                     liveStatGrid = null;
                     liveStatsLabels = null;
                     liveOpenItemId = -1;
@@ -3465,8 +3501,10 @@ private String openBankItemName = null;
                     bankReopenAction = null;
                     graphWasOpen = false;
                     liveHeaderPriceLabel = null;
-                    liveLastTradedValueLabel = null;
-                    liveLastTradedHeaderLabel = null;
+                    liveBuyPriceValueLabel = null;
+                    liveBuyPriceHeaderLabel = null;
+                    liveSellPriceValueLabel = null;
+                    liveSellPriceHeaderLabel = null;
                     liveStatGrid = null;
                     liveStatsLabels = null;
                     liveOpenItemId = -1;
