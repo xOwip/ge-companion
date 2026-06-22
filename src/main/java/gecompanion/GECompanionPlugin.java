@@ -23,7 +23,6 @@ import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.api.events.MenuEntryAdded;
 import net.runelite.api.MenuEntry;
 import net.runelite.api.MenuAction;
-import net.runelite.client.input.KeyManager;
 import net.runelite.client.eventbus.EventBus;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.config.ConfigManager;
