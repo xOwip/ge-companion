@@ -1162,7 +1162,7 @@ private String openBankItemName = null;
 
         final boolean[] graphOpen = {false};
         final JPanel[] graphPanelHolder = {null};
-        final JLabel[] statsLabels = new JLabel[6];
+        final JLabel[] statsLabels = new JLabel[4];
         final boolean[] statsOpen2 = {false};
         final javax.swing.JViewport[] statsViewportHolder = {null};
         final JLabel[] statsArrowHolder = {null};
@@ -1292,25 +1292,28 @@ private String openBankItemName = null;
         statsHeader.add(statsLbl, BorderLayout.WEST);
         statsHeader.add(statsArrow, BorderLayout.EAST);
 
-        JPanel statsContent = new JPanel(new GridLayout(3, 2, 2, 2));
+        JPanel statsContent = new JPanel(new GridLayout(2, 2, 2, 2));
         statsContent.setBackground(BG_DETAIL);
         statsContent.setAlignmentX(Component.LEFT_ALIGNMENT);
-        statsContent.setPreferredSize(new Dimension(200, 100));
+        statsContent.setPreferredSize(new Dimension(200, 110));
         statsContent.setMaximumSize(new Dimension(200, 200));
 
-        String[] statNames = {"Overall High", "Overall Low", "Buying High", "Buying Low", "Selling High", "Selling Low"};
-        Color[] statColors = {TEXT_PRIMARY, TEXT_PRIMARY, GOLD, GOLD, new Color(74, 122, 191), new Color(74, 122, 191)};
-        for (int i = 0; i < 6; i++) {
+        String[] statNames = {"Buying High", "Buying Low", "Selling High", "Selling Low"};
+        Color[] statColors = {GOLD, GOLD, STAT_BLUE, STAT_BLUE};
+        for (int i = 0; i < 4; i++) {
             JPanel box = new JPanel();
             box.setLayout(new BoxLayout(box, BoxLayout.Y_AXIS));
             box.setBackground(new Color(14, 12, 13));
-            box.setBorder(new EmptyBorder(4, 5, 4, 5));
-            JLabel nameLabel = new JLabel(statNames[i].toUpperCase());
+            box.setBorder(new EmptyBorder(8, 5, 0, 5));
+            JLabel nameLabel = new JLabel(statNames[i].toUpperCase(), SwingConstants.CENTER);
             nameLabel.setForeground(TEXT_DIM);
             nameLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
             JLabel valLabel = new JLabel("—");
             valLabel.setForeground(statColors[i]);
             valLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_VALUE));
+            valLabel.setHorizontalAlignment(SwingConstants.CENTER);
+            valLabel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
+            nameLabel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 16));
             statsLabels[i] = valLabel;
             box.add(nameLabel);
             box.add(valLabel);
@@ -1331,14 +1334,14 @@ private String openBankItemName = null;
                     statsViewport.setView(statsContent);
                     statsViewport.setVisible(true);
                     statsContent.doLayout();
-                    int fullH = 135;
+                    int fullH = 110;
                     final int targetH = fullH;
                     statsViewport.setPreferredSize(new Dimension(1, 0));
                     statsViewport.setViewPosition(new java.awt.Point(0, targetH));
                     int[] curH = {0};
                     javax.swing.Timer t = new javax.swing.Timer(16, null);
                     t.addActionListener(ev -> {
-                        curH[0] = Math.min(curH[0] + 30, targetH);
+                        curH[0] = Math.min(curH[0] + 15, targetH);
                         statsViewport.setPreferredSize(new Dimension(1, curH[0]));
                         statsViewport.setViewPosition(new java.awt.Point(0, targetH - curH[0]));
                         statsViewport.revalidate();
@@ -1361,7 +1364,7 @@ private String openBankItemName = null;
                     int[] curH = {targetH};
                     javax.swing.Timer t = new javax.swing.Timer(16, null);
                     t.addActionListener(ev -> {
-                        curH[0] = Math.max(curH[0] - 30, 0);
+                        curH[0] = Math.max(curH[0] - 15, 0);
                         statsViewport.setPreferredSize(new Dimension(1, curH[0]));
                         statsViewport.setViewPosition(new java.awt.Point(0, targetH - curH[0]));
                         statsViewport.revalidate();
@@ -5476,15 +5479,17 @@ private String[] buildItemDataFromCache(String name)
         box.setBackground(new Color(14, 12, 13));
         box.setBorder(new EmptyBorder(5, 5, 5, 5));
 
-        JLabel labelText = new JLabel(label.toUpperCase());
+        JLabel labelText = new JLabel(label.toUpperCase(), SwingConstants.CENTER);
         labelText.setForeground(TEXT_DIM);
         labelText.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
         labelText.setAlignmentX(Component.LEFT_ALIGNMENT);
+        labelText.setMaximumSize(new Dimension(Integer.MAX_VALUE, 16));
 
-        JLabel valueText = new JLabel(value);
+        JLabel valueText = new JLabel(value, SwingConstants.CENTER);
         valueText.setForeground(valueColor);
         valueText.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_VALUE));
         valueText.setAlignmentX(Component.LEFT_ALIGNMENT);
+        valueText.setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
         if (tooltip != null) valueText.setToolTipText(tooltip);
 
         box.add(labelText);
