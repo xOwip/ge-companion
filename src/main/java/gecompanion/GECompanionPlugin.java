@@ -90,6 +90,7 @@ public class GECompanionPlugin extends Plugin
 	// 1h buy/sell volume — itemId -> volume
 	private final Map<Integer, Long> buyVolume1h = new HashMap<>();
 	private final Map<Integer, Long> sellVolume1h = new HashMap<>();
+	private final Map<Integer, Long> volumeCache = new HashMap<>();
 	// Name -> itemId mapping
 	private final Map<String, Integer> nameToId = new HashMap<>();
 	// Item GE limits — itemId -> limit
@@ -183,11 +184,12 @@ public class GECompanionPlugin extends Plugin
 				log.debug("Fetched prices for {} items", priceCache.size());
 // Fetch all timeframe averages
 				fetch24hAverages();
+				fetchVolumes();
 				fetchTimeframeAverages("1h", avgPrice1h);
 				fetchTimeframeAverages("6h", avgPrice6h);
 
 				// Update panel on EDT
-				javax.swing.SwingUtilities.invokeLater(() -> panel.onPricesUpdated(priceCache, nameToId, avgPrice24h, avgPrice1h, avgPrice6h, itemLimits, buyVolume1h, sellVolume1h));
+				javax.swing.SwingUtilities.invokeLater(() -> panel.onPricesUpdated(priceCache, nameToId, avgPrice24h, avgPrice1h, avgPrice6h, itemLimits, buyVolume1h, sellVolume1h, volumeCache));
 			}
 		}
 		catch (Exception e)
@@ -289,9 +291,46 @@ private void fetch24hAverages()
     }
     catch (Exception e)
     {
-        log.warn("Error fetching 24h averages", e);
-    }
+		log.warn("Error fetching 24h averages", e);
+	}
 }
+
+	private void fetchVolumes()
+	{
+		try
+		{
+			Request request = new Request.Builder()
+					.url("https://prices.runescape.wiki/api/v1/osrs/volumes")
+					.header("User-Agent", "GE Companion RuneLite Plugin")
+					.build();
+
+			try (Response response = okHttpClient.newCall(request).execute())
+			{
+				if (!response.isSuccessful() || response.body() == null) return;
+
+				String body = response.body().string();
+				JSONObject json = new JSONObject(body);
+				JSONObject data = json.getJSONObject("data");
+
+				volumeCache.clear();
+				for (String key : data.keySet())
+				{
+					try
+					{
+						int id = Integer.parseInt(key);
+						long volume = data.optLong(key, 0);
+						if (volume > 0) volumeCache.put(id, volume);
+					}
+					catch (NumberFormatException e) { }
+				}
+				log.debug("Fetched volumes for {} items", volumeCache.size());
+			}
+		}
+		catch (Exception e)
+		{
+			log.warn("Error fetching volumes", e);
+		}
+	}
 
 private void fetchMapping()
 	{

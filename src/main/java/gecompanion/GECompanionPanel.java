@@ -139,6 +139,7 @@ public class GECompanionPanel extends PluginPanel
     private java.util.Map<Integer, Integer> itemLimits = new java.util.HashMap<>();
     private java.util.Map<Integer, Long> buyVolume1h = new java.util.HashMap<>();
     private java.util.Map<Integer, Long> sellVolume1h = new java.util.HashMap<>();
+    private java.util.Map<Integer, Long> volumeCache = new java.util.HashMap<>();
 
     // Price graph cache — key: "itemId_timeframe" e.g. "20997_30d"
     private final java.util.Map<String, java.util.List<PricePoint>> timeseriesCache = new java.util.HashMap<>();
@@ -582,7 +583,7 @@ private String openBankItemName = null;
         showTab(activeTab);
     }
 
-    public void onPricesUpdated(java.util.Map<Integer, PriceData> priceCache, java.util.Map<String, Integer> nameToId, java.util.Map<Integer, Long> avgPrice24h, java.util.Map<Integer, Long> avgPrice1h, java.util.Map<Integer, Long> avgPrice6h, java.util.Map<Integer, Integer> itemLimits, java.util.Map<Integer, Long> buyVolume1h, java.util.Map<Integer, Long> sellVolume1h)
+    public void onPricesUpdated(java.util.Map<Integer, PriceData> priceCache, java.util.Map<String, Integer> nameToId, java.util.Map<Integer, Long> avgPrice24h, java.util.Map<Integer, Long> avgPrice1h, java.util.Map<Integer, Long> avgPrice6h, java.util.Map<Integer, Integer> itemLimits, java.util.Map<Integer, Long> buyVolume1h, java.util.Map<Integer, Long> sellVolume1h, java.util.Map<Integer, Long> volumeCache)
     {
         this.priceCache = priceCache;
         this.nameToId = nameToId;
@@ -593,6 +594,7 @@ private String openBankItemName = null;
         this.itemLimits = itemLimits;
         this.buyVolume1h = buyVolume1h;
         this.sellVolume1h = sellVolume1h;
+        this.volumeCache = volumeCache;
         secondsSinceRefresh = 0;
 
         // If a detail panel is open, update labels in place — no rebuild
