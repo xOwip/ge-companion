@@ -4095,6 +4095,13 @@ private String[] buildItemDataFromCache(String name)
             btn.setBorder(BorderFactory.createLineBorder(frame.equals(activeTimeFrame) ? GOLD : new Color(58, 53, 48)));
             btn.addActionListener(e -> {
                 activeTimeFrame = frame;
+                // Close floating stats panel if open
+                if (activeStatsFloatPanel != null && activeStatsLayeredPane != null) {
+                    activeStatsLayeredPane.remove(activeStatsFloatPanel);
+                    activeStatsLayeredPane.repaint();
+                    activeStatsFloatPanel = null;
+                    activeStatsLayeredPane = null;
+                }
                 isRefreshing = true;
                 showTab(activeTab);
                 isRefreshing = false;
