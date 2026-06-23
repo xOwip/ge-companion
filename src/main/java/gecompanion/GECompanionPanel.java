@@ -121,6 +121,10 @@ public class GECompanionPanel extends PluginPanel
     private JLabel liveHeaderPriceLabel = null;
     private javax.swing.JPanel activeStatsFloatPanel = null;
     private javax.swing.JLayeredPane activeStatsLayeredPane = null;
+    private JLabel liveFloatVolumeLabel = null;
+    private JLabel liveFloatMarginLabel = null;
+    private JLabel liveFloatProfitLabel = null;
+    private JLabel liveFloatRoiLabel = null;
     private JLabel liveBuyPriceValueLabel = null;
     private JLabel liveBuyPriceHeaderLabel = null;
     private JLabel liveSellPriceValueLabel = null;
@@ -983,7 +987,28 @@ private String openBankItemName = null;
             liveSellPriceHeaderLabel.setText(sellPriceLabel);
         }
 
-        // Repaint graph if open
+// Update floating stats panel live (Margin, Profit, ROI only — Volume is static)
+        if (activeStatsFloatPanel != null && liveOpenItemId != -1) {
+            long liveMargin = pd.high - pd.low;
+            Integer liveBuyLimit = itemLimits.get(liveOpenItemId);
+            long liveProfitAtLimit = liveBuyLimit != null ? liveMargin * liveBuyLimit : 0;
+            double liveRoi = pd.low > 0 ? ((double) liveMargin / pd.low) * 100.0 : 0;
+            if (liveFloatMarginLabel != null) {
+                String mStr = (liveMargin >= 0 ? "+" : "") + formatFullPrice(String.valueOf(liveMargin)) + " gp";
+                liveFloatMarginLabel.setText(mStr);
+                liveFloatMarginLabel.setForeground(liveMargin >= 0 ? new Color(109, 184, 109) : new Color(192, 57, 43));
+            }
+            if (liveFloatProfitLabel != null) {
+                String pStr = liveBuyLimit != null ? (liveProfitAtLimit >= 0 ? "+" : "") + formatFullPrice(String.valueOf(liveProfitAtLimit)) + " gp" : "?";
+                liveFloatProfitLabel.setText(pStr);
+                liveFloatProfitLabel.setForeground(liveProfitAtLimit >= 0 ? new Color(109, 184, 109) : new Color(192, 57, 43));
+            }
+            if (liveFloatRoiLabel != null) {
+                liveFloatRoiLabel.setText(String.format("%.2f%%", liveRoi));
+            }
+        }
+
+// Repaint graph if open
         if (liveGraphPanel != null)
         {
             liveGraphPanel.repaint();
@@ -1891,6 +1916,10 @@ private String openBankItemName = null;
                     liveBuyPriceHeaderLabel = null;
                     liveSellPriceValueLabel = null;
                     liveSellPriceHeaderLabel = null;
+                    liveFloatVolumeLabel = null;
+                    liveFloatMarginLabel = null;
+                    liveFloatProfitLabel = null;
+                    liveFloatRoiLabel = null;
                     liveStatGrid = null;
                     liveStatsLabels = null;
                     liveOpenItemId = -1;
@@ -2423,6 +2452,10 @@ private String openBankItemName = null;
                     liveBuyPriceHeaderLabel = null;
                     liveSellPriceValueLabel = null;
                     liveSellPriceHeaderLabel = null;
+                    liveFloatVolumeLabel = null;
+                    liveFloatMarginLabel = null;
+                    liveFloatProfitLabel = null;
+                    liveFloatRoiLabel = null;
                     liveStatGrid = null;
                     liveStatsLabels = null;
                     liveOpenItemId = -1;
@@ -3520,6 +3553,10 @@ private String openBankItemName = null;
                     liveBuyPriceHeaderLabel = null;
                     liveSellPriceValueLabel = null;
                     liveSellPriceHeaderLabel = null;
+                    liveFloatVolumeLabel = null;
+                    liveFloatMarginLabel = null;
+                    liveFloatProfitLabel = null;
+                    liveFloatRoiLabel = null;
                     liveStatGrid = null;
                     liveStatsLabels = null;
                     liveOpenItemId = -1;
@@ -4170,23 +4207,33 @@ private String[] buildItemDataFromCache(String name)
                 String fprofitStr = fbuyLimit != null ? (fprofitAtLimit >= 0 ? "+" : "") + formatFullPrice(String.valueOf(fprofitAtLimit)) + " gp" : "?";
                 String froiStr = String.format("%.2f%%", froi);
 
-                statsFloatPanel.add(buildFloatStatRow("Daily Volume", fvolStr, new Color(212, 175, 55)));
+                JPanel volRow = buildFloatStatRow("Daily Volume", fvolStr, new Color(212, 175, 55));
+                liveFloatVolumeLabel = (JLabel) ((java.awt.BorderLayout) volRow.getLayout() == null ? null : volRow.getComponent(1));
+                statsFloatPanel.add(volRow);
                 statsFloatPanel.add(Box.createVerticalStrut(3));
-                statsFloatPanel.add(buildFloatStatRow("Margin", fmarginStr, fmargin >= 0 ? new Color(109, 184, 109) : new Color(192, 57, 43)));
+                JPanel marginRow = buildFloatStatRow("Margin", fmarginStr, fmargin >= 0 ? new Color(109, 184, 109) : new Color(192, 57, 43));
+                liveFloatMarginLabel = (JLabel) marginRow.getComponent(1);
+                statsFloatPanel.add(marginRow);
                 statsFloatPanel.add(Box.createVerticalStrut(3));
-                statsFloatPanel.add(buildFloatStatRow("Profit (at limit)", fprofitStr, fprofitAtLimit >= 0 ? new Color(109, 184, 109) : new Color(192, 57, 43)));
+                JPanel profitRow = buildFloatStatRow("Profit (at limit)", fprofitStr, fprofitAtLimit >= 0 ? new Color(109, 184, 109) : new Color(192, 57, 43));
+                liveFloatProfitLabel = (JLabel) profitRow.getComponent(1);
+                statsFloatPanel.add(profitRow);
                 statsFloatPanel.add(Box.createVerticalStrut(3));
-                statsFloatPanel.add(buildFloatStatRow("ROI", froiStr, new Color(232, 227, 216)));
+                JPanel roiRow = buildFloatStatRow("ROI", froiStr, new Color(232, 227, 216));
+                liveFloatRoiLabel = (JLabel) roiRow.getComponent(1);
+                statsFloatPanel.add(roiRow);
                 statsFloatPanel.add(Box.createVerticalStrut(5));
                 JSeparator sep = new JSeparator();
                 sep.setForeground(new Color(60, 50, 30));
                 sep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
                 statsFloatPanel.add(sep);
                 statsFloatPanel.add(Box.createVerticalStrut(4));
-                JLabel footnote = new JLabel("Updated when panel opened · reopen for latest");
+                JLabel footnote = new JLabel("<html><center>Margin, Profit & ROI update live<br>Volume updates on startup</center></html>", SwingConstants.CENTER);
                 footnote.setForeground(new Color(107, 102, 96));
                 footnote.setFont(new Font("Monospaced", Font.PLAIN, 9));
                 footnote.setAlignmentX(Component.CENTER_ALIGNMENT);
+                footnote.setHorizontalAlignment(SwingConstants.CENTER);
+                footnote.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
                 statsFloatPanel.add(footnote);
             }
         }
@@ -5690,6 +5737,7 @@ private String[] buildItemDataFromCache(String name)
         valueText.setForeground(valueColor);
         valueText.setFont(new Font("Monospaced", Font.PLAIN, 11));
 
+        labelText.setBorder(new EmptyBorder(0, 0, 0, 12));
         row.add(labelText, java.awt.BorderLayout.WEST);
         row.add(valueText, java.awt.BorderLayout.EAST);
         return row;
