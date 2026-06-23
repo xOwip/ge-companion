@@ -3160,8 +3160,11 @@ private String openBankItemName = null;
         {
             // Sort by delta for gainers/losers
             java.util.List<String[]> allBankItems = new java.util.ArrayList<>();
+            java.util.Set<String> seenNames = new java.util.HashSet<>();
             for (String name : bankItems)
             {
+                if (seenNames.contains(name)) continue;
+                seenNames.add(name);
                 String[] item = buildItemDataFromCache(name);
                 if (item != null) allBankItems.add(item);
             }
