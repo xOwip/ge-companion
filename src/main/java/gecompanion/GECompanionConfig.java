@@ -18,30 +18,13 @@ public interface GECompanionConfig extends Config
 	)
 	String bankSection = "bank";
 
-	@ConfigSection(
-			name = "Item Lookup",
-			description = "Right-click item lookup settings",
-			position = 10
-	)
-	String lookupSection = "lookup";
-
 	@ConfigItem(
 			keyName = "rightClickLookup",
 			name = "Right-click item lookup",
 			description = "Show Price Check option when right-clicking items to open them in GE Companion",
-			section = lookupSection,
 			position = 0
 	)
 	default boolean rightClickLookup() { return true; }
-
-	@ConfigItem(
-			keyName = "lookupMenuType",
-			name = "Lookup menu type",
-			description = "Controls when the GE Companion lookup option appears in the item menu. Shift right-click keeps the normal menu clean.",
-			section = lookupSection,
-			position = 1
-	)
-	default LookupMenuType lookupMenuType() { return LookupMenuType.ALWAYS; }
 
 	@ConfigItem(
 			keyName = "autoScanBank",

@@ -426,10 +426,6 @@ private void fetchMapping()
 		if (itemId <= 0) return;
 		if (!panel.isItemPriceable(itemId)) return;
 
-		boolean shiftPressed = client.isKeyPressed(java.awt.event.KeyEvent.VK_SHIFT);
-		boolean shouldShow = config.lookupMenuType() == LookupMenuType.ALWAYS || shiftPressed;
-		if (!shouldShow) return;
-
 		final int finalItemId = itemId;
 		client.createMenuEntry(-1)
 				.setOption("Price Check")
