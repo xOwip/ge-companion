@@ -4073,36 +4073,85 @@ private String[] buildItemDataFromCache(String name)
         headerRow.setAlignmentX(Component.LEFT_ALIGNMENT);
         headerRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 80));
 
-        JPanel iconBox = new JPanel(new java.awt.GridBagLayout());
-        iconBox.setPreferredSize(new Dimension(42, 42));
-        iconBox.setBackground(new Color(14, 12, 13));
-        iconBox.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 40)));
-
         Integer detailItemId = nameToId.get(name.toLowerCase()
-            .replace('\u2019', '\'')
-            .replace('\u2018', '\''));
+                .replace('\u2019', '\'')
+                .replace('\u2018', '\''));
         if (detailItemId == null) detailItemId = nameToId.get(name.toLowerCase());
-        if (detailItemId != null)
-        {
+
+        // Build tooltip for second icon
+        String tooltipHtml = "<html><table width='230' cellpadding='2'>";
+        if (detailItemId != null) {
+            PriceData tooltipPd = priceCache.get(detailItemId);
+            Long dailyVol = volumeCache.get(detailItemId);
+            Integer buyLimit = itemLimits.get(detailItemId);
+            if (tooltipPd != null) {
+                long margin = tooltipPd.high - tooltipPd.low;
+                long profitAtLimit = buyLimit != null ? margin * buyLimit : 0;
+                double roi = tooltipPd.low > 0 ? ((double) margin / tooltipPd.low) * 100.0 : 0;
+                String volStr = dailyVol != null ? String.format("%,d", dailyVol) : "?";
+                String marginColor = margin >= 0 ? "#6db86d" : "#c0392b";
+                String profitColor = profitAtLimit >= 0 ? "#6db86d" : "#c0392b";
+                String marginStr = (margin >= 0 ? "+" : "") + formatFullPrice(String.valueOf(margin)) + " gp";
+                String profitStr = buyLimit != null ? (profitAtLimit >= 0 ? "+" : "") + formatFullPrice(String.valueOf(profitAtLimit)) + " gp" : "?";
+                String roiStr = String.format("%.2f%%", roi);
+                tooltipHtml += "<tr><td><font color='#8a8680'>Daily Volume</font></td><td>&nbsp;&nbsp;</td><td><font color='#d4af37'>" + volStr + "</font></td></tr>";
+                tooltipHtml += "<tr><td><font color='#8a8680'>Margin</font></td><td>&nbsp;&nbsp;</td><td><font color='" + marginColor + "'>" + marginStr + "</font></td></tr>";
+                tooltipHtml += "<tr><td><font color='#8a8680'>Profit (at limit)</font></td><td>&nbsp;&nbsp;</td><td><font color='" + profitColor + "'>" + profitStr + "</font></td></tr>";
+                tooltipHtml += "<tr><td><font color='#8a8680'>ROI</font></td><td>&nbsp;&nbsp;</td><td><font color='#e8e3d8'>" + roiStr + "</font></td></tr>";
+                tooltipHtml += "<tr><td colspan='3'><hr></td></tr>";
+                tooltipHtml += "<tr><td colspan='3'><font color='#6b6660'><i>Updated when panel opened &middot; reopen for latest</i></font></td></tr>";
+            }
+        }
+        tooltipHtml += "</table></html>";
+
+        // Override getToolTipLocation to position tooltip above the icon
+        final String finalTooltipHtml = tooltipHtml;
+        javax.swing.JPanel iconBoxWithTooltip = new javax.swing.JPanel(new java.awt.GridBagLayout()) {
+            @Override
+            public java.awt.Point getToolTipLocation(java.awt.event.MouseEvent e) {
+                return new java.awt.Point(0, -160);
+            }
+        };
+        iconBoxWithTooltip.setPreferredSize(new Dimension(42, 42));
+        iconBoxWithTooltip.setMaximumSize(new Dimension(42, 42));
+        iconBoxWithTooltip.setMinimumSize(new Dimension(42, 42));
+        iconBoxWithTooltip.setBackground(new Color(14, 12, 13));
+        iconBoxWithTooltip.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 40)));
+        iconBoxWithTooltip.setToolTipText(finalTooltipHtml);
+
+        // Load icon directly into iconBoxWithTooltip
+        if (detailItemId != null) {
             final int finalDetailId = detailItemId;
             new Thread(() -> {
                 java.awt.image.BufferedImage detailIcon = plugin.getItemManager().getImage(finalDetailId);
-                if (detailIcon != null)
-                {
+                if (detailIcon != null) {
                     javax.swing.SwingUtilities.invokeLater(() -> {
                         javax.swing.JLabel iconLabel = new javax.swing.JLabel(new javax.swing.ImageIcon(detailIcon));
-                        iconBox.add(iconLabel);
-                        iconBox.revalidate();
-                        iconBox.repaint();
-                        if (iconBox.getParent() != null) iconBox.getParent().repaint();
+                        iconBoxWithTooltip.add(iconLabel);
+                        iconBoxWithTooltip.revalidate();
+                        iconBoxWithTooltip.repaint();
+                        if (iconBoxWithTooltip.getParent() != null) iconBoxWithTooltip.getParent().repaint();
                     });
                 }
             }).start();
         }
 
+// Cursor change + hover border highlight for discoverability
+        iconBoxWithTooltip.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        iconBoxWithTooltip.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                iconBoxWithTooltip.setBorder(BorderFactory.createLineBorder(new Color(100, 80, 20)));
+            }
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                iconBoxWithTooltip.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 40)));
+            }
+        });
+
         JPanel detailIconWrapper = new JPanel(new java.awt.GridBagLayout());
         detailIconWrapper.setBackground(BG_DETAIL);
-        detailIconWrapper.add(iconBox);
+        detailIconWrapper.add(iconBoxWithTooltip);
         headerRow.add(detailIconWrapper, BorderLayout.WEST);
 
         JPanel namePrice = new JPanel();
