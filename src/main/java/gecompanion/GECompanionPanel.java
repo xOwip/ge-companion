@@ -119,6 +119,8 @@ public class GECompanionPanel extends PluginPanel
     private String[] currentOpenBankItem = null;
     // Live label references for zero-disruption refresh
     private JLabel liveHeaderPriceLabel = null;
+    private javax.swing.JPanel activeStatsFloatPanel = null;
+    private javax.swing.JLayeredPane activeStatsLayeredPane = null;
     private JLabel liveBuyPriceValueLabel = null;
     private JLabel liveBuyPriceHeaderLabel = null;
     private JLabel liveSellPriceValueLabel = null;
@@ -1001,6 +1003,13 @@ private String openBankItemName = null;
     // ── SHARED DETAIL PANEL BUILDER ──
     private JPanel buildInlineDetail(String[] item, boolean isWatchlist)
     {
+        // Auto-close any open floating stats panel instantly
+        if (activeStatsFloatPanel != null && activeStatsLayeredPane != null) {
+            activeStatsLayeredPane.remove(activeStatsFloatPanel);
+            activeStatsLayeredPane.repaint();
+            activeStatsFloatPanel = null;
+            activeStatsLayeredPane = null;
+        }
         String name = item[0];
         String price = item[1];
         String profit = item[2];
@@ -4136,8 +4145,60 @@ private String[] buildItemDataFromCache(String name)
             }).start();
         }
 
-// Cursor change + hover border highlight for discoverability
+// Build floating stats panel content
+        JPanel statsFloatPanel = new JPanel();
+        statsFloatPanel.setLayout(new BoxLayout(statsFloatPanel, BoxLayout.Y_AXIS));
+        statsFloatPanel.setBackground(new Color(14, 12, 13));
+        statsFloatPanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(80, 65, 20), 1),
+                BorderFactory.createEmptyBorder(6, 10, 6, 10)
+        ));
+
+        // Build stat rows
+        if (detailItemId != null) {
+            PriceData fpd = priceCache.get(detailItemId);
+            Long fdailyVol = volumeCache.get(detailItemId);
+            Integer fbuyLimit = itemLimits.get(detailItemId);
+            if (fpd != null) {
+                long fmargin = fpd.high - fpd.low;
+                long fprofitAtLimit = fbuyLimit != null ? fmargin * fbuyLimit : 0;
+                double froi = fpd.low > 0 ? ((double) fmargin / fpd.low) * 100.0 : 0;
+                String fvolStr = fdailyVol != null ? String.format("%,d", fdailyVol) : "?";
+                String fmarginColor = fmargin >= 0 ? "#6db86d" : "#c0392b";
+                String fprofitColor = fprofitAtLimit >= 0 ? "#6db86d" : "#c0392b";
+                String fmarginStr = (fmargin >= 0 ? "+" : "") + formatFullPrice(String.valueOf(fmargin)) + " gp";
+                String fprofitStr = fbuyLimit != null ? (fprofitAtLimit >= 0 ? "+" : "") + formatFullPrice(String.valueOf(fprofitAtLimit)) + " gp" : "?";
+                String froiStr = String.format("%.2f%%", froi);
+
+                statsFloatPanel.add(buildFloatStatRow("Daily Volume", fvolStr, new Color(212, 175, 55)));
+                statsFloatPanel.add(Box.createVerticalStrut(3));
+                statsFloatPanel.add(buildFloatStatRow("Margin", fmarginStr, fmargin >= 0 ? new Color(109, 184, 109) : new Color(192, 57, 43)));
+                statsFloatPanel.add(Box.createVerticalStrut(3));
+                statsFloatPanel.add(buildFloatStatRow("Profit (at limit)", fprofitStr, fprofitAtLimit >= 0 ? new Color(109, 184, 109) : new Color(192, 57, 43)));
+                statsFloatPanel.add(Box.createVerticalStrut(3));
+                statsFloatPanel.add(buildFloatStatRow("ROI", froiStr, new Color(232, 227, 216)));
+                statsFloatPanel.add(Box.createVerticalStrut(5));
+                JSeparator sep = new JSeparator();
+                sep.setForeground(new Color(60, 50, 30));
+                sep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
+                statsFloatPanel.add(sep);
+                statsFloatPanel.add(Box.createVerticalStrut(4));
+                JLabel footnote = new JLabel("Updated when panel opened · reopen for latest");
+                footnote.setForeground(new Color(107, 102, 96));
+                footnote.setFont(new Font("Monospaced", Font.PLAIN, 9));
+                footnote.setAlignmentX(Component.CENTER_ALIGNMENT);
+                statsFloatPanel.add(footnote);
+            }
+        }
+
+        final boolean[] statsOpen = {false};
+        final javax.swing.Timer[] closeTimer = {null};
+        // Declare arrowIndicator early so it can be referenced in mouse listener
+        final JLabel[] arrowIndicatorRef = {null};
+
+        // Hover border highlight + ▲ indicator
         iconBoxWithTooltip.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        iconBoxWithTooltip.setToolTipText(null); // remove old tooltip — replaced by floating panel
         iconBoxWithTooltip.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent e) {
@@ -4145,13 +4206,105 @@ private String[] buildItemDataFromCache(String name)
             }
             @Override
             public void mouseExited(java.awt.event.MouseEvent e) {
-                iconBoxWithTooltip.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 40)));
+                if (!statsOpen[0])
+                    iconBoxWithTooltip.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 40)));
+            }
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                javax.swing.JRootPane root = javax.swing.SwingUtilities.getRootPane(iconBoxWithTooltip);
+                if (root == null) return;
+                javax.swing.JLayeredPane layered = root.getLayeredPane();
+
+                if (statsOpen[0]) {
+                    // Close
+// Slide down animation
+                    statsOpen[0] = false;
+                    iconBoxWithTooltip.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 40)));
+                    int[] curH2 = {statsFloatPanel.getHeight()};
+                    final int closingY = statsFloatPanel.getY();
+                    final int closingX = statsFloatPanel.getX();
+                    final int closingW = statsFloatPanel.getWidth();
+                    javax.swing.Timer closeTimer2 = new javax.swing.Timer(12, null);
+                    closeTimer2.addActionListener(ev -> {
+                        curH2[0] = Math.max(curH2[0] - 15, 0);
+                        // Keep Y fixed at bottom, shrink from top down
+                        int newY = closingY + (statsFloatPanel.getPreferredSize().height - curH2[0]);
+                        statsFloatPanel.setBounds(closingX, newY, closingW, curH2[0]);
+                        layered.repaint();
+                        if (curH2[0] <= 0) {
+                            closeTimer2.stop();
+                            layered.remove(statsFloatPanel);
+                            layered.repaint();
+                        }
+                    });
+                    closeTimer2.start();
+                } else {
+                    // Calculate position above icon
+                    java.awt.Point arrowLoc = arrowIndicatorRef[0] != null ?
+                            javax.swing.SwingUtilities.convertPoint(arrowIndicatorRef[0], 0, 0, layered) :
+                            javax.swing.SwingUtilities.convertPoint(iconBoxWithTooltip, 0, 0, layered);
+                    java.awt.Point iconLoc = javax.swing.SwingUtilities.convertPoint(iconBoxWithTooltip, 0, 0, layered);
+                    statsFloatPanel.setSize(statsFloatPanel.getPreferredSize());
+                    int pw = statsFloatPanel.getPreferredSize().width;
+                    int ph = statsFloatPanel.getPreferredSize().height;
+                    int px = iconLoc.x;
+                    int py = arrowLoc.y - ph;
+// Slide up animation — starts at tip of ▲, grows upward
+                    statsFloatPanel.setBounds(px, arrowLoc.y, pw, 0);
+                    layered.add(statsFloatPanel, javax.swing.JLayeredPane.POPUP_LAYER);
+                    layered.repaint();
+                    statsOpen[0] = true;
+                    activeStatsFloatPanel = statsFloatPanel;
+                    activeStatsLayeredPane = layered;
+                    final int targetY = py;
+                    final int targetH = ph;
+                    int[] curH = {0};
+                    javax.swing.Timer openTimer = new javax.swing.Timer(12, null);
+                    openTimer.addActionListener(ev -> {
+                        curH[0] = Math.min(curH[0] + 15, targetH);
+                        int newY = arrowLoc.y - curH[0];
+                        statsFloatPanel.setBounds(px, newY, pw, curH[0]);
+                        layered.repaint();
+                        if (curH[0] >= targetH) {
+                            openTimer.stop();
+                        }
+                    });
+                    openTimer.start();
+                    iconBoxWithTooltip.setBorder(BorderFactory.createLineBorder(new Color(140, 110, 30)));
+                }
+            }
+        });
+
+// ▲ indicator — shows on hover above the icon
+        JLabel arrowIndicator = new JLabel("▲", SwingConstants.LEFT);
+        arrowIndicatorRef[0] = arrowIndicator;
+        arrowIndicator.setForeground(new Color(100, 80, 20));
+        arrowIndicator.setFont(new Font("Monospaced", Font.PLAIN, 8));
+        arrowIndicator.setAlignmentX(Component.CENTER_ALIGNMENT);
+        arrowIndicator.setForeground(new Color(0, 0, 0, 0)); // transparent when not hovered
+
+        // Show/hide ▲ on icon hover
+        iconBoxWithTooltip.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseEntered(java.awt.event.MouseEvent e) {
+                arrowIndicator.setForeground(new Color(100, 80, 20));
+            }
+            @Override
+            public void mouseExited(java.awt.event.MouseEvent e) {
+                if (!statsOpen[0]) arrowIndicator.setForeground(new Color(0, 0, 0, 0));
             }
         });
 
         JPanel detailIconWrapper = new JPanel(new java.awt.GridBagLayout());
         detailIconWrapper.setBackground(BG_DETAIL);
-        detailIconWrapper.add(iconBoxWithTooltip);
+        java.awt.GridBagConstraints gbc = new java.awt.GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = java.awt.GridBagConstraints.SOUTH;
+        detailIconWrapper.add(arrowIndicator, gbc);
+        gbc.gridy = 1;
+        gbc.anchor = java.awt.GridBagConstraints.CENTER;
+        detailIconWrapper.add(iconBoxWithTooltip, gbc);
         headerRow.add(detailIconWrapper, BorderLayout.WEST);
 
         JPanel namePrice = new JPanel();
@@ -5523,6 +5676,25 @@ private String[] buildItemDataFromCache(String name)
             });
         }
     }
+    private JPanel buildFloatStatRow(String label, String value, Color valueColor)
+    {
+        JPanel row = new JPanel(new java.awt.BorderLayout());
+        row.setBackground(new Color(14, 12, 13));
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 18));
+
+        JLabel labelText = new JLabel(label);
+        labelText.setForeground(new Color(138, 134, 128));
+        labelText.setFont(new Font("Monospaced", Font.PLAIN, 11));
+
+        JLabel valueText = new JLabel(value);
+        valueText.setForeground(valueColor);
+        valueText.setFont(new Font("Monospaced", Font.PLAIN, 11));
+
+        row.add(labelText, java.awt.BorderLayout.WEST);
+        row.add(valueText, java.awt.BorderLayout.EAST);
+        return row;
+    }
+
     private JPanel buildStatBox(String label, String value, Color valueColor, String tooltip)
     {
         JPanel box = new JPanel();
