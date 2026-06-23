@@ -4228,7 +4228,7 @@ private String[] buildItemDataFromCache(String name)
                 sep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
                 statsFloatPanel.add(sep);
                 statsFloatPanel.add(Box.createVerticalStrut(4));
-                JLabel footnote = new JLabel("<html><center>Margin, Profit & ROI update live<br>Volume updates on startup</center></html>", SwingConstants.CENTER);
+                JLabel footnote = new JLabel("<html><center>Margin, Profit & ROI auto-refresh every 60s<br>Volume updates on startup</center></html>", SwingConstants.CENTER);
                 footnote.setForeground(new Color(107, 102, 96));
                 footnote.setFont(new Font("Monospaced", Font.PLAIN, 9));
                 footnote.setAlignmentX(Component.CENTER_ALIGNMENT);
