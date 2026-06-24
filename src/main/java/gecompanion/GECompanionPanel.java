@@ -5710,6 +5710,22 @@ private String[] buildItemDataFromCache(String name)
                             zoomBoxMaxY[0] = panBoxMaxY[0] + shiftY;
                         }
                         priceCanvas.repaint(); volCanvas.repaint();
+                        if (updateCanvasHolder[0] != null) updateCanvasHolder[0].repaint();
+                        // update date label to reflect new pan position
+                        if (crosshairIdx[0] >= 0 && allPts != null) {
+                            int curStart = zoomStart[0];
+                            int curEnd = zoomEnd[0] < 0 ? allPts.size()-1 : zoomEnd[0];
+                            int idx = Math.min(curStart + crosshairIdx[0], curEnd);
+                            idx = Math.max(0, Math.min(idx, allPts.size()-1));
+                            PricePoint cp = allPts.get(idx);
+                            java.time.Instant inst = java.time.Instant.ofEpochSecond(cp.timestamp);
+                            java.time.LocalDateTime ldt = java.time.LocalDateTime.ofInstant(inst, java.time.ZoneId.of("UTC"));
+                            String fmt = (activeFrame[0].equals("1D") || activeFrame[0].equals("7D"))
+                                    ? String.format("%s %d %s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getDayOfMonth(), ldt.getMonth().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
+                                    : String.format("%d %s %d", ldt.getDayOfMonth(), ldt.getMonth().toString().substring(0,3), ldt.getYear());
+                            dateCanvas.putClientProperty("dateText", fmt);
+                            dateCanvas.repaint();
+                        }
                         return;
                     }
                     if (!isDragging[0]) return;
