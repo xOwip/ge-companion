@@ -424,9 +424,10 @@ private void fetchMapping()
 		MenuEntry lastEntry = entries[entries.length - 1];
 		int itemId = lastEntry.getItemId();
 		if (itemId <= 0) return;
-		if (!panel.isItemPriceable(itemId)) return;
+		int canonicalId = itemManager.canonicalize(itemId);
+		if (!panel.isItemPriceable(canonicalId)) return;
 
-		final int finalItemId = itemId;
+		final int finalItemId = canonicalId;
 		client.createMenuEntry(-1)
 				.setOption("Price Check")
 				.setTarget(event.getTarget())
