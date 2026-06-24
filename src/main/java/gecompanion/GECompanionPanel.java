@@ -5636,6 +5636,7 @@ private String[] buildItemDataFromCache(String name)
                 public void mousePressed(MouseEvent e) {
                     if (e.getButton() == java.awt.event.MouseEvent.BUTTON2) {
                         zoomStart[0] = 0; zoomEnd[0] = -1;
+                        zoomBoxMinY[0] = -1; zoomBoxMaxY[0] = -1;
                         priceCanvas.repaint(); volCanvas.repaint(); return;
                     }
                     boolean[] isDragging = (boolean[]) priceCanvas.getClientProperty("isDragging");
@@ -5679,6 +5680,7 @@ private String[] buildItemDataFromCache(String name)
                 public void mouseClicked(MouseEvent e) {
                     if (e.getClickCount() == 2) {
                         zoomStart[0] = 0; zoomEnd[0] = -1;
+                        zoomBoxMinY[0] = -1; zoomBoxMaxY[0] = -1;
                         priceCanvas.repaint(); volCanvas.repaint();
                     }
                 }
@@ -5763,6 +5765,8 @@ private String[] buildItemDataFromCache(String name)
                 graphActiveTimeframe = frame;
                 zoomStart[0] = 0;
                 zoomEnd[0] = -1;
+                zoomBoxMinY[0] = -1;
+                zoomBoxMaxY[0] = -1;
                 crosshairIdx[0] = -1;
                 dateCanvas.putClientProperty("dateText", "");
                 dateCanvas.repaint();
