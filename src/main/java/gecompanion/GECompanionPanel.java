@@ -4406,6 +4406,10 @@ private String[] buildItemDataFromCache(String name)
         final int[] revealW = {0};
         final int[] zoomStart = {0};
         final int[] zoomEnd = {-1}; // -1 means full range
+        final long[] zoomBoxMinY = {-1}; // -1 means auto-scale
+        final long[] zoomBoxMaxY = {-1}; // -1 means auto-scale
+        final int[] dragStartY = {-1};
+        final int[] dragEndY = {-1};
         final boolean[] magnifying = {false};
         final int[] magnifyIdx = {-1};
 
@@ -4562,7 +4566,9 @@ private String[] buildItemDataFromCache(String name)
                 if (minP == Long.MAX_VALUE) { g2.dispose(); return; }
                 long pad = Math.max((maxP - minP) / 3, 1);
                 minP -= pad; maxP += pad;
-                final long fMin = minP, fMax = maxP;
+// box zoom: override Y axis if explicit bounds are set
+                final long fMin = zoomBoxMinY[0] >= 0 ? zoomBoxMinY[0] : minP;
+                final long fMax = zoomBoxMaxY[0] >= 0 ? zoomBoxMaxY[0] : maxP;
 
                 // grid lines
                 g2.setColor(new Color(40, 36, 34));
@@ -4702,23 +4708,45 @@ private String[] buildItemDataFromCache(String name)
                 Object dx1Obj = getClientProperty("dragStart");
                 Object dx2Obj = getClientProperty("dragEnd");
                 boolean draggingNow = dsObj instanceof boolean[] && ((boolean[])dsObj)[0];
-                if (draggingNow && dx1Obj instanceof int[] && dx2Obj instanceof int[]) {
-                    int dx1 = Math.min(((int[])dx1Obj)[0], ((int[])dx2Obj)[0]);
-                    int dx2 = Math.max(((int[])dx1Obj)[0], ((int[])dx2Obj)[0]);
-                    // shade outside selection
-                    g2.setColor(new Color(0, 0, 0, 90));
-                    g2.fillRect(0, 0, dx1, h);
-                    g2.fillRect(dx2, 0, w - dx2, h);
-                    // selection fill
-                    g2.setColor(new Color(74, 122, 191, 30));
-                    g2.fillRect(dx1, 0, dx2 - dx1, h);
-                    // selection border
-                    g2.setColor(new Color(100, 160, 255, 200));
-                    g2.setStroke(new java.awt.BasicStroke(1.5f));
-                    g2.drawLine(dx1, 0, dx1, h);
-                    g2.drawLine(dx2, 0, dx2, h);
-                    g2.setStroke(new java.awt.BasicStroke(1f));
-                }
+                    if (draggingNow && dx1Obj instanceof int[] && dx2Obj instanceof int[]) {
+                        int dx1 = Math.min(((int[])dx1Obj)[0], ((int[])dx2Obj)[0]);
+                        int dx2 = Math.max(((int[])dx1Obj)[0], ((int[])dx2Obj)[0]);
+                        int ddx = Math.abs(((int[])dx2Obj)[0] - ((int[])dx1Obj)[0]);
+                        int ddy = Math.abs(dragEndY[0] - dragStartY[0]);
+                        boolean isBoxZoom = dragStartY[0] >= 0 && ddy > ddx * 0.25;
+                        int dy1 = Math.min(dragStartY[0], dragEndY[0]);
+                        int dy2 = Math.max(dragStartY[0], dragEndY[0]);
+                        if (isBoxZoom) {
+                            // box zoom — draw actual rectangle
+                            g2.setColor(new Color(0, 0, 0, 90));
+                            g2.fillRect(0, 0, dx1, h);
+                            g2.fillRect(dx2, 0, w - dx2, h);
+                            g2.fillRect(dx1, 0, dx2 - dx1, dy1);
+                            g2.fillRect(dx1, dy2, dx2 - dx1, h - dy2);
+                            // selection fill
+                            g2.setColor(new Color(74, 122, 191, 30));
+                            g2.fillRect(dx1, dy1, dx2 - dx1, dy2 - dy1);
+                            // selection border
+                            g2.setColor(new Color(100, 160, 255, 200));
+                            g2.setStroke(new java.awt.BasicStroke(1.5f));
+                            g2.drawRect(dx1, dy1, dx2 - dx1, dy2 - dy1);
+                            g2.setStroke(new java.awt.BasicStroke(1f));
+                        } else {
+                            // range zoom — original horizontal behavior
+                            g2.setColor(new Color(0, 0, 0, 90));
+                            g2.fillRect(0, 0, dx1, h);
+                            g2.fillRect(dx2, 0, w - dx2, h);
+                            // selection fill
+                            g2.setColor(new Color(74, 122, 191, 30));
+                            g2.fillRect(dx1, 0, dx2 - dx1, h);
+                            // selection border
+                            g2.setColor(new Color(100, 160, 255, 200));
+                            g2.setStroke(new java.awt.BasicStroke(1.5f));
+                            g2.drawLine(dx1, 0, dx1, h);
+                            g2.drawLine(dx2, 0, dx2, h);
+                            g2.setStroke(new java.awt.BasicStroke(1f));
+                        }
+                    }
             }
 
             // ── magnifier / loupe ──────────────────────────────────────────
@@ -5399,12 +5427,16 @@ private String[] buildItemDataFromCache(String name)
                 public void mousePressed(MouseEvent e) {
                     if (e.getButton() == java.awt.event.MouseEvent.BUTTON2) {
                         zoomStart[0] = 0; zoomEnd[0] = -1;
+                        zoomBoxMinY[0] = -1; zoomBoxMaxY[0] = -1;
                         dragStart[0] = -1; dragEnd[0] = -1;
+                        dragStartY[0] = -1; dragEndY[0] = -1;
                         priceCanvas.repaint(); volCanvas.repaint(); return;
                     }
                     isDragging[0] = true;
                     dragStart[0] = e.getX();
                     dragEnd[0] = e.getX();
+                    dragStartY[0] = e.getY();
+                    dragEndY[0] = e.getY();
                     priceCanvas.putClientProperty("dragSource", "price");
                     priceCanvas.repaint();
                 }
@@ -5429,13 +5461,44 @@ private String[] buildItemDataFromCache(String name)
                     if (newEnd - newStart < 2) { dragStart[0]=-1; dragEnd[0]=-1; priceCanvas.repaint(); return; }
                     zoomStart[0] = newStart;
                     zoomEnd[0] = newEnd;
+                    // box zoom: if drag was sufficiently diagonal, lock Y axis too
+                    int dy = Math.abs(dragEndY[0] - dragStartY[0]);
+                    int dx = Math.abs(dragEnd[0] - dragStart[0]);
+                    if (dragStartY[0] >= 0 && dy > dx * 0.25) {
+                        // map Y pixels to price values using current fMin/fMax
+                        // get current auto-scale bounds from visible points
+                        int h = priceCanvas.getHeight();
+                        long minP = Long.MAX_VALUE, maxP = Long.MIN_VALUE;
+                        java.util.List<PricePoint> visPts = pts.subList(newStart, newEnd + 1);
+                        for (PricePoint p : visPts) {
+                            if (p.buyPrice  > 0) { minP = Math.min(minP, p.buyPrice);  maxP = Math.max(maxP, p.buyPrice); }
+                            if (p.sellPrice > 0) { minP = Math.min(minP, p.sellPrice); maxP = Math.max(maxP, p.sellPrice); }
+                        }
+                        if (minP != Long.MAX_VALUE) {
+                            long pad = Math.max((maxP - minP) / 3, 1);
+                            minP -= pad; maxP += pad;
+                            int y1 = Math.min(dragStartY[0], dragEndY[0]);
+                            int y2 = Math.max(dragStartY[0], dragEndY[0]);
+                            // invert: y=0 is top (high price), y=h is bottom (low price)
+                            long boxMax = minP + (long)((1.0 - (double)y1 / h) * (maxP - minP));
+                            long boxMin = minP + (long)((1.0 - (double)y2 / h) * (maxP - minP));
+                            zoomBoxMinY[0] = boxMin;
+                            zoomBoxMaxY[0] = boxMax;
+                        }
+                    } else {
+                        // range zoom — clear any box zoom Y lock
+                        zoomBoxMinY[0] = -1;
+                        zoomBoxMaxY[0] = -1;
+                    }
                     dragStart[0] = -1; dragEnd[0] = -1;
+                    dragStartY[0] = -1; dragEndY[0] = -1;
                     priceCanvas.repaint(); volCanvas.repaint();
                 }
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     if (e.getClickCount() == 2) {
                         zoomStart[0] = 0; zoomEnd[0] = -1;
+                        zoomBoxMinY[0] = -1; zoomBoxMaxY[0] = -1;
                         priceCanvas.repaint(); volCanvas.repaint();
                     }
                 }
@@ -5472,6 +5535,7 @@ private String[] buildItemDataFromCache(String name)
                 public void mouseDragged(MouseEvent e) {
                     if (!isDragging[0]) return;
                     dragEnd[0] = e.getX();
+                    dragEndY[0] = e.getY();
                     // update crosshair to drag end position
                     java.util.List<PricePoint> pts = pointsHolder[0];
                     if (pts != null && pts.size() >= 2) {
