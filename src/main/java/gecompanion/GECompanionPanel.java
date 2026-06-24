@@ -4577,7 +4577,7 @@ private String[] buildItemDataFromCache(String name)
                 final long fMin = zoomBoxMinY[0] >= 0 ? zoomBoxMinY[0] : minP;
                 final long fMax = zoomBoxMaxY[0] >= 0 ? zoomBoxMaxY[0] : maxP;
 
-                // grid lines
+// grid lines
                 g2.setColor(new Color(40, 36, 34));
                 for (float pct : new float[]{0.25f, 0.5f, 0.75f}) {
                     int y = (int)(h * pct);
@@ -4586,38 +4586,45 @@ private String[] buildItemDataFromCache(String name)
 
                 int n = visPts.size();
 
+// intersect clip with chart bounds so lines are clipped at Y boundaries
+                g2.clip(new java.awt.Rectangle(0, 0, w, h));
+
 // buy line
                 g2.setStroke(new java.awt.BasicStroke(1.4f));
                 g2.setColor(GOLD);
                 int[] bx = new int[n], by = new int[n];
+                boolean[] bHas = new boolean[n];
                 for (int i = 0; i < n; i++) {
                     bx[i] = (int)(i * (w - 1.0) / (n - 1));
-                    by[i] = visPts.get(i).buyPrice > 0
+                    bHas[i] = visPts.get(i).buyPrice > 0;
+                    by[i] = bHas[i]
                             ? h - (int)((visPts.get(i).buyPrice - fMin) * h / Math.max(fMax - fMin, 1))
-                            : -1;
+                            : 0;
                 }
                 for (int i = 0; i < n - 1; i++)
-                    if (by[i] >= 0 && by[i+1] >= 0)
+                    if (bHas[i] && bHas[i+1])
                         g2.drawLine(bx[i], by[i], bx[i+1], by[i+1]);
 
-                // sell line
+// sell line
                 g2.setColor(new Color(74, 122, 191));
                 int[] sx = new int[n], sy = new int[n];
+                boolean[] sHas = new boolean[n];
                 for (int i = 0; i < n; i++) {
                     sx[i] = bx[i];
-                    sy[i] = visPts.get(i).sellPrice > 0
+                    sHas[i] = visPts.get(i).sellPrice > 0;
+                    sy[i] = sHas[i]
                             ? h - (int)((visPts.get(i).sellPrice - fMin) * h / Math.max(fMax - fMin, 1))
-                            : -1;
+                            : 0;
                 }
                 for (int i = 0; i < n - 1; i++)
-                    if (sy[i] >= 0 && sy[i+1] >= 0)
+                    if (sHas[i] && sHas[i+1])
                         g2.drawLine(sx[i], sy[i], sx[i+1], sy[i+1]);
 
 // dots
                 g2.setStroke(new java.awt.BasicStroke(1f));
                 for (int i = 0; i < n; i++) {
-                    if (by[i] >= 0) { g2.setColor(GOLD); g2.fillOval(bx[i]-1, by[i]-1, 2, 2); }
-                    if (sy[i] >= 0) { g2.setColor(new Color(74, 122, 191)); g2.fillOval(sx[i]-1, sy[i]-1, 2, 2); }
+                    if (bHas[i]) { g2.setColor(GOLD); g2.fillOval(bx[i]-1, by[i]-1, 2, 2); }
+                    if (sHas[i]) { g2.setColor(new Color(74, 122, 191)); g2.fillOval(sx[i]-1, sy[i]-1, 2, 2); }
                 }
 
 // current price dashed line (drawn after lines/dots so label is on top)
@@ -4650,14 +4657,14 @@ private String[] buildItemDataFromCache(String name)
 
                     PricePoint cp = visPts.get(ci);
                     // buy dot + label
-                    if (by[ci] >= 0) {
+                    if (bHas[ci]) {
                         g2.setColor(new Color(14, 12, 13));
                         g2.fillOval(bx[ci]-4, by[ci]-4, 8, 8);
                         g2.setColor(GOLD);
                         g2.drawOval(bx[ci]-4, by[ci]-4, 8, 8);
                         g2.fillOval(bx[ci]-2, by[ci]-2, 4, 4);
                     }
-                    if (sy[ci] >= 0) {
+                    if (sHas[ci]) {
                         g2.setColor(new Color(14, 12, 13));
                         g2.fillOval(sx[ci]-4, sy[ci]-4, 8, 8);
                         g2.setColor(new Color(74, 122, 191));
@@ -4690,22 +4697,22 @@ private String[] buildItemDataFromCache(String name)
                     boolean nearRight = cx > w - labelW - 6;
                     int lx = nearRight ? cx - labelW - 6 : cx + 6;
 
-                    if (by[ci] >= 0) {
+                        if (bHas[ci]) {
 
-                        g2.setColor(new Color(30, 25, 10));
-                        g2.fillRect(lx, buyLabelY, labelW, labelH);
-                        g2.setColor(GOLD);
-                        g2.drawRect(lx, buyLabelY, labelW, labelH);
-                        g2.drawString(buyStr2, lx + 3, buyLabelY + labelH - 3);
-                    }
-                    if (sy[ci] >= 0) {
+                            g2.setColor(new Color(30, 25, 10));
+                            g2.fillRect(lx, buyLabelY, labelW, labelH);
+                            g2.setColor(GOLD);
+                            g2.drawRect(lx, buyLabelY, labelW, labelH);
+                            g2.drawString(buyStr2, lx + 3, buyLabelY + labelH - 3);
+                        }
+                        if (sHas[ci]) {
 
-                        g2.setColor(new Color(10, 15, 30));
-                        g2.fillRect(lx, sellLabelY, labelW, labelH);
-                        g2.setColor(new Color(74, 122, 191));
-                        g2.drawRect(lx, sellLabelY, labelW, labelH);
-                        g2.drawString(sellStr2, lx + 3, sellLabelY + labelH - 3);
-                    }
+                            g2.setColor(new Color(10, 15, 30));
+                            g2.fillRect(lx, sellLabelY, labelW, labelH);
+                            g2.setColor(new Color(74, 122, 191));
+                            g2.drawRect(lx, sellLabelY, labelW, labelH);
+                            g2.drawString(sellStr2, lx + 3, sellLabelY + labelH - 3);
+                        }
                     } // end if (!magnifying[0])
                 } // end crosshair if block
 
@@ -5326,7 +5333,7 @@ private String[] buildItemDataFromCache(String name)
                 crosshairIdx[0] = nearest;
                 PricePoint cp = pts.get(curStart + nearest);
                 java.time.Instant inst = java.time.Instant.ofEpochSecond(cp.timestamp);
-                java.time.LocalDateTime ldt = java.time.LocalDateTime.ofInstant(inst, java.time.ZoneId.systemDefault());
+                java.time.LocalDateTime ldt = java.time.LocalDateTime.ofInstant(inst, java.time.ZoneId.of("UTC"));
                 String fmt = (activeFrame[0].equals("1D") || activeFrame[0].equals("7D"))
                         ? String.format("%s %d %s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getDayOfMonth(), ldt.getMonth().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
                         : String.format("%d %s %d", ldt.getDayOfMonth(),
@@ -5399,7 +5406,7 @@ private String[] buildItemDataFromCache(String name)
                 crosshairIdx[0] = nearest;
                 PricePoint cp = pts.get(nearest);
                 java.time.Instant inst = java.time.Instant.ofEpochSecond(cp.timestamp);
-                java.time.LocalDateTime ldt = java.time.LocalDateTime.ofInstant(inst, java.time.ZoneId.systemDefault());
+                java.time.LocalDateTime ldt = java.time.LocalDateTime.ofInstant(inst, java.time.ZoneId.of("UTC"));
                 String fmt = (activeFrame[0].equals("1D") || activeFrame[0].equals("7D"))
                         ? String.format("%s %d %s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getDayOfMonth(), ldt.getMonth().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
                         : String.format("%d %s %d", ldt.getDayOfMonth(),
@@ -5536,7 +5543,7 @@ private String[] buildItemDataFromCache(String name)
                     crosshairIdx[0] = nearest;
                     PricePoint cp = pts.get(curStart + nearest);
                     java.time.Instant inst = java.time.Instant.ofEpochSecond(cp.timestamp);
-                    java.time.LocalDateTime ldt = java.time.LocalDateTime.ofInstant(inst, java.time.ZoneId.systemDefault());
+                    java.time.LocalDateTime ldt = java.time.LocalDateTime.ofInstant(inst, java.time.ZoneId.of("UTC"));
                     String fmt = (activeFrame[0].equals("1D") || activeFrame[0].equals("7D"))
                             ? String.format("%s %d %s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getDayOfMonth(), ldt.getMonth().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
                             : String.format("%d %s %d", ldt.getDayOfMonth(), ldt.getMonth().toString().substring(0,3), ldt.getYear());
@@ -5598,7 +5605,7 @@ private String[] buildItemDataFromCache(String name)
                         crosshairIdx[0] = nearest;
                         PricePoint cp = pts.get(curStart + nearest);
                         java.time.Instant inst = java.time.Instant.ofEpochSecond(cp.timestamp);
-                        java.time.LocalDateTime ldt = java.time.LocalDateTime.ofInstant(inst, java.time.ZoneId.systemDefault());
+                        java.time.LocalDateTime ldt = java.time.LocalDateTime.ofInstant(inst, java.time.ZoneId.of("UTC"));
                         String fmt = (activeFrame[0].equals("1D") || activeFrame[0].equals("7D"))
                                 ? String.format("%s %d %s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getDayOfMonth(), ldt.getMonth().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
                                 : String.format("%d %s %d", ldt.getDayOfMonth(), ldt.getMonth().toString().substring(0,3), ldt.getYear());
@@ -5721,7 +5728,7 @@ private String[] buildItemDataFromCache(String name)
                 crosshairIdx[0] = nearest;
                 PricePoint cp = pts.get(curStart + nearest);
                 java.time.Instant inst = java.time.Instant.ofEpochSecond(cp.timestamp);
-                java.time.LocalDateTime ldt = java.time.LocalDateTime.ofInstant(inst, java.time.ZoneId.systemDefault());
+                java.time.LocalDateTime ldt = java.time.LocalDateTime.ofInstant(inst, java.time.ZoneId.of("UTC"));
                 String fmt = (activeFrame[0].equals("1D") || activeFrame[0].equals("7D"))
                         ? String.format("%s %d %s %02d:%02d", ldt.getDayOfWeek().toString().substring(0,3), ldt.getDayOfMonth(), ldt.getMonth().toString().substring(0,3), ldt.getHour(), ldt.getMinute())
                         : String.format("%d %s %d", ldt.getDayOfMonth(),
