@@ -4410,6 +4410,13 @@ private String[] buildItemDataFromCache(String name)
         final long[] zoomBoxMaxY = {-1}; // -1 means auto-scale
         final int[] dragStartY = {-1};
         final int[] dragEndY = {-1};
+        final int[] panStartX = {-1};
+        final int[] panStartY = {-1};
+        final int[] panZoomStart = {-1};
+        final int[] panZoomEnd = {-1};
+        final long[] panBoxMinY = {-1};
+        final long[] panBoxMaxY = {-1};
+        final boolean[] isPanning = {false};
         final boolean[] magnifying = {false};
         final int[] magnifyIdx = {-1};
 
@@ -5426,11 +5433,14 @@ private String[] buildItemDataFromCache(String name)
                 @Override
                 public void mousePressed(MouseEvent e) {
                     if (e.getButton() == java.awt.event.MouseEvent.BUTTON2) {
-                        zoomStart[0] = 0; zoomEnd[0] = -1;
-                        zoomBoxMinY[0] = -1; zoomBoxMaxY[0] = -1;
-                        dragStart[0] = -1; dragEnd[0] = -1;
-                        dragStartY[0] = -1; dragEndY[0] = -1;
-                        priceCanvas.repaint(); volCanvas.repaint(); return;
+                        isPanning[0] = true;
+                        panStartX[0] = e.getX();
+                        panStartY[0] = e.getY();
+                        panZoomStart[0] = zoomStart[0];
+                        panZoomEnd[0] = zoomEnd[0];
+                        panBoxMinY[0] = zoomBoxMinY[0];
+                        panBoxMaxY[0] = zoomBoxMaxY[0];
+                        return;
                     }
                     isDragging[0] = true;
                     dragStart[0] = e.getX();
@@ -5442,6 +5452,11 @@ private String[] buildItemDataFromCache(String name)
                 }
                 @Override
                 public void mouseReleased(MouseEvent e) {
+                    if (isPanning[0]) {
+                        isPanning[0] = false;
+                        panStartX[0] = -1; panStartY[0] = -1;
+                        return;
+                    }
                     if (!isDragging[0]) return;
                     isDragging[0] = false;
                     java.util.List<PricePoint> pts = pointsHolder[0];
@@ -5533,6 +5548,37 @@ private String[] buildItemDataFromCache(String name)
                 }
                 @Override
                 public void mouseDragged(MouseEvent e) {
+                    // pan with middle mouse button
+                    if (isPanning[0]) {
+                        java.util.List<PricePoint> allPts = pointsHolder[0];
+                        if (allPts == null || allPts.size() < 2) return;
+                        int totalN = allPts.size();
+                        int w = priceCanvas.getWidth();
+                        int visN = (panZoomEnd[0] < 0 ? totalN - 1 : panZoomEnd[0]) - panZoomStart[0] + 1;
+                        // X pan: shift zoom window by pixel delta
+                        int dx = e.getX() - panStartX[0];
+                        int shiftX = (int)(dx * visN / (double)w);
+                        int newStart = panZoomStart[0] - shiftX;
+                        int newEnd = (panZoomEnd[0] < 0 ? totalN - 1 : panZoomEnd[0]) - shiftX;
+                        // clamp to data bounds
+                        if (newStart < 0) { newEnd -= newStart; newStart = 0; }
+                        if (newEnd >= totalN) { newStart -= (newEnd - (totalN - 1)); newEnd = totalN - 1; }
+                        newStart = Math.max(0, newStart);
+                        newEnd = Math.min(totalN - 1, newEnd);
+                        zoomStart[0] = newStart;
+                        zoomEnd[0] = newEnd;
+                        // Y pan: shift price range if box zoom is active
+                        if (panBoxMinY[0] >= 0 && panBoxMaxY[0] >= 0) {
+                            int h = priceCanvas.getHeight();
+                            long priceRange = panBoxMaxY[0] - panBoxMinY[0];
+                            int dy = e.getY() - panStartY[0];
+                            long shiftY = (long)(dy * priceRange / (double)h);
+                            zoomBoxMinY[0] = panBoxMinY[0] + shiftY;
+                            zoomBoxMaxY[0] = panBoxMaxY[0] + shiftY;
+                        }
+                        priceCanvas.repaint(); volCanvas.repaint();
+                        return;
+                    }
                     if (!isDragging[0]) return;
                     dragEnd[0] = e.getX();
                     dragEndY[0] = e.getY();

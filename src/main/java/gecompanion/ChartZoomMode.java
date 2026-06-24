@@ -2,7 +2,7 @@ package gecompanion;
 
 public enum ChartZoomMode
 {
-    DRAG_SELECT("Drag Select"),
+    DRAG_SELECT("Drag Select & Pan"),
     MAGNIFIER("Magnifier");
 
     private final String name;
