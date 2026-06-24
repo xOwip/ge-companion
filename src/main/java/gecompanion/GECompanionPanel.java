@@ -1842,7 +1842,8 @@ private String openBankItemName = null;
         info.add(deltaLimitRow);
         row.add(info, BorderLayout.CENTER);
 
-        // Inline detail panel for this row
+// Inline detail panel for this row
+        final JButton[] watchBtnRef = {null};
         JPanel detailSlot = new JPanel(new BorderLayout());
         detailSlot.setBackground(BG_DARK);
         detailSlot.setBorder(javax.swing.BorderFactory.createEmptyBorder());
@@ -1858,6 +1859,47 @@ private String openBankItemName = null;
             // Toggle — click same item to close
             public void mouseClicked(MouseEvent e)
             {
+                if (javax.swing.SwingUtilities.isRightMouseButton(e))
+                {
+                    javax.swing.JPopupMenu popup = new javax.swing.JPopupMenu();
+                    boolean isWatched = pinnedItems.contains(item[0]);
+                    javax.swing.JMenuItem watchItem = new javax.swing.JMenuItem(isWatched ? "- Unwatch" : "+ Watch");
+                    watchItem.addActionListener(ev -> {
+                        boolean nowWatched = !pinnedItems.contains(item[0]);
+                        if (nowWatched) pinnedItems.add(item[0]);
+                        else pinnedItems.remove(item[0]);
+                        savePinnedItems();
+                        if (activeTab == 0) showTab(0);
+                        // update watch button live if detail panel is open
+                        JButton wb = watchBtnRef[0];
+                        if (wb != null) {
+                            wb.setText(nowWatched ? "✓ Watch" : "+ Watch");
+                            wb.setBorder(BorderFactory.createLineBorder(nowWatched ? GOLD : new Color(58, 53, 48)));
+                            wb.setForeground(nowWatched ? GOLD : TAB_INACTIVE);
+                        }
+                        // update popup item text for next time
+                        watchItem.setText(nowWatched ? "- Unwatch" : "+ Watch");
+                    });
+                    popup.add(watchItem);
+                    javax.swing.JMenuItem pricesItem = new javax.swing.JMenuItem("Prices ↗");
+                    pricesItem.addActionListener(ev -> {
+                        try {
+                            int trackerItemId = item.length > 12 ? Integer.parseInt(item[12]) : -1;
+                            java.awt.Desktop.getDesktop().browse(new java.net.URI("https://prices.runescape.wiki/osrs/item/" + trackerItemId));
+                        } catch (Exception ex) { }
+                    });
+                    popup.add(pricesItem);
+                    javax.swing.JMenuItem wikiItem = new javax.swing.JMenuItem("Wiki ↗");
+                    wikiItem.addActionListener(ev -> {
+                        try {
+                            String wikiName = name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase().replace(" ", "_");
+                            java.awt.Desktop.getDesktop().browse(new java.net.URI("https://oldschool.runescape.wiki/w/" + wikiName));
+                        } catch (Exception ex) { }
+                    });
+                    popup.add(wikiItem);
+                    popup.show(row, e.getX(), e.getY());
+                    return;
+                }
                 if (name.equals(selectedItemName) && currentOpenSearchDetail != null)
                 {
                     final JPanel closingDetail = currentOpenSearchDetail;
@@ -2001,6 +2043,8 @@ private String openBankItemName = null;
 
                 detailSlot.removeAll();
                 detailSlot.add(buildInlineDetail(item, false), BorderLayout.CENTER);
+// find and store watch button reference for right-click menu
+                watchBtnRef[0] = findWatchButton(detailSlot);
                 detailSlot.revalidate();
                 javax.swing.SwingUtilities.invokeLater(() -> {
                     int fullHeight = detailSlot.getPreferredSize().height;
@@ -2379,7 +2423,8 @@ private String openBankItemName = null;
 
             row.add(arrowPanel, BorderLayout.EAST);
         }
-        // Inline detail slot
+// Inline detail slot
+        final JButton[] watchBtnRef = {null};
         JPanel detailSlot = new JPanel(new BorderLayout());
         detailSlot.setBackground(BG_DARK);
         detailSlot.setBorder(javax.swing.BorderFactory.createEmptyBorder());
@@ -2395,6 +2440,45 @@ private String openBankItemName = null;
             public void mouseClicked(MouseEvent e)
             {
                 if (watchlistEditMode) return;
+                if (javax.swing.SwingUtilities.isRightMouseButton(e))
+                {
+                    javax.swing.JPopupMenu popup = new javax.swing.JPopupMenu();
+                    boolean isWatched = pinnedItems.contains(item[0]);
+                    javax.swing.JMenuItem watchItem = new javax.swing.JMenuItem(isWatched ? "- Unwatch" : "+ Watch");
+                    watchItem.addActionListener(ev -> {
+                        boolean nowWatched = !pinnedItems.contains(item[0]);
+                        if (nowWatched) pinnedItems.add(item[0]);
+                        else pinnedItems.remove(item[0]);
+                        savePinnedItems();
+                        if (activeTab == 0) showTab(0);
+                        JButton wb = watchBtnRef[0];
+                        if (wb != null) {
+                            wb.setText(nowWatched ? "✓ Watch" : "+ Watch");
+                            wb.setBorder(BorderFactory.createLineBorder(nowWatched ? GOLD : new Color(58, 53, 48)));
+                            wb.setForeground(nowWatched ? GOLD : TAB_INACTIVE);
+                        }
+                        watchItem.setText(nowWatched ? "- Unwatch" : "+ Watch");
+                    });
+                    popup.add(watchItem);
+                    javax.swing.JMenuItem pricesItem = new javax.swing.JMenuItem("Prices ↗");
+                    pricesItem.addActionListener(ev -> {
+                        try {
+                            int trackerItemId = item.length > 12 ? Integer.parseInt(item[12]) : -1;
+                            java.awt.Desktop.getDesktop().browse(new java.net.URI("https://prices.runescape.wiki/osrs/item/" + trackerItemId));
+                        } catch (Exception ex) { }
+                    });
+                    popup.add(pricesItem);
+                    javax.swing.JMenuItem wikiItem = new javax.swing.JMenuItem("Wiki ↗");
+                    wikiItem.addActionListener(ev -> {
+                        try {
+                            String wikiName = name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase().replace(" ", "_");
+                            java.awt.Desktop.getDesktop().browse(new java.net.URI("https://oldschool.runescape.wiki/w/" + wikiName));
+                        } catch (Exception ex) { }
+                    });
+                    popup.add(wikiItem);
+                    popup.show(row, e.getX(), e.getY());
+                    return;
+                }
                 // Toggle
                 if (name.equals(selectedWatchlistItemName) && currentOpenWatchlistDetail != null)
                 {
@@ -2524,6 +2608,7 @@ private String openBankItemName = null;
 
                 detailSlot.removeAll();
                 detailSlot.add(buildInlineDetail(item, true), BorderLayout.CENTER);
+                watchBtnRef[0] = findWatchButton(detailSlot);
                 detailSlot.revalidate();
                 javax.swing.SwingUtilities.invokeLater(() -> {
                     int fullHeight = detailSlot.getPreferredSize().height;
@@ -3498,7 +3583,8 @@ private String openBankItemName = null;
         info.add(deltaRow);
         row.add(info, BorderLayout.CENTER);
 
-        // Inline detail slot
+// Inline detail slot
+        final JButton[] watchBtnRef = {null};
         JPanel detailSlot = new JPanel(new BorderLayout());
         detailSlot.setBackground(BG_DARK);
         detailSlot.setBorder(javax.swing.BorderFactory.createEmptyBorder());
@@ -3513,6 +3599,45 @@ private String openBankItemName = null;
         {
             public void mouseClicked(MouseEvent e)
             {
+                if (javax.swing.SwingUtilities.isRightMouseButton(e))
+                {
+                    javax.swing.JPopupMenu popup = new javax.swing.JPopupMenu();
+                    boolean isWatched = pinnedItems.contains(item[0]);
+                    javax.swing.JMenuItem watchItem = new javax.swing.JMenuItem(isWatched ? "- Unwatch" : "+ Watch");
+                    watchItem.addActionListener(ev -> {
+                        boolean nowWatched = !pinnedItems.contains(item[0]);
+                        if (nowWatched) pinnedItems.add(item[0]);
+                        else pinnedItems.remove(item[0]);
+                        savePinnedItems();
+                        if (activeTab == 0) showTab(0);
+                        JButton wb = watchBtnRef[0];
+                        if (wb != null) {
+                            wb.setText(nowWatched ? "✓ Watch" : "+ Watch");
+                            wb.setBorder(BorderFactory.createLineBorder(nowWatched ? GOLD : new Color(58, 53, 48)));
+                            wb.setForeground(nowWatched ? GOLD : TAB_INACTIVE);
+                        }
+                        watchItem.setText(nowWatched ? "- Unwatch" : "+ Watch");
+                    });
+                    popup.add(watchItem);
+                    javax.swing.JMenuItem pricesItem = new javax.swing.JMenuItem("Prices ↗");
+                    pricesItem.addActionListener(ev -> {
+                        try {
+                            int trackerItemId = item.length > 12 ? Integer.parseInt(item[12]) : -1;
+                            java.awt.Desktop.getDesktop().browse(new java.net.URI("https://prices.runescape.wiki/osrs/item/" + trackerItemId));
+                        } catch (Exception ex) { }
+                    });
+                    popup.add(pricesItem);
+                    javax.swing.JMenuItem wikiItem = new javax.swing.JMenuItem("Wiki ↗");
+                    wikiItem.addActionListener(ev -> {
+                        try {
+                            String wikiName = name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase().replace(" ", "_");
+                            java.awt.Desktop.getDesktop().browse(new java.net.URI("https://oldschool.runescape.wiki/w/" + wikiName));
+                        } catch (Exception ex) { }
+                    });
+                    popup.add(wikiItem);
+                    popup.show(row, e.getX(), e.getY());
+                    return;
+                }
                 if (name.equals(selectedBankItemName) && currentOpenBankDetail != null)
                 {
                     final JPanel closingDetail = currentOpenBankDetail;
@@ -3617,6 +3742,7 @@ private String openBankItemName = null;
 
                 detailSlot.removeAll();
                 detailSlot.add(buildInlineDetail(item, false), BorderLayout.CENTER);
+                watchBtnRef[0] = findWatchButton(detailSlot);
                 detailSlot.revalidate();
                 javax.swing.SwingUtilities.invokeLater(() -> {
                     int fullHeight = detailSlot.getPreferredSize().height;
@@ -5897,6 +6023,22 @@ private String[] buildItemDataFromCache(String name)
         box.add(labelText);
         box.add(valueText);
         return box;
+    }
+
+    private JButton findWatchButton(java.awt.Container container)
+    {
+        for (java.awt.Component c : container.getComponents()) {
+            if (c instanceof JButton) {
+                String txt = ((JButton)c).getText();
+                if (txt.equals("+ Watch") || txt.equals("✓ Watch") || txt.equals("- Unwatch"))
+                    return (JButton)c;
+            }
+            if (c instanceof java.awt.Container) {
+                JButton found = findWatchButton((java.awt.Container)c);
+                if (found != null) return found;
+            }
+        }
+        return null;
     }
 
     private JButton buildFooterBtn(String text, boolean isGold)
