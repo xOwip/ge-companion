@@ -3522,7 +3522,7 @@ private String openBankItemName = null;
         block.setLayout(new BoxLayout(block, BoxLayout.Y_AXIS));
         block.setBackground(bgColor);
         block.setAlignmentX(Component.LEFT_ALIGNMENT);
-        block.setBorder(new MatteBorder(0, 0, 1, 0, new Color(40, 36, 34)));
+        block.setBorder(javax.swing.BorderFactory.createEmptyBorder());
 
         JPanel row = new JPanel(new BorderLayout());
         row.setBackground(bgColor);
@@ -3764,7 +3764,7 @@ private String openBankItemName = null;
                         detailViewport.revalidate();
                         if (curH[0] >= targetFinal)
                         {
-                            detailViewport.setPreferredSize(null);
+                            detailViewport.setPreferredSize(new Dimension(1, targetFinal));
                             detailViewport.setViewPosition(new java.awt.Point(0, 0));
                             openTimer.stop();
                         }
