@@ -834,11 +834,13 @@ private String openBankItemName = null;
 
         JLabel liveDot = new JLabel("●");
         liveDot.setForeground(LIVE_GREEN);
+        liveDot.setToolTipText("Live — prices auto-refresh every 60 seconds");
         liveDot.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
 
         timerLabel = new JLabel("0s ago");
         timerLabel.setForeground(TAB_INACTIVE);
         timerLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
+        timerLabel.setToolTipText("Time since last price refresh — prices auto-refresh every 60 seconds");
         JLabel timer = timerLabel;
 
         JLabel refresh = new JLabel("↻");
