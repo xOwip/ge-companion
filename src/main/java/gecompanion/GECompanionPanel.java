@@ -271,6 +271,13 @@ private String openBankItemName = null;
         {
             if (itemListChanged)
             {
+                // close any open floating stats panel before rebuilding
+                if (activeStatsFloatPanel != null && activeStatsLayeredPane != null) {
+                    activeStatsLayeredPane.remove(activeStatsFloatPanel);
+                    activeStatsLayeredPane.repaint();
+                    activeStatsFloatPanel = null;
+                    activeStatsLayeredPane = null;
+                }
                 isRefreshing = true;
                 showTab(2);
                 isRefreshing = false;
