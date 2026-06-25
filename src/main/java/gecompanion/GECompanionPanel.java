@@ -259,6 +259,7 @@ private String openBankItemName = null;
 
     public void updateBankItems(java.util.List<String> items, java.util.Map<String, Integer> quantities, long bankOnlyValue, long totalWealthValue)
     {
+        boolean itemListChanged = !items.equals(this.bankItems);
         this.bankItems.clear();
         this.bankItems.addAll(items);
         this.bankQuantities.clear();
@@ -268,14 +269,17 @@ private String openBankItemName = null;
         saveBankData();
         if (activeTab == 2)
         {
-            isRefreshing = true;
-            showTab(2);
-            isRefreshing = false;
-            if (bankReopenAction != null)
+            if (itemListChanged)
             {
-                javax.swing.Timer t = new javax.swing.Timer(150, e2 -> bankReopenAction.run());
-                t.setRepeats(false);
-                t.start();
+                isRefreshing = true;
+                showTab(2);
+                isRefreshing = false;
+                if (bankReopenAction != null)
+                {
+                    javax.swing.Timer t = new javax.swing.Timer(150, e2 -> bankReopenAction.run());
+                    t.setRepeats(false);
+                    t.start();
+                }
             }
         }
     }
@@ -3764,7 +3768,7 @@ private String openBankItemName = null;
                         detailViewport.revalidate();
                         if (curH[0] >= targetFinal)
                         {
-                            detailViewport.setPreferredSize(new Dimension(1, targetFinal));
+                            detailViewport.setPreferredSize(null);
                             detailViewport.setViewPosition(new java.awt.Point(0, 0));
                             openTimer.stop();
                         }
