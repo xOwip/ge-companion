@@ -4058,13 +4058,13 @@ private String openBankItemName = null;
 
     private Color getUpdateColor(String category)
     {
-        if (category == null) return new Color(120, 120, 120);
+        if (category == null) return new Color(160, 160, 160);
         String cat = category.toLowerCase();
-        if (cat.contains("game")) return new Color(212, 175, 55);      // gold
-        if (cat.contains("patch")) return new Color(74, 122, 191);     // blue
-        if (cat.contains("event")) return new Color(75, 153, 75);      // green
-        if (cat.contains("poll")) return new Color(150, 80, 200);      // purple
-        return new Color(120, 120, 120);                                // gray
+        if (cat.contains("game")) return new Color(255, 200, 0);       // bright gold
+        if (cat.contains("patch")) return new Color(80, 150, 255);     // bright blue
+        if (cat.contains("event")) return new Color(50, 200, 50);      // bright green
+        if (cat.contains("poll")) return new Color(180, 80, 255);      // bright purple
+        return new Color(160, 160, 160);                                // light gray
     }
 
     private String extractParam(String params, String key)
@@ -5272,8 +5272,9 @@ private String[] buildItemDataFromCache(String name)
                         // date (white)
                         g2.setColor(Color.WHITE);
                         g2.drawString(dateStr, boxX + pad, boxY + lineH - 2);
-                        // title (tan)
-                        g2.setColor(new Color(180, 165, 140));
+                        // title — dark on gold, tan on other colors
+                        boolean isGoldDot = dotColor.getRed() > 200 && dotColor.getGreen() > 150 && dotColor.getBlue() < 50;
+                        g2.setColor(isGoldDot ? new Color(255, 240, 150) : new Color(180, 165, 140));
                         g2.drawString(titleLine1, boxX + pad, boxY + lineH * 2 - 2);
                         if (titleLine2 != null)
                             g2.drawString(titleLine2, boxX + pad, boxY + lineH * 3 - 2);
