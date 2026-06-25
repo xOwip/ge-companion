@@ -5660,6 +5660,7 @@ private String[] buildItemDataFromCache(String name)
                     dragStart[0] = -1; dragEnd[0] = -1;
                     dragStartY[0] = -1; dragEndY[0] = -1;
                     priceCanvas.repaint(); volCanvas.repaint();
+                    if (updateCanvasHolder[0] != null) updateCanvasHolder[0].repaint();
                 }
                 @Override
                 public void mouseClicked(MouseEvent e) {
