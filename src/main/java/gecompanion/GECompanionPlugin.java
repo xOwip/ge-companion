@@ -7,7 +7,7 @@
  *  ╚═════╝ ╚══════╝     ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚═╝
  *
  *  Built by Owip | github.com/xOwip
- *  Live GE prices, bank value tracker, and item search.
+ *  Live GE prices, interactive price charts, watchlist, bank value tracker, and item search.
  */
 
 package gecompanion;
