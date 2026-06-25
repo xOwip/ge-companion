@@ -5220,14 +5220,34 @@ private String[] buildItemDataFromCache(String name)
                                 + ld.getMonth().toString().substring(0,1)
                                 + ld.getMonth().toString().substring(1,3).toLowerCase()
                                 + " " + ld.getYear() + "  (" + catLabel + ")";
-                        String titleStr = u.title.length() > 28 ? u.title.substring(0, 25) + "..." : u.title;
-                        int line1W = fm.stringWidth(dateStr);
-                        int line2W = fm.stringWidth(titleStr);
-                        int maxTextW = Math.max(line1W, line2W);
+// wrap title across up to 2 lines instead of truncating
                         int pad = 5;
-                        int boxW = maxTextW + pad * 2;
                         int lineH = fm.getHeight();
-                        int boxH = lineH * 2 + 4;
+                        int maxBoxW = w - 8;
+                        String titleLine1, titleLine2;
+                        if (fm.stringWidth(u.title) <= maxBoxW - pad * 2) {
+                            titleLine1 = u.title;
+                            titleLine2 = null;
+                        } else {
+                            // find wrap point
+                            int wrapAt = u.title.length();
+                            for (int ci = u.title.length(); ci > 0; ci--) {
+                                if (u.title.charAt(ci-1) == ' ' && fm.stringWidth(u.title.substring(0, ci-1)) <= maxBoxW - pad * 2) {
+                                    wrapAt = ci - 1;
+                                    break;
+                                }
+                            }
+                            titleLine1 = u.title.substring(0, wrapAt);
+                            titleLine2 = u.title.substring(wrapAt).trim();
+                            if (fm.stringWidth(titleLine2) > maxBoxW - pad * 2)
+                                titleLine2 = titleLine2.substring(0, Math.min(titleLine2.length(), 25)) + "...";
+                        }
+                        int line1W = fm.stringWidth(dateStr);
+                        int line2W = fm.stringWidth(titleLine1);
+                        int line3W = titleLine2 != null ? fm.stringWidth(titleLine2) : 0;
+                        int maxTextW = Math.max(line1W, Math.max(line2W, line3W));
+                        int boxW = Math.min(maxTextW + pad * 2, maxBoxW);
+                        int boxH = titleLine2 != null ? lineH * 3 + 4 : lineH * 2 + 4;
                         int arrowH = 5;
                         int arrowW = 7;
                         int tooltipY = 10; // start of tooltip area
@@ -5254,14 +5274,16 @@ private String[] buildItemDataFromCache(String name)
                         g2.drawString(dateStr, boxX + pad, boxY + lineH - 2);
                         // title (tan)
                         g2.setColor(new Color(180, 165, 140));
-                        g2.drawString(titleStr, boxX + pad, boxY + lineH * 2 - 2);
+                        g2.drawString(titleLine1, boxX + pad, boxY + lineH * 2 - 2);
+                        if (titleLine2 != null)
+                            g2.drawString(titleLine2, boxX + pad, boxY + lineH * 3 - 2);
                     }
                 }
                 g2.dispose();
             }
         };
         updateCanvas.setPreferredSize(new Dimension(1, 10));
-        updateCanvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 58));
+        updateCanvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, 72));
         updateCanvas.setMinimumSize(new Dimension(0, 10));
         updateCanvas.setBackground(new Color(14, 12, 13));
         updateCanvas.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -5307,7 +5329,7 @@ private String[] buildItemDataFromCache(String name)
 
                 updateCanvas.putClientProperty("hoveredUpdate", found >= 0 ? found : null);
 // expand/collapse canvas based on hover state
-                int targetH = found >= 0 ? 58 : 10;
+                int targetH = found >= 0 ? 72 : 10;
                 if (updateCanvas.getPreferredSize().height != targetH) {
                     updateCanvas.setPreferredSize(new Dimension(1, targetH));
                     updateCanvas.setMaximumSize(new Dimension(Integer.MAX_VALUE, targetH));
