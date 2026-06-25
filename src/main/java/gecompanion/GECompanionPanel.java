@@ -1859,6 +1859,7 @@ private String openBankItemName = null;
         javax.swing.JViewport detailViewport = new javax.swing.JViewport();
         detailViewport.setView(detailSlot);
         detailViewport.setVisible(false);
+        detailViewport.setBorder(null);
         detailViewport.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         row.addMouseListener(new MouseAdapter()
@@ -2306,6 +2307,7 @@ private String openBankItemName = null;
         block.setBackground(rowBg);
         block.setAlignmentX(Component.LEFT_ALIGNMENT);
         block.setBorder(javax.swing.BorderFactory.createEmptyBorder());
+        block.setMaximumSize(new Dimension(Integer.MAX_VALUE, 800));
 
         JPanel row = new JPanel(new BorderLayout());
         row.setBackground(rowBg);
@@ -2440,6 +2442,7 @@ private String openBankItemName = null;
         javax.swing.JViewport detailViewport = new javax.swing.JViewport();
         detailViewport.setView(detailSlot);
         detailViewport.setVisible(false);
+        detailViewport.setBorder(null);
         detailViewport.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         row.addMouseListener(new MouseAdapter()
@@ -3527,6 +3530,7 @@ private String openBankItemName = null;
         block.setBackground(bgColor);
         block.setAlignmentX(Component.LEFT_ALIGNMENT);
         block.setBorder(javax.swing.BorderFactory.createEmptyBorder());
+        block.setMaximumSize(new Dimension(Integer.MAX_VALUE, 800));
 
         JPanel row = new JPanel(new BorderLayout());
         row.setBackground(bgColor);
@@ -3600,6 +3604,7 @@ private String openBankItemName = null;
         javax.swing.JViewport detailViewport = new javax.swing.JViewport();
         detailViewport.setView(detailSlot);
         detailViewport.setVisible(false);
+        detailViewport.setBorder(null);
         detailViewport.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         row.addMouseListener(new MouseAdapter()
