@@ -140,23 +140,6 @@ public interface GECompanionConfig extends Config
 	)
 	default boolean resetBankHistory() { return false; }
 
-	// ── DISPLAY ──
-    @ConfigSection(
-          name = "Display",
-          description = "Display settings",
-          position = 3
-    )
-    String displaySection = "display";
-
-    @ConfigItem(
-          keyName = "showLookupButton",
-          name = "Show lookup button",
-          description = "Show the GE Companion lookup button on the minimap",
-          section = displaySection,
-          position = 0
-    )
-    default boolean showLookupButton() { return true; }
-
     @ConfigItem(
           keyName = "pinnedItems",
           name = "Pinned items",
