@@ -4703,6 +4703,8 @@ private String[] buildItemDataFromCache(String name)
                 public void mouseClicked(MouseEvent e) {
                     zoomStart[0] = 0;
                     zoomEnd[0] = -1;
+                    zoomBoxMinY[0] = -1;
+                    zoomBoxMaxY[0] = -1;
                     if (priceCanvasHolder[0] != null) priceCanvasHolder[0].repaint();
                     if (volCanvasHolder[0] != null) volCanvasHolder[0].repaint();
                 }
