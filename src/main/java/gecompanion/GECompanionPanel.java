@@ -91,7 +91,7 @@ public class GECompanionPanel extends PluginPanel
     private String activeTimeFrame = "24H";
     private boolean bankAllItemsCollapsed = true;
     private boolean graphWasOpen = false;
-    private String graphActiveTimeframe = "1D";
+    private String graphActiveTimeframe = "7D"; // overridden in build() from config
     private JPanel tabContentPanel;
     private JLabel[] tabLabels = new JLabel[3];
     private JLabel timerLabel;
@@ -789,6 +789,7 @@ private String openBankItemName = null;
 
     private void build()
     {
+        graphActiveTimeframe = getDefaultTimeframe();
         JPanel goldBar = new JPanel();
         goldBar.setPreferredSize(new Dimension(0, 2));
         goldBar.setBackground(GOLD);
@@ -1996,6 +1997,7 @@ private String openBankItemName = null;
                     selectedItemName = null;
                     searchReopenAction = null;
                     graphWasOpen = false;
+                    graphActiveTimeframe = getDefaultTimeframe();
                     liveHeaderPriceLabel = null;
                     liveBuyPriceValueLabel = null;
                     liveBuyPriceHeaderLabel = null;
@@ -2576,6 +2578,7 @@ private String openBankItemName = null;
                     selectedWatchlistItemName = null;
                     watchlistReopenAction = null;
                     graphWasOpen = false;
+                    graphActiveTimeframe = getDefaultTimeframe();
                     liveHeaderPriceLabel = null;
                     liveBuyPriceValueLabel = null;
                     liveBuyPriceHeaderLabel = null;
@@ -3733,6 +3736,7 @@ private String openBankItemName = null;
                     selectedBankItemName = null;
                     bankReopenAction = null;
                     graphWasOpen = false;
+                    graphActiveTimeframe = getDefaultTimeframe();
                     liveHeaderPriceLabel = null;
                     liveBuyPriceValueLabel = null;
                     liveBuyPriceHeaderLabel = null;
@@ -6120,6 +6124,18 @@ private String[] buildItemDataFromCache(String name)
         box.add(labelText);
         box.add(valueText);
         return box;
+    }
+
+    private String getDefaultTimeframe()
+    {
+        switch (config.defaultChartRange()) {
+            case DAY: return "1D";
+            case WEEK: return "7D";
+            case MONTH: return "30D";
+            case QUARTER: return "3M";
+            case YEAR: return "1Y";
+            default: return "7D";
+        }
     }
 
     private JButton findWatchButton(java.awt.Container container)

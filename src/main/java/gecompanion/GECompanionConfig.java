@@ -78,7 +78,7 @@ public interface GECompanionConfig extends Config
 			section = watchlistSection,
 			position = 0
 	)
-	default ChartRange defaultChartRange() { return ChartRange.MONTH; }
+	default ChartRange defaultChartRange() { return ChartRange.WEEK; }
 	@ConfigItem(
 			keyName = "chartZoomMode",
 			name = "Chart zoom mode",
