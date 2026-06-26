@@ -823,7 +823,7 @@ private String openBankItemName = null;
         footerSeparator.setBackground(BG_DARK);
         JLabel footerLabel = new JLabel("Data from prices.runescape.wiki");
         footerLabel.setForeground(TEXT_DIM);
-        footerLabel.setFont(new Font("Monospaced", Font.PLAIN, 10));
+        footerLabel.setFont(new Font("Monospaced", Font.PLAIN, 11));
         footerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         footer.add(footerSeparator);
         footer.add(footerLabel);
