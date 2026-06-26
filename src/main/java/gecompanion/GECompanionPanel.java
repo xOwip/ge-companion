@@ -835,6 +835,17 @@ private String openBankItemName = null;
         JLabel liveDot = new JLabel("●");
         liveDot.setForeground(LIVE_GREEN);
         liveDot.setToolTipText("Live — prices auto-refresh every 60 seconds");
+// pulsing animation
+        final float[] phase = {0f};
+        javax.swing.Timer pulseTimer = new javax.swing.Timer(50, ev -> {
+            phase[0] += 0.12f;
+            float brightness = (float)(0.5 + 0.5 * Math.sin(phase[0]));
+            int r = (int)(30 + brightness * (74 - 30));
+            int g = (int)(80 + brightness * (154 - 80));
+            int b = (int)(20 + brightness * (48 - 20));
+            liveDot.setForeground(new Color(r, g, b));
+        });
+        pulseTimer.start();
         liveDot.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
 
         timerLabel = new JLabel("0s ago");
