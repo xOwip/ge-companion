@@ -3202,7 +3202,7 @@ private String openBankItemName = null;
             JLabel gainersLabel = new JLabel("▲ Top Gainers (by " + config.sortMode().getLabel() + ")");
             gainersLabel.setForeground(GREEN_UP);
             gainersLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_SECTION));
-            gainersLabel.setToolTipText("Based on items in your bank at last scan");
+            gainersLabel.setToolTipText("<html>Based on items in your bank at last scan.<br>Items must be priced above 10,000 gp each,<br>with a total stack value above the threshold set in plugin settings.</html>");
             gainersHeader.add(gainersLabel, BorderLayout.WEST);
             JLabel gCountLabel = new JLabel(String.valueOf(config.gainersCount()));
             gCountLabel.setForeground(TEXT_DIM);
@@ -3308,7 +3308,7 @@ private String openBankItemName = null;
                     long price = Long.parseLong(bankItem[1]);
                     int qty = bankQuantities.getOrDefault(bankItem[0], 0);
                     long stackValue = price * qty;
-                    return price < 50000 || stackValue < minStackValue;
+                    return price < 10000 || stackValue < minStackValue;
                 } catch (NumberFormatException e) { return true; }
             });
 
@@ -3350,7 +3350,7 @@ private String openBankItemName = null;
             JLabel losersLabel = new JLabel("▼ Top Losers (by " + config.sortMode().getLabel() + ")");
             losersLabel.setForeground(RED_DOWN);
             losersLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_SECTION));
-            losersLabel.setToolTipText("Based on items in your bank at last scan");
+            losersLabel.setToolTipText("<html>Based on items in your bank at last scan.<br>Items must be priced above 10,000 gp each,<br>with a total stack value above the threshold set in plugin settings.</html>");
             losersHeader.add(losersLabel, BorderLayout.WEST);
             JLabel lCountLabel = new JLabel(String.valueOf(config.losersCount()));
             lCountLabel.setForeground(TEXT_DIM);
@@ -3429,6 +3429,7 @@ private String openBankItemName = null;
 // All Items — collapsible
             JLabel allLabel = new JLabel((bankAllItemsCollapsed ? "≡ All Bank Items ▶" : "≡ All Bank Items ▼"));
             allLabel.setForeground(TAB_INACTIVE);
+            allLabel.setToolTipText("<html>All bank items priced above 10,000 gp each,<br>with a total stack value above the threshold set in plugin settings.</html>");
             allLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_SECTION));
             allLabel.setBorder(new EmptyBorder(6, 7, 2, 7));
             allLabel.setAlignmentX(Component.LEFT_ALIGNMENT);

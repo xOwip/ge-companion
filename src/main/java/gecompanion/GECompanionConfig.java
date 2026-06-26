@@ -111,8 +111,8 @@ public interface GECompanionConfig extends Config
           section = bankSection,
           position = 3
     )
-    @Range(min = 0, max = 10000000)
-    default int minBankItemValue() { return 500000; }
+	@Range(min = 10000, max = 10000000)
+	default int minBankItemValue() { return 50000; }
 	@ConfigItem(
 			keyName = "sortMode",
 			name = "Sort Gainers/Losers by",
