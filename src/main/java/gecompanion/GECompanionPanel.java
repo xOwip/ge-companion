@@ -3221,6 +3221,7 @@ private String openBankItemName = null;
                         {
                             int newCount = config.gainersCount() - 1;
                             plugin.saveConfig("gainersCount", String.valueOf(newCount));
+                            if (activeStatsFloatPanel != null && activeStatsLayeredPane != null) { activeStatsLayeredPane.remove(activeStatsFloatPanel); activeStatsLayeredPane.repaint(); activeStatsFloatPanel = null; activeStatsLayeredPane = null; }
                             gCountLabel.setText(String.valueOf(newCount));
                             showTab(activeTab);
                         }
@@ -3240,6 +3241,7 @@ private String openBankItemName = null;
                     {
                         int newCount = config.gainersCount() + 1;
                         plugin.saveConfig("gainersCount", String.valueOf(newCount));
+                        if (activeStatsFloatPanel != null && activeStatsLayeredPane != null) { activeStatsLayeredPane.remove(activeStatsFloatPanel); activeStatsLayeredPane.repaint(); activeStatsFloatPanel = null; activeStatsLayeredPane = null; }
                         gCountLabel.setText(String.valueOf(newCount));
                         showTab(activeTab);
                     }
@@ -3367,6 +3369,7 @@ private String openBankItemName = null;
                         {
                             int newCount = config.losersCount() - 1;
                             plugin.saveConfig("losersCount", String.valueOf(newCount));
+                            if (activeStatsFloatPanel != null && activeStatsLayeredPane != null) { activeStatsLayeredPane.remove(activeStatsFloatPanel); activeStatsLayeredPane.repaint(); activeStatsFloatPanel = null; activeStatsLayeredPane = null; }
                             lCountLabel.setText(String.valueOf(newCount));
                             showTab(activeTab);
                         }
@@ -3386,6 +3389,7 @@ private String openBankItemName = null;
                     {
                         int newCount = config.losersCount() + 1;
                         plugin.saveConfig("losersCount", String.valueOf(newCount));
+                        if (activeStatsFloatPanel != null && activeStatsLayeredPane != null) { activeStatsLayeredPane.remove(activeStatsFloatPanel); activeStatsLayeredPane.repaint(); activeStatsFloatPanel = null; activeStatsLayeredPane = null; }
                         lCountLabel.setText(String.valueOf(newCount));
                         showTab(activeTab);
                     }
