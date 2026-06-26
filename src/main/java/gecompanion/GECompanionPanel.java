@@ -196,6 +196,8 @@ public class GECompanionPanel extends PluginPanel
     // Item variant map: ornamented/charged item ID → base tradeable item ID
     private final java.util.Map<Integer, Integer> itemVariantMap = new java.util.HashMap<>();
     private final java.util.List<String> bankItems = new java.util.ArrayList<>();
+    private final java.util.Set<String> displayedGainersLosers = new java.util.HashSet<>();
+    private final java.util.Set<String> removedFromDisplay = new java.util.HashSet<>();
     private final java.util.Map<String, Integer> bankQuantities = new java.util.HashMap<>();
 
     // Inline detail tracking
@@ -259,7 +261,20 @@ private String openBankItemName = null;
 
     public void updateBankItems(java.util.List<String> items, java.util.Map<String, Integer> quantities, long bankOnlyValue, long totalWealthValue)
     {
-        boolean itemListChanged = !items.equals(this.bankItems);
+        java.util.Set<String> newItemSet = new java.util.HashSet<>(items);
+        java.util.Set<String> oldItemSet = new java.util.HashSet<>(this.bankItems);
+        // track items that were displayed but are now gone from bank
+        for (String name : displayedGainersLosers) {
+            if (oldItemSet.contains(name) && !newItemSet.contains(name))
+                removedFromDisplay.add(name);
+        }
+        // rebuild if displayed item changed, or if a previously-removed displayed item returned
+        boolean displayedItemChanged = displayedGainersLosers.stream().anyMatch(name ->
+                newItemSet.contains(name) != oldItemSet.contains(name) ||
+                        !quantities.getOrDefault(name, 0).equals(this.bankQuantities.getOrDefault(name, 0)));
+        boolean removedItemReturned = removedFromDisplay.stream().anyMatch(newItemSet::contains);
+        boolean itemListChanged = displayedGainersLosers.isEmpty() || displayedItemChanged || removedItemReturned;
+        if (removedItemReturned) removedFromDisplay.removeIf(newItemSet::contains);
         this.bankItems.clear();
         this.bankItems.addAll(items);
         this.bankQuantities.clear();
@@ -3318,9 +3333,12 @@ private String openBankItemName = null;
             }
 
             // Top Gainers
+            displayedGainersLosers.clear();
             int gainersCount = Math.min(config.gainersCount(), gainers.size());
-            for (int i = 0; i < gainersCount; i++)
+            for (int i = 0; i < gainersCount; i++) {
+                displayedGainersLosers.add(gainers.get(i)[0]);
                 listPanel.add(buildBankItemBlock(gainers.get(i), true, i));
+            }
 
             // Top Losers
             JPanel losersHeader = new JPanel(new BorderLayout());
@@ -3399,8 +3417,10 @@ private String openBankItemName = null;
             listPanel.add(losersAccent);
 
             int losersCount = Math.min(config.losersCount(), losers.size());
-            for (int i = 0; i < losersCount; i++)
+            for (int i = 0; i < losersCount; i++) {
+                displayedGainersLosers.add(losers.get(i)[0]);
                 listPanel.add(buildBankItemBlock(losers.get(i), true, i));
+            }
 
 // All Items — collapsible
             JLabel allLabel = new JLabel((bankAllItemsCollapsed ? "≡ All Bank Items ▶" : "≡ All Bank Items ▼"));
