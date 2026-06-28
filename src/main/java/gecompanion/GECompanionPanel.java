@@ -4121,8 +4121,8 @@ private String openBankItemName = null;
     {
         if (category == null) return new Color(160, 160, 160);
         String cat = category.toLowerCase();
-        if (cat.contains("game")) return new Color(255, 200, 0);       // bright gold
         if (cat.contains("patch")) return new Color(80, 150, 255);     // bright blue
+        if (cat.contains("game")) return new Color(255, 200, 0);       // bright gold
         if (cat.contains("event")) return new Color(50, 200, 50);      // bright green
         if (cat.contains("poll")) return new Color(180, 80, 255);      // bright purple
         return new Color(160, 160, 160);                                // light gray
