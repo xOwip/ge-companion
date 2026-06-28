@@ -911,6 +911,13 @@ private String openBankItemName = null;
                     if (activeTab == 2 && idx != 2 && bankMetadataExpanded) {
                         bankMetadataExpanded = false;
                     }
+                    // Close floating stats panel when switching tabs
+                    if (activeStatsFloatPanel != null && activeStatsLayeredPane != null) {
+                        activeStatsLayeredPane.remove(activeStatsFloatPanel);
+                        activeStatsLayeredPane.repaint();
+                        activeStatsFloatPanel = null;
+                        activeStatsLayeredPane = null;
+                    }
                     activeTab = idx;
                     for (int j = 0; j < 3; j++)
                         updateTabStyle(tabLabels[j], j == idx);
@@ -2802,6 +2809,12 @@ private String openBankItemName = null;
             btn.setBorder(BorderFactory.createLineBorder(frame.equals(bankWealthTimeFrame) ? GOLD : new Color(58, 53, 48)));
             btn.addActionListener(e -> {
                 bankWealthTimeFrame = frame;
+                if (activeStatsFloatPanel != null && activeStatsLayeredPane != null) {
+                    activeStatsLayeredPane.remove(activeStatsFloatPanel);
+                    activeStatsLayeredPane.repaint();
+                    activeStatsFloatPanel = null;
+                    activeStatsLayeredPane = null;
+                }
                 isRefreshing = true;
                 showTab(activeTab);
                 isRefreshing = false;
@@ -2827,6 +2840,12 @@ private String openBankItemName = null;
             btn.setBorder(BorderFactory.createLineBorder(frame.equals(bankWealthTimeFrame) ? GOLD : new Color(58, 53, 48)));
             btn.addActionListener(e -> {
                 bankWealthTimeFrame = frame;
+                if (activeStatsFloatPanel != null && activeStatsLayeredPane != null) {
+                    activeStatsLayeredPane.remove(activeStatsFloatPanel);
+                    activeStatsLayeredPane.repaint();
+                    activeStatsFloatPanel = null;
+                    activeStatsLayeredPane = null;
+                }
                 isRefreshing = true;
                 showTab(activeTab);
                 isRefreshing = false;
@@ -4265,7 +4284,6 @@ private String[] buildItemDataFromCache(String name)
         String lastTradedTime = pd.getTimeSince();
         return new String[]{name, price, buyPrice, sellPrice, "0", delta, limitStr, gpChangeStr, buyQty, sellQty, lastTradedStr, lastTradedTime, String.valueOf(id)};
     }
-
 
     private JPanel buildTimeFrameBar()
     {
