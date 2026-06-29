@@ -2504,6 +2504,12 @@ private String openBankItemName = null;
                         if (nowWatched) pinnedItems.add(item[0]);
                         else pinnedItems.remove(item[0]);
                         savePinnedItems();
+                        if (activeStatsFloatPanel != null && activeStatsLayeredPane != null) {
+                            activeStatsLayeredPane.remove(activeStatsFloatPanel);
+                            activeStatsLayeredPane.repaint();
+                            activeStatsFloatPanel = null;
+                            activeStatsLayeredPane = null;
+                        }
                         if (activeTab == 0) showTab(0);
                         JButton wb = watchBtnRef[0];
                         if (wb != null) {
@@ -3688,6 +3694,12 @@ private String openBankItemName = null;
                         if (nowWatched) pinnedItems.add(item[0]);
                         else pinnedItems.remove(item[0]);
                         savePinnedItems();
+                        if (activeStatsFloatPanel != null && activeStatsLayeredPane != null) {
+                            activeStatsLayeredPane.remove(activeStatsFloatPanel);
+                            activeStatsLayeredPane.repaint();
+                            activeStatsFloatPanel = null;
+                            activeStatsLayeredPane = null;
+                        }
                         if (activeTab == 0) showTab(0);
                         JButton wb = watchBtnRef[0];
                         if (wb != null) {
