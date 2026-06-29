@@ -4413,6 +4413,7 @@ private String[] buildItemDataFromCache(String name)
         JPanel statsFloatPanel = new JPanel();
         statsFloatPanel.setLayout(new BoxLayout(statsFloatPanel, BoxLayout.Y_AXIS));
         statsFloatPanel.setBackground(new Color(14, 12, 13));
+        statsFloatPanel.addMouseListener(new MouseAdapter() {}); // consume clicks so they don't pass through
         statsFloatPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(80, 65, 20), 1),
                 BorderFactory.createEmptyBorder(6, 10, 6, 10)
