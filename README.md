@@ -41,6 +41,14 @@ Every item has a full buy/sell price history chart with five timeframes:
 Jagex updates happened — hover to see the update title, right-click to open
 the full update on the OSRS Wiki.
 
+Markers are color-coded by category:
+- 🟡 **Gold** — General game updates
+- 🔵 **Blue** — Patch notes
+- 🟢 **Green** — Events
+- 🟣 **Purple** — Polls
+
+Choose how many markers to show in plugin settings — All, Major Only, or Off.
+
 Update markers are sourced live from the OSRS Wiki and require no maintenance —
 whenever the Wiki documents a new game update, it automatically appears on your
 price chart the next time you open it.
