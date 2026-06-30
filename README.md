@@ -41,6 +41,10 @@ Every item has a full buy/sell price history chart with five timeframes:
 Jagex updates happened — hover to see the update title, right-click to open
 the full update on the OSRS Wiki.
 
+Update markers are sourced live from the OSRS Wiki and require no maintenance —
+whenever the Wiki documents a new game update, it automatically appears on your
+price chart the next time you open it.
+
 ![Price chart with zoom and update markers](gifs/price_chart.gif)
 
 ### 💡 Flipping Stats
@@ -79,6 +83,14 @@ tradeable base.
 All price data comes from the free public OSRS Wiki prices API
 (`prices.runescape.wiki`). GE Companion never asks you to log in,
 register, or provide any credentials. Install it and it works.
+
+---
+
+## Always Up to Date
+Every panel refreshes automatically every 60 seconds with zero disruption —
+open detail panels, expanded charts, and floating stats stay exactly where
+you left them. Want the latest prices right now? Click the ↻ refresh button
+in the top-right corner to force an instant update.
 
 ---
 
