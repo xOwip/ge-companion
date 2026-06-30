@@ -134,4 +134,10 @@ All data stays on your machine.
 
 ---
 
+Source code is public at [github.com/xOwip/ge-companion](https://github.com/xOwip/ge-companion) and open to audit.
+
+Questions or feedback? Open an issue on [GitHub](https://github.com/xOwip/ge-companion/issues).
+
+---
+
 *Data from [prices.runescape.wiki](https://prices.runescape.wiki)*
