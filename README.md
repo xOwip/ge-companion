@@ -103,8 +103,12 @@ register, or provide any credentials. Install it and it works.
 ## Always Up to Date
 Every panel refreshes automatically every 60 seconds with zero disruption —
 open detail panels, expanded charts, and floating stats stay exactly where
-you left them. Want the latest prices right now? Click the ↻ refresh button
-in the top-right corner to force an instant update.
+you left them. Want to check right now instead of waiting? Click the ↻ refresh
+button in the top-right corner to pull the latest data immediately.
+
+60 seconds is the fastest refresh rate supported by the OSRS Wiki prices API —
+the same trusted, community-maintained data source used by many popular OSRS
+price tracking tools.
 
 ---
 
