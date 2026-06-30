@@ -72,6 +72,12 @@ Open your bank and GE Companion automatically scans it to show:
 - **Top Gainers** — your banked items with the biggest price increase
 - **Top Losers** — your banked items with the biggest price drop
 
+**Total Bank Value** matches the same calculation used by RuneLite's official
+Bank plugin — just your bank's contents. **Bank value change**, however, tracks
+your Bank + Inventory + Equipment combined, giving a more accurate picture of
+your overall wealth and reducing volatility from temporarily carrying items
+in your inventory.
+
 Switch between 1H, 6H, and 24H to see how your bank is performing over
 different timeframes. Expand any item to see its full detail panel and chart.
 
