@@ -4133,10 +4133,15 @@ private String openBankItemName = null;
     {
         if (category == null) return new Color(160, 160, 160);
         String cat = category.toLowerCase();
-        if (cat.contains("patch")) return new Color(80, 150, 255);     // bright blue
-        if (cat.contains("game")) return new Color(255, 200, 0);       // bright gold
-        if (cat.contains("event")) return new Color(50, 200, 50);      // bright green
-        if (cat.contains("poll")) return new Color(180, 80, 255);      // bright purple
+        // exact match first, then contains fallback
+        if (cat.equals("game")) return new Color(255, 200, 0);         // bright gold
+        if (cat.equals("patch")) return new Color(80, 150, 255);       // bright blue
+        if (cat.equals("event")) return new Color(50, 200, 50);        // bright green
+        if (cat.equals("poll")) return new Color(180, 80, 255);        // bright purple
+        if (cat.contains("game")) return new Color(255, 200, 0);       // bright gold (fallback)
+        if (cat.contains("patch")) return new Color(80, 150, 255);     // bright blue (fallback)
+        if (cat.contains("event")) return new Color(50, 200, 50);      // bright green (fallback)
+        if (cat.contains("poll")) return new Color(180, 80, 255);      // bright purple (fallback)
         return new Color(160, 160, 160);                                // light gray
     }
 
@@ -5267,6 +5272,7 @@ private String[] buildItemDataFromCache(String name)
                 Integer hoveredIdx = (Integer) getClientProperty("hoveredUpdate");
                 int dotY = 5; // center of dot strip (top 10px)
 
+                java.util.Map<Integer, Integer> usedXPositions = new java.util.HashMap<>();
                 for (int i = 0; i < gameUpdates.size(); i++) {
                     UpdateMarker u = gameUpdates.get(i);
                     if (config.gameUpdateMode() == GameUpdateMode.MAJOR_ONLY &&
@@ -5278,7 +5284,9 @@ private String[] buildItemDataFromCache(String name)
                     boolean hovered = hoveredIdx != null && hoveredIdx == i;
                     int r = hovered ? 5 : 3;
                     g2.setColor(dotColor);
-                    g2.fillOval(x - r, dotY - r, r * 2, r * 2);
+                    int xOffset = usedXPositions.getOrDefault(x, 0);
+                    usedXPositions.put(x, xOffset + r * 2 + 3);
+                    g2.fillOval(x - r + xOffset, dotY - r, r * 2, r * 2);
                     if (hovered) {
                         g2.setColor(Color.WHITE);
                         g2.drawOval(x - r - 1, dotY - r - 1, r * 2 + 2, r * 2 + 2);
@@ -5394,12 +5402,16 @@ private String[] buildItemDataFromCache(String name)
                     // cursor is in tooltip area — keep current hovered dot
                     found = currentHovered;
                 } else {
+                    java.util.Map<Integer, Integer> hoverXOffsets = new java.util.HashMap<>();
                     for (int i = 0; i < gameUpdates.size(); i++) {
                         UpdateMarker u = gameUpdates.get(i);
                         if (config.gameUpdateMode() == GameUpdateMode.MAJOR_ONLY && !u.category.contains("game")) continue;
                         if (u.timestamp < tMin || u.timestamp > tMax) continue;
                         int x = (int)((double)(u.timestamp - tMin) / (tMax - tMin) * (w - 1));
-                        if (Math.abs(mx - x) <= threshold && my <= 12) { found = i; break; }
+                        int xOff = hoverXOffsets.getOrDefault(x, 0);
+                        hoverXOffsets.put(x, xOff + 9);
+                        int actualX = x + xOff;
+                        if (Math.abs(mx - actualX) <= threshold && my <= 12) { found = i; break; }
                     }
                 }
 
