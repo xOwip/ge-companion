@@ -1218,6 +1218,12 @@ private String openBankItemName = null;
                 pinnedItems.add(item[0]);
             }
             savePinnedItems();
+            if (activeStatsFloatPanel != null && activeStatsLayeredPane != null) {
+                activeStatsLayeredPane.remove(activeStatsFloatPanel);
+                activeStatsLayeredPane.repaint();
+                activeStatsFloatPanel = null;
+                activeStatsLayeredPane = null;
+            }
             if (activeTab == 0) showTab(0);
             // Update button live
             boolean nowWatched = pinnedItems.contains(item[0]);
