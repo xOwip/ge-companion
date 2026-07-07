@@ -119,6 +119,7 @@ public class GECompanionPanel extends PluginPanel
     private String[] currentOpenBankItem = null;
     // Live label references for zero-disruption refresh
     private JLabel liveHeaderPriceLabel = null;
+    private JLabel liveBankValueLabel = null;
     private javax.swing.JPanel activeStatsFloatPanel = null;
     private javax.swing.JLayeredPane activeStatsLayeredPane = null;
     private JLabel liveFloatVolumeLabel = null;
@@ -280,6 +281,14 @@ private String openBankItemName = null;
         this.bankQuantities.clear();
         this.bankQuantities.putAll(quantities);
         this.totalBankValue = bankOnlyValue;
+// update bank value label in place if visible
+        if (liveBankValueLabel != null && activeTab == 2) {
+            boolean bankHidden = plugin.isBankValueHidden();
+            String bankValueStr = bankOnlyValue == 0 ? "No bank data" : formatFullPrice(String.valueOf(bankOnlyValue)) + " gp";
+            String heroText = bankHidden ? "Click to reveal" : bankValueStr;
+            liveBankValueLabel.setText(heroText);
+            liveBankValueLabel.setForeground(bankHidden ? TEXT_DIM : PRICE_GOLD);
+        }
         if (config.showBankValueChange()) saveBankValueLog(bankOnlyValue, totalWealthValue);
         saveBankData();
         if (activeTab == 2)
@@ -2913,6 +2922,7 @@ private String openBankItemName = null;
             heroFontSize--;
         } while (heroFontSize > 10);
         heroValue.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        liveBankValueLabel = heroValue;
         heroValue.setToolTipText(bankHidden ? "Click to reveal bank value" : "Click to hide bank value");
         heroValue.addMouseListener(new MouseAdapter()
         {
