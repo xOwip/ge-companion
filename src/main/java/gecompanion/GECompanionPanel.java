@@ -3029,7 +3029,7 @@ private String openBankItemName = null;
         JLabel bankChangeLabel = new JLabel(changeDisplayStr, SwingConstants.CENTER);
         bankChangeLabel.setForeground(showChangeData ? bankChangeColor : TEXT_DIM);
         bankChangeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
-        bankChangeLabel.setToolTipText("<html>Includes Bank + Inventory + Equipment to reduce volatility.<br>Temporarily removed high-value items may cause a slight discrepancy<br>with the displayed Total Bank Value.<br><br>To verify: Bank all items, then expand the details below and check<br>Total Bank Value − Wealth = Bank Change Value</html>");
+        bankChangeLabel.setToolTipText("<html>This tracks your Bank + Inventory + Equipment combined to reduce volatility,<br>so it may differ from the bank-only Total Bank Value shown above.<br><br>To verify: Bank all items, then expand the details below and check<br>Total Bank Value − Wealth = Bank Change Value</html>");
         gbc.gridy = 5;
         gbc.insets = new java.awt.Insets(0, 6, 0, 6);
         if (!showChangeData)
