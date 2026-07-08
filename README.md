@@ -6,7 +6,7 @@ a personal watchlist, and bank value tracking directly into your client.
 
 ---
 
-![Overview](screenshots/overview_bordered.PNG)
+![Overview](screenshots/overview_bordered.png)
 
 ## Features
 
