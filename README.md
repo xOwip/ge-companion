@@ -12,8 +12,8 @@ a personal watchlist, and bank value tracking directly into your client.
 
 ### Live Price Search
 Search any tradeable item by name and get instant results with live prices,
-buy/sell volume per hour, and percentage change. Click any item to expand its
-detail panel showing:
+buy/sell volume per hour, and percentage change across your selected timeframe 
+(1H, 6H, or 24H). Click any item to expand its detail panel showing:
 - Buy Price and Sell Price with last-traded timestamps
 - GE buy limit
 - Quick links to prices.runescape.wiki and the OSRS Wiki
