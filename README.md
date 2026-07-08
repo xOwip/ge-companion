@@ -82,12 +82,12 @@ GE Companion automatically logs your bank value each time you open your bank,
 building a history that powers the value change tracking across all timeframes
 — from 1H all the way up to your full recorded history.
 
+Tap the ▼ details arrow below your bank value to expand a breakdown showing
+exactly when and at what value your wealth was recorded for the selected timeframe.
+
 Switch between 1H, 6H, and 24H to see how your bank is performing over
 different timeframes. Expand any item in either the top gainers or top losers 
 section to see its full detail panel and chart.
-
-Tap the ▼ details arrow below your bank value to expand a breakdown showing
-exactly when and at what value your wealth was recorded for the selected timeframe.
 
 ![Bank tab](gifs/bank.gif)
 
