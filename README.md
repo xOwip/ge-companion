@@ -53,7 +53,7 @@ Update markers are sourced live from the OSRS Wiki and require no maintenance â€
 whenever the Wiki documents a new game update, it automatically appears on your
 price chart the next time you open it.
 
-![Price chart with zoom and update markers](gifs/price_chart.gif)
+![Price chart with zoom and update markers](gifs/price_chart_zoom.gif)
 
 ### ðŸ’¡ Flipping Stats
 Click the item icon in any detail panel to reveal a flipping stats panel with:
