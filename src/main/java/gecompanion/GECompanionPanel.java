@@ -4627,7 +4627,7 @@ private String[] buildItemDataFromCache(String name)
         priceLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         liveHeaderPriceLabel = priceLabel;
 
-        JLabel limitLabel = new JLabel("Lmt: " + limit);
+        JLabel limitLabel = new JLabel("Limit: " + limit);
         limitLabel.setForeground(TEXT_PRIMARY);
         limitLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
         limitLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
