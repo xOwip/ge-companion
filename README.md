@@ -118,6 +118,9 @@ button in the top-right corner to pull the latest data immediately.
 the same trusted, community-maintained data source used by many popular OSRS
 price tracking tools.
 
+New items appear in search automatically as soon as they begin trading
+on the Grand Exchange — no plugin update required.
+
 ---
 
 ## Privacy & Safety
