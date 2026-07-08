@@ -57,8 +57,8 @@ public interface GECompanionConfig extends Config
 
 	// ── WATCHLIST ──
 	@ConfigSection(
-			name = "Watchlist",
-			description = "Watchlist tab settings",
+			name = "Charts & Watchlist",
+			description = "Price chart and watchlist settings",
 			position = 2
 	)
 	String watchlistSection = "watchlist";
