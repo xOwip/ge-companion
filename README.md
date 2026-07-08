@@ -10,7 +10,7 @@ a personal watchlist, and bank value tracking directly into your client.
 
 ## Features
 
-### 🔍 Live Price Search
+### Live Price Search
 Search any tradeable item by name and get instant results with live prices,
 buy/sell volume per hour, and percentage change. Click any item to expand its
 detail panel showing:
@@ -20,14 +20,14 @@ detail panel showing:
 
 ![Search and detail panel](screenshots/search_detail.png)
 
-### 👁️ Watchlist
+### Watchlist
 Pin items to your personal watchlist and monitor their prices at a glance.
 Switch between 1H, 6H, and 24H timeframes to track short and medium-term
 price movements. Prices auto-refresh every 60 seconds.
 
 ![Watchlist tab](gifs/watchlist.gif)
 
-### 📈 Interactive Price Chart
+### Interactive Price Chart
 Every item has a full buy/sell price history chart with five timeframes:
 1D, 7D, 30D, 3M, and 1Y.
 
@@ -55,7 +55,7 @@ price chart the next time you open it.
 
 ![Price chart with zoom and update markers](gifs/price_chart_zoom.gif)
 
-### 💡 Flipping Stats
+### Flipping Stats
 Click the item icon in any detail panel to reveal a flipping stats panel with:
 - **Daily Volume** — how many times this item trades per day
 - **Margin** — current buy/sell spread
@@ -66,7 +66,7 @@ Margin, Profit, and ROI update live every 60 seconds alongside prices.
 
 ![Flipping stats panel](screenshots/flipping_stats.PNG)
 
-### 💰 Bank Value Tracker
+### Bank Value Tracker
 Open your bank and GE Companion automatically scans it to show:
 - **Total Bank Value** in gp
 - **Top Gainers** — your banked items with the biggest price increase
@@ -91,7 +91,7 @@ section to see its full detail panel and chart.
 
 ![Bank tab](gifs/bank.gif)
 
-### 🖱️ Right-click Price Check
+### Right-click Price Check
 Right-click any item in your bank or inventory and select **Price Check**
 to instantly pull it up in GE Companion. Works on noted items and
 automatically resolves charged, ornamented, and variant items to their
