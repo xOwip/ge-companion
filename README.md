@@ -78,6 +78,10 @@ your Bank + Inventory + Equipment combined, giving a more accurate picture of
 your overall wealth and reducing volatility from temporarily carrying items
 in your inventory.
 
+GE Companion automatically logs your bank value each time you open your bank,
+building a history that powers the value change tracking across all timeframes
+— from 1H all the way up to your full recorded history.
+
 Switch between 1H, 6H, and 24H to see how your bank is performing over
 different timeframes. Expand any item to see its full detail panel and chart.
 
