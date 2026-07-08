@@ -1191,8 +1191,8 @@ private String openBankItemName = null;
         grid.setAlignmentX(Component.LEFT_ALIGNMENT);
         grid.setMaximumSize(new Dimension(225, 45));
 
-        grid.add(buildStatBox("Buy Qty/hr", item.length > 8 ? item[8] : "?", STAT_GOLD, null));
-        grid.add(buildStatBox("Sell Qty/hr", item.length > 9 ? item[9] : "?", STAT_BLUE, null));
+        grid.add(buildStatBox("Buy Qty/hr", item.length > 8 ? formatWithCommas(item[8]) : "?", STAT_GOLD, null));
+        grid.add(buildStatBox("Sell Qty/hr", item.length > 9 ? formatWithCommas(item[9]) : "?", STAT_BLUE, null));
         liveStatGrid = grid;
 
         inner.add(grid);
@@ -6304,6 +6304,19 @@ private String[] buildItemDataFromCache(String name)
         });
 
         return row;
+    }
+
+    private String formatWithCommas(String value)
+    {
+        try
+        {
+            long val = Long.parseLong(value.replace(",", ""));
+            return String.format("%,d", val);
+        }
+        catch (NumberFormatException e)
+        {
+            return value;
+        }
     }
 
     private String formatFullPrice(String price)
