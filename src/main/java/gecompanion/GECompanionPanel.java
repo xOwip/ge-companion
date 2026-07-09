@@ -4184,14 +4184,12 @@ private String openBankItemName = null;
 
                 gameUpdates = updates;
                 gameUpdatesFetching = false;
-                System.out.println("GE Companion: fetched " + gameUpdates.size() + " game updates");
                 javax.swing.SwingUtilities.invokeLater(() -> { if (liveUpdateCanvas != null) liveUpdateCanvas.repaint(); });
             }
             catch (Exception e)
             {
                 gameUpdatesFetching = false;
                 gameUpdates = new java.util.ArrayList<>();
-                System.out.println("GE Companion: game updates fetch failed: " + e.getMessage());
             }
         }).start();
     }
