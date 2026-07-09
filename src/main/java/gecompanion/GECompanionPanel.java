@@ -4110,7 +4110,7 @@ private String openBankItemName = null;
         {
             try
             {
-                okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
+                okhttp3.OkHttpClient client = plugin.getOkHttpClient();
                 java.util.List<UpdateMarker> updates = new java.util.ArrayList<>();
                 long oneYearAgo = System.currentTimeMillis() / 1000 - 365L * 24 * 3600;
 
@@ -4284,7 +4284,7 @@ private String openBankItemName = null;
                 }
 
                 String url = "https://prices.runescape.wiki/api/v1/osrs/timeseries?timestep=" + timestep + "&id=" + itemId;
-                okhttp3.OkHttpClient client = new okhttp3.OkHttpClient();
+                okhttp3.OkHttpClient client = plugin.getOkHttpClient();
                 okhttp3.Request request = new okhttp3.Request.Builder()
                         .url(url)
                         .header("User-Agent", "GE Companion RuneLite Plugin")

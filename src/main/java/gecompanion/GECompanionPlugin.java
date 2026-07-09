@@ -542,6 +542,8 @@ private void fetchMapping()
 		return "true".equals(val);
 	}
 
+	public OkHttpClient getOkHttpClient() { return okHttpClient; }
+
 	public void setBankValueHidden(boolean hidden)
 	{
 		saveConfig("bankValueHidden", String.valueOf(hidden));
