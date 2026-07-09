@@ -3,6 +3,9 @@ package gecompanion;
 import net.runelite.client.ui.PluginPanel;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import javax.swing.border.MatteBorder;
 import java.awt.*;
 import java.awt.event.*;
@@ -4120,8 +4123,8 @@ private String openBankItemName = null;
                     if (response.isSuccessful() && response.body() != null)
                     {
                         String body = response.body().string();
-                        org.json.JSONObject json = new org.json.JSONObject(body);
-                        String wikitext = json.getJSONObject("parse").getJSONObject("text").getString("*");
+                        JsonObject json = new JsonParser().parse(body).getAsJsonObject();
+                        String wikitext = json.getAsJsonObject("parse").getAsJsonObject("text").get("*").getAsString();
 
                         // Parse year sections and bullet entries
                         // Format: ==2026== ... * [[link|Title]] or * [[Update:Title|Title]]
@@ -4291,18 +4294,18 @@ private String openBankItemName = null;
                 {
                     if (!response.isSuccessful() || response.body() == null) return;
                     String body = response.body().string();
-                    org.json.JSONObject json = new org.json.JSONObject(body);
-                    org.json.JSONArray data = json.getJSONArray("data");
+                    JsonObject json = new JsonParser().parse(body).getAsJsonObject();
+                    JsonArray data = json.getAsJsonArray("data");
 
                     java.util.List<PricePoint> points = new java.util.ArrayList<>();
-                    for (int i = 0; i < data.length(); i++)
+                    for (int i = 0; i < data.size(); i++)
                     {
-                        org.json.JSONObject obj = data.getJSONObject(i);
-                        long timestamp  = obj.optLong("timestamp", 0);
-                        long buyPrice   = obj.optLong("avgHighPrice", 0);
-                        long sellPrice  = obj.optLong("avgLowPrice", 0);
-                        int  buyVolume  = obj.optInt("highPriceVolume", 0);
-                        int  sellVolume = obj.optInt("lowPriceVolume", 0);
+                        JsonObject obj = data.get(i).getAsJsonObject();
+                        long timestamp  = obj.has("timestamp") && !obj.get("timestamp").isJsonNull() ? obj.get("timestamp").getAsLong() : 0;
+                        long buyPrice   = obj.has("avgHighPrice") && !obj.get("avgHighPrice").isJsonNull() ? obj.get("avgHighPrice").getAsLong() : 0;
+                        long sellPrice  = obj.has("avgLowPrice") && !obj.get("avgLowPrice").isJsonNull() ? obj.get("avgLowPrice").getAsLong() : 0;
+                        int  buyVolume  = obj.has("highPriceVolume") && !obj.get("highPriceVolume").isJsonNull() ? obj.get("highPriceVolume").getAsInt() : 0;
+                        int  sellVolume = obj.has("lowPriceVolume") && !obj.get("lowPriceVolume").isJsonNull() ? obj.get("lowPriceVolume").getAsInt() : 0;
                         if (timestamp > 0)
                             points.add(new PricePoint(timestamp, buyPrice, sellPrice, buyVolume, sellVolume));
                     }

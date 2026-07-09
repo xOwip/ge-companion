@@ -34,7 +34,9 @@ import net.runelite.client.util.ImageUtil;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import org.json.JSONObject;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
@@ -157,8 +159,8 @@ public class GECompanionPlugin extends Plugin
 				}
 
 				String body = response.body().string();
-				JSONObject json = new JSONObject(body);
-				JSONObject data = json.getJSONObject("data");
+				JsonObject json = new JsonParser().parse(body).getAsJsonObject();
+				JsonObject data = json.getAsJsonObject("data");
 
 				priceCache.clear();
 				for (String key : data.keySet())
@@ -166,12 +168,12 @@ public class GECompanionPlugin extends Plugin
 					try
 					{
 						int id = Integer.parseInt(key);
-						JSONObject item = data.getJSONObject(key);
+						JsonObject item = data.getAsJsonObject(key);
 
-						long high = item.optLong("high", 0);
-						long low = item.optLong("low", 0);
-						long highTime = item.optLong("highTime", 0);
-						long lowTime = item.optLong("lowTime", 0);
+						long high = item.has("high") && !item.get("high").isJsonNull() ? item.get("high").getAsLong() : 0;
+						long low = item.has("low") && !item.get("low").isJsonNull() ? item.get("low").getAsLong() : 0;
+						long highTime = item.has("highTime") && !item.get("highTime").isJsonNull() ? item.get("highTime").getAsLong() : 0;
+						long lowTime = item.has("lowTime") && !item.get("lowTime").isJsonNull() ? item.get("lowTime").getAsLong() : 0;
 
 						priceCache.put(id, new PriceData(id, high, low, highTime, lowTime));
 					}
@@ -212,18 +214,18 @@ public class GECompanionPlugin extends Plugin
             if (!response.isSuccessful() || response.body() == null) return;
 
             String body = response.body().string();
-            JSONObject json = new JSONObject(body);
-            JSONObject data = json.getJSONObject("data");
+			JsonObject json = new JsonParser().parse(body).getAsJsonObject();
+			JsonObject data = json.getAsJsonObject("data");
 
-            cache.clear();
-            for (String key : data.keySet())
-            {
+			cache.clear();
+			for (String key : data.keySet())
+			{
 				try
 				{
 					int id = Integer.parseInt(key);
-					JSONObject item = data.getJSONObject(key);
-					long avgHigh = item.optLong("avgHighPrice", 0);
-					long avgLow = item.optLong("avgLowPrice", 0);
+					JsonObject item = data.getAsJsonObject(key);
+					long avgHigh = item.has("avgHighPrice") && !item.get("avgHighPrice").isJsonNull() ? item.get("avgHighPrice").getAsLong() : 0;
+					long avgLow = item.has("avgLowPrice") && !item.get("avgLowPrice").isJsonNull() ? item.get("avgLowPrice").getAsLong() : 0;
 					if (avgHigh > 0 && avgLow > 0)
 						cache.put(id, (avgHigh + avgLow) / 2);
 					else if (avgHigh > 0)
@@ -233,8 +235,8 @@ public class GECompanionPlugin extends Plugin
 					// Store buy/sell volume for 1h timeframe
 					if (interval.equals("1h"))
 					{
-						long buyVol = item.optLong("highPriceVolume", 0);
-						long sellVol = item.optLong("lowPriceVolume", 0);
+						long buyVol = item.has("highPriceVolume") && !item.get("highPriceVolume").isJsonNull() ? item.get("highPriceVolume").getAsLong() : 0;
+						long sellVol = item.has("lowPriceVolume") && !item.get("lowPriceVolume").isJsonNull() ? item.get("lowPriceVolume").getAsLong() : 0;
 						if (buyVol > 0) buyVolume1h.put(id, buyVol);
 						if (sellVol > 0) sellVolume1h.put(id, sellVol);
 					}
@@ -265,27 +267,27 @@ private void fetch24hAverages()
             if (!response.isSuccessful() || response.body() == null) return;
 
             String body = response.body().string();
-            JSONObject json = new JSONObject(body);
-            JSONObject data = json.getJSONObject("data");
+			JsonObject json = new JsonParser().parse(body).getAsJsonObject();
+			JsonObject data = json.getAsJsonObject("data");
 
-            avgPrice24h.clear();
-            for (String key : data.keySet())
-            {
-                try
-                {
-                    int id = Integer.parseInt(key);
-                    JSONObject item = data.getJSONObject(key);
-                    long avgHigh = item.optLong("avgHighPrice", 0);
-                    long avgLow = item.optLong("avgLowPrice", 0);
-                    if (avgHigh > 0 && avgLow > 0)
-                        avgPrice24h.put(id, (avgHigh + avgLow) / 2);
-                    else if (avgHigh > 0)
-                        avgPrice24h.put(id, avgHigh);
-                    else if (avgLow > 0)
-                        avgPrice24h.put(id, avgLow);
-                }
-                catch (NumberFormatException e) { }
-            }
+			avgPrice24h.clear();
+			for (String key : data.keySet())
+			{
+				try
+				{
+					int id = Integer.parseInt(key);
+					JsonObject item = data.getAsJsonObject(key);
+					long avgHigh = item.has("avgHighPrice") && !item.get("avgHighPrice").isJsonNull() ? item.get("avgHighPrice").getAsLong() : 0;
+					long avgLow = item.has("avgLowPrice") && !item.get("avgLowPrice").isJsonNull() ? item.get("avgLowPrice").getAsLong() : 0;
+					if (avgHigh > 0 && avgLow > 0)
+						avgPrice24h.put(id, (avgHigh + avgLow) / 2);
+					else if (avgHigh > 0)
+						avgPrice24h.put(id, avgHigh);
+					else if (avgLow > 0)
+						avgPrice24h.put(id, avgLow);
+				}
+				catch (NumberFormatException e) { }
+			}
             log.debug("Fetched 24h averages for {} items", avgPrice24h.size());
         }
     }
@@ -309,8 +311,8 @@ private void fetch24hAverages()
 				if (!response.isSuccessful() || response.body() == null) return;
 
 				String body = response.body().string();
-				JSONObject json = new JSONObject(body);
-				JSONObject data = json.getJSONObject("data");
+				JsonObject json = new JsonParser().parse(body).getAsJsonObject();
+				JsonObject data = json.getAsJsonObject("data");
 
 				volumeCache.clear();
 				for (String key : data.keySet())
@@ -318,7 +320,7 @@ private void fetch24hAverages()
 					try
 					{
 						int id = Integer.parseInt(key);
-						long volume = data.optLong(key, 0);
+						long volume = data.has(key) && !data.get(key).isJsonNull() ? data.get(key).getAsLong() : 0;
 						if (volume > 0) volumeCache.put(id, volume);
 					}
 					catch (NumberFormatException e) { }
@@ -350,15 +352,15 @@ private void fetchMapping()
 				}
 
 				String body = response.body().string();
-				org.json.JSONArray arr = new org.json.JSONArray(body);
+				JsonArray arr = new JsonParser().parse(body).getAsJsonArray();
 
-				for (int i = 0; i < arr.length(); i++)
+				for (int i = 0; i < arr.size(); i++)
 				{
-					JSONObject item = arr.getJSONObject(i);
-					int id = item.getInt("id");
-					String name = item.getString("name");
+					JsonObject item = arr.get(i).getAsJsonObject();
+					int id = item.get("id").getAsInt();
+					String name = item.get("name").getAsString();
 					nameToId.put(name.toLowerCase(), id);
-					int limit = item.optInt("limit", 0);
+					int limit = item.has("limit") ? item.get("limit").getAsInt() : 0;
 					itemLimits.put(id, limit);
 				}
 
