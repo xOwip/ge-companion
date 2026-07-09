@@ -1604,6 +1604,8 @@ private String openBankItemName = null;
             JPanel tipWrapper = tipWrapperRef[0];
             tipWrapper.setBackground(BG_DARK);
             tipWrapper.setBorder(new EmptyBorder(6, 6, 4, 6));
+            tipWrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
+            tipWrapper.setMaximumSize(new Dimension(Integer.MAX_VALUE, 999));
             tipWrapper.add(tipBox, BorderLayout.CENTER);
         }
 
