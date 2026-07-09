@@ -46,6 +46,7 @@ public class GECompanionPanel extends PluginPanel
 
     private final GECompanionConfig config;
     private final GECompanionPlugin plugin;
+    private net.runelite.client.config.ConfigManager configManager;
 
     private int activeTab = 1;
     public int getActiveTab() { return activeTab; }
@@ -222,10 +223,11 @@ private JPanel currentOpenBankInfo = null;
 private JPanel currentOpenBankDeltaRow = null;
 private String openBankItemName = null;
 
-    public GECompanionPanel(GECompanionConfig config, GECompanionPlugin plugin)
+    public GECompanionPanel(GECompanionConfig config, GECompanionPlugin plugin, net.runelite.client.config.ConfigManager configManager)
     {
         this.config = config;
         this.plugin = plugin;
+        this.configManager = configManager;
         loadBankData();
         activeTimeFrame = config.defaultTimeFrame().getValue();
         loadBankValueLog();
@@ -1548,6 +1550,60 @@ private String openBankItemName = null;
         topBar.add(searchWrap, BorderLayout.SOUTH);
         panel.add(topBar, BorderLayout.NORTH);
 
+// Dismissible search tip
+        final JPanel[] tipWrapperRef = {null};
+        if (config.showSearchTip()) {
+            JPanel tipBox = new JPanel();
+            tipBox.setLayout(new BoxLayout(tipBox, BoxLayout.Y_AXIS));
+            tipBox.setBackground(new Color(10, 8, 9));
+            tipBox.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(GOLD, 1),
+                    BorderFactory.createEmptyBorder(6, 10, 6, 10)
+            ));
+            tipBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+            tipBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 999));
+
+            JPanel tipHeader = new JPanel(new BorderLayout());
+            tipHeader.setBackground(new Color(10, 8, 9));
+            JLabel tipLabel = new JLabel("TIP");
+            tipLabel.setForeground(GOLD);
+            tipLabel.setFont(new Font("Monospaced", Font.BOLD, FONT_STAT_LABEL));
+            JLabel tipClose = new JLabel("✕");
+            tipClose.setForeground(TEXT_DIM);
+            tipClose.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+            tipClose.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            tipHeader.add(tipLabel, BorderLayout.WEST);
+            tipHeader.add(tipClose, BorderLayout.EAST);
+
+            JLabel tipText = new JLabel("<html><body style='width:150px;color:#888888;font-family:monospaced;font-size:9px;'>Search any item by name to get live prices, charts, and flipping stats. Right-click any bank or inventory item and select <span style='color:#D4AF37;'>Price Check</span> to open it here instantly.</body></html>");
+            tipText.setBorder(new EmptyBorder(4, 0, 0, 0));
+
+            tipBox.add(tipHeader);
+            tipBox.add(tipText);
+
+            tipClose.addMouseListener(new MouseAdapter() {
+                public void mouseClicked(MouseEvent e) {
+                    if (configManager != null) {
+                        configManager.setConfiguration("gecompanion", "showSearchTip", false);
+                    }
+                    Container parent = tipWrapperRef[0].getParent();
+                    if (parent != null) {
+                        parent.remove(tipWrapperRef[0]);
+                        parent.revalidate();
+                        parent.repaint();
+                    }
+                }
+                public void mouseEntered(MouseEvent e) { tipClose.setForeground(TEXT_PRIMARY); }
+                public void mouseExited(MouseEvent e) { tipClose.setForeground(TEXT_DIM); }
+            });
+
+            tipWrapperRef[0] = new JPanel(new BorderLayout());
+            JPanel tipWrapper = tipWrapperRef[0];
+            tipWrapper.setBackground(BG_DARK);
+            tipWrapper.setBorder(new EmptyBorder(6, 6, 4, 6));
+            tipWrapper.add(tipBox, BorderLayout.CENTER);
+        }
+
         recentSearchesPanel = new JPanel();
         recentSearchesPanel.setLayout(new BoxLayout(recentSearchesPanel, BoxLayout.Y_AXIS));
         recentSearchesPanel.setBackground(BG_DARK);
@@ -1625,6 +1681,9 @@ private String openBankItemName = null;
             }
         };
         listWrapper.setBackground(BG_DARK);
+        if (config.showSearchTip()) {
+            recentSearchesPanel.add(tipWrapperRef[0]);
+        }
         listWrapper.add(recentSearchesPanel, BorderLayout.NORTH);
         listWrapper.add(searchResultsPanel, BorderLayout.CENTER);
 

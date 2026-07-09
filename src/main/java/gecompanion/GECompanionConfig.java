@@ -148,5 +148,13 @@ public interface GECompanionConfig extends Config
           position = 1,
           hidden = true
     )
-    default String pinnedItems() { return ""; }
+	default String pinnedItems() { return ""; }
+
+	@ConfigItem(
+			keyName = "showSearchTip",
+			name = "Show search tip",
+			description = "Show the tip box in the search tab",
+			hidden = true
+	)
+	default boolean showSearchTip() { return true; }
 }

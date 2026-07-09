@@ -99,7 +99,7 @@ public class GECompanionPlugin extends Plugin
 	@Override
 	protected void startUp() throws Exception
 	{
-		panel = new GECompanionPanel(config, this);
+		panel = new GECompanionPanel(config, this, configManager);
 
 		final BufferedImage icon = ImageUtil.loadImageResource(getClass(), "/ge_companion_icon_32_v2.png");
 
