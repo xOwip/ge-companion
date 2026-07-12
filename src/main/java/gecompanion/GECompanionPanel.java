@@ -52,6 +52,7 @@ public class GECompanionPanel extends PluginPanel
     private net.runelite.client.config.ConfigManager configManager;
     private final java.util.Map<Integer, JLabel> livePriceLabels = new java.util.HashMap<>();
     private final java.util.Map<Integer, JLabel> liveDeltaLabels = new java.util.HashMap<>();
+    private final java.util.Map<Integer, JLabel> liveGpChangeLabels = new java.util.HashMap<>();
 
     private int activeTab = 1;
     public int getActiveTab() { return activeTab; }
@@ -995,6 +996,7 @@ private String openBankItemName = null;
         }
         livePriceLabels.clear();
         liveDeltaLabels.clear();
+        liveGpChangeLabels.clear();
         switch (index)
         {
             case 0: tabContentPanel.add(buildWatchlistTab(), BorderLayout.CENTER); break;
@@ -1039,6 +1041,62 @@ private String openBankItemName = null;
             {
                 long rowMid = rowPd.getMid();
                 javax.swing.SwingUtilities.invokeLater(() -> label.setText(formatPrice(String.valueOf(rowMid)) + " gp"));
+            }
+        }
+
+        // Update compacted item row delta labels
+        for (java.util.Map.Entry<Integer, JLabel> entry : liveDeltaLabels.entrySet())
+        {
+            int id = entry.getKey();
+            JLabel label = entry.getValue();
+            PriceData rowPd = priceCache.get(id);
+            if (rowPd != null && label != null)
+            {
+                long currentPrice = rowPd.getMid();
+                long historicalPrice = 0;
+                if (activeTimeFrame.equals("1H")) historicalPrice = plugin.getAvgPrice1h().getOrDefault(id, 0L);
+                else if (activeTimeFrame.equals("6H")) historicalPrice = plugin.getAvgPrice6h().getOrDefault(id, 0L);
+                else if (activeTimeFrame.equals("24H")) historicalPrice = plugin.getAvgPrice24h().getOrDefault(id, 0L);
+                if (historicalPrice > 0 && currentPrice > 0)
+                {
+                    double pct = ((double)(currentPrice - historicalPrice) / historicalPrice) * 100.0;
+                    String deltaStr = String.format("%+.2f%%", pct);
+                    boolean isUp = pct > 0;
+                    boolean isDown = pct < 0;
+                    Color color = isUp ? GREEN_UP : isDown ? RED_DOWN : TAB_INACTIVE;
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        label.setText("(" + deltaStr + ")");
+                        label.setForeground(color);
+                    });
+                }
+            }
+        }
+
+// Update compacted item row gp change labels
+        for (java.util.Map.Entry<Integer, JLabel> entry : liveGpChangeLabels.entrySet())
+        {
+            int id = entry.getKey();
+            JLabel label = entry.getValue();
+            PriceData rowPd = priceCache.get(id);
+            if (rowPd != null && label != null)
+            {
+                long currentPrice = rowPd.getMid();
+                long historicalPrice = 0;
+                if (activeTimeFrame.equals("1H")) historicalPrice = plugin.getAvgPrice1h().getOrDefault(id, 0L);
+                else if (activeTimeFrame.equals("6H")) historicalPrice = plugin.getAvgPrice6h().getOrDefault(id, 0L);
+                else if (activeTimeFrame.equals("24H")) historicalPrice = plugin.getAvgPrice24h().getOrDefault(id, 0L);
+                if (historicalPrice > 0 && currentPrice > 0)
+                {
+                    long gpDiff = currentPrice - historicalPrice;
+                    boolean isUp = gpDiff > 0;
+                    boolean isDown = gpDiff < 0;
+                    String gpStr = (isUp ? "+" : "") + formatPrice(String.valueOf(Math.abs(gpDiff))) + " gp";
+                    Color color = isUp ? GREEN_UP : isDown ? RED_DOWN : TAB_INACTIVE;
+                    javax.swing.SwingUtilities.invokeLater(() -> {
+                        label.setText(gpStr);
+                        label.setForeground(color);
+                    });
+                }
             }
         }
 
@@ -1978,6 +2036,7 @@ private String openBankItemName = null;
         JLabel gpChangeLabel = new JLabel(gpChange);
         gpChangeLabel.setForeground(isUp ? GREEN_UP : isDown ? RED_DOWN : TAB_INACTIVE);
         gpChangeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_DELTA));
+        if (itemId != null) liveGpChangeLabels.put(itemId, gpChangeLabel);
 
         JPanel deltaLimitRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         deltaLimitRow.setBackground(rowBg);
@@ -2504,6 +2563,7 @@ private String openBankItemName = null;
         JLabel gpChangeLabel = new JLabel(gpChange);
         gpChangeLabel.setForeground(isUp ? GREEN_UP : isDown ? RED_DOWN : TAB_INACTIVE);
         gpChangeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_DELTA));
+        if (itemId != null) liveGpChangeLabels.put(itemId, gpChangeLabel);
 
         JPanel deltaLimitRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         deltaLimitRow.setBackground(rowBg);
@@ -3763,6 +3823,7 @@ private String openBankItemName = null;
         JLabel gpChangeLabel = new JLabel(gpChange);
         gpChangeLabel.setForeground(isUp ? GREEN_UP : isDown ? RED_DOWN : TAB_INACTIVE);
         gpChangeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_DELTA));
+        if (bankItemId != null) liveGpChangeLabels.put(bankItemId, gpChangeLabel);
 
         JPanel deltaRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         deltaRow.setBackground(bgColor);

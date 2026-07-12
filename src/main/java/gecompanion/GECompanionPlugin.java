@@ -543,6 +543,9 @@ private void fetchMapping()
 	}
 
 	public OkHttpClient getOkHttpClient() { return okHttpClient; }
+	public java.util.Map<Integer, Long> getAvgPrice1h() { return avgPrice1h; }
+	public java.util.Map<Integer, Long> getAvgPrice6h() { return avgPrice6h; }
+	public java.util.Map<Integer, Long> getAvgPrice24h() { return avgPrice24h; }
 
 	public void setBankValueHidden(boolean hidden)
 	{
