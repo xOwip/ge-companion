@@ -845,7 +845,7 @@ private String openBankItemName = null;
         footer.add(footerSeparator);
         footer.add(footerLabel);
         add(wrapper, BorderLayout.CENTER);
-        add(footer, BorderLayout.SOUTH);
+        getWrappedPanel().add(footer, BorderLayout.SOUTH);
     }
 
     private JPanel buildHeader()
