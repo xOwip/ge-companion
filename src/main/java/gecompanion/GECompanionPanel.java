@@ -1531,6 +1531,7 @@ private String openBankItemName = null;
                 new EmptyBorder(3, 5, 3, 5)
         ));
         searchField.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
+        searchField.putClientProperty("JTextField.placeholderText", "Search items...");
 
         searchClearBtn = new JLabel("✕");
         searchClearBtn.setForeground(TEXT_DIM);
