@@ -6680,7 +6680,6 @@ private String[] buildItemDataFromCache(String name)
                 java.awt.Desktop.getDesktop().browse(new java.net.URI(url));
                 dialog.dispose();
             } catch (Exception ex) {
-                ex.printStackTrace();
             }
         });
 
