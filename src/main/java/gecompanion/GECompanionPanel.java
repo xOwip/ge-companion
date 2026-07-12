@@ -50,6 +50,8 @@ public class GECompanionPanel extends PluginPanel
     private final GECompanionConfig config;
     private final GECompanionPlugin plugin;
     private net.runelite.client.config.ConfigManager configManager;
+    private final java.util.Map<Integer, JLabel> livePriceLabels = new java.util.HashMap<>();
+    private final java.util.Map<Integer, JLabel> liveDeltaLabels = new java.util.HashMap<>();
 
     private int activeTab = 1;
     public int getActiveTab() { return activeTab; }
@@ -991,6 +993,8 @@ private String openBankItemName = null;
             bankReopenAction = null;
             graphWasOpen = false;
         }
+        livePriceLabels.clear();
+        liveDeltaLabels.clear();
         switch (index)
         {
             case 0: tabContentPanel.add(buildWatchlistTab(), BorderLayout.CENTER); break;
@@ -1023,6 +1027,19 @@ private String openBankItemName = null;
         if (liveHeaderPriceLabel != null)
         {
             liveHeaderPriceLabel.setText(formatFullPrice(String.valueOf(mid)) + " gp");
+        }
+
+        // Update compacted item row price labels
+        for (java.util.Map.Entry<Integer, JLabel> entry : livePriceLabels.entrySet())
+        {
+            int id = entry.getKey();
+            JLabel label = entry.getValue();
+            PriceData rowPd = priceCache.get(id);
+            if (rowPd != null && label != null)
+            {
+                long rowMid = rowPd.getMid();
+                javax.swing.SwingUtilities.invokeLater(() -> label.setText(formatPrice(String.valueOf(rowMid)) + " gp"));
+            }
         }
 
 // Update Buy Price box
@@ -1946,6 +1963,7 @@ private String openBankItemName = null;
         JLabel priceLabel = new JLabel(formatPrice(price) + " gp");
         priceLabel.setForeground(PRICE_GOLD);
         priceLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_PRICE));
+        if (itemId != null) livePriceLabels.put(itemId, priceLabel);
 
         JLabel qtyLabel = new JLabel(buyQty.equals("0") ? "" : "Buy: " + buyQty + "/hr  Sell: " + sellQty + "/hr");
         qtyLabel.setForeground(TAB_INACTIVE);
@@ -1953,6 +1971,7 @@ private String openBankItemName = null;
 
         JLabel deltaLabel = new JLabel("(" + delta + "%)");
         deltaLabel.setForeground(isUp ? GREEN_UP : isDown ? RED_DOWN : TAB_INACTIVE);
+        if (itemId != null) liveDeltaLabels.put(itemId, deltaLabel);
         deltaLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
         deltaLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
@@ -2474,8 +2493,10 @@ private String openBankItemName = null;
         JLabel priceLabel = new JLabel(formatPrice(price) + " gp");
         priceLabel.setForeground(PRICE_GOLD);
         priceLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_PRICE));
+        if (itemId != null) livePriceLabels.put(itemId, priceLabel);
 
         JLabel deltaLabel = new JLabel("(" + delta + "%)");
+        if (itemId != null) liveDeltaLabels.put(itemId, deltaLabel);
         deltaLabel.setForeground(isUp ? GREEN_UP : isDown ? RED_DOWN : TEXT_PRIMARY);
         deltaLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
         deltaLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -3731,9 +3752,11 @@ private String openBankItemName = null;
         JLabel priceLabel = new JLabel(formatPrice(price) + " gp");
         priceLabel.setForeground(PRICE_GOLD);
         priceLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_PRICE));
+        if (bankItemId != null) livePriceLabels.put(bankItemId, priceLabel);
 
         JLabel deltaLabel = new JLabel("(" + delta + "%)");
         deltaLabel.setForeground(isUp ? GREEN_UP : isDown ? RED_DOWN : TAB_INACTIVE);
+        if (bankItemId != null) liveDeltaLabels.put(bankItemId, deltaLabel);
         deltaLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
         deltaLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
