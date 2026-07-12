@@ -46,6 +46,7 @@ public class GECompanionPanel extends PluginPanel
     private static final Color BG_ROW_HOVER = new Color(45, 40, 38);
     private static final Color BG_ROW_SELECTED = new Color(26, 24, 20);
     private static final Color STAT_BLUE = new Color(74, 122, 191);
+    private static final String CURRENT_VERSION = "1.1";
 
     private final GECompanionConfig config;
     private final GECompanionPlugin plugin;
@@ -53,6 +54,7 @@ public class GECompanionPanel extends PluginPanel
     private final java.util.Map<Integer, JLabel> livePriceLabels = new java.util.HashMap<>();
     private final java.util.Map<Integer, JLabel> liveDeltaLabels = new java.util.HashMap<>();
     private final java.util.Map<Integer, JLabel> liveGpChangeLabels = new java.util.HashMap<>();
+    private JLabel updatesIconRef = null;
 
     private int activeTab = 1;
     public int getActiveTab() { return activeTab; }
@@ -833,19 +835,148 @@ private String openBankItemName = null;
 
         JPanel footer = new JPanel();
         footer.setBackground(BG_DARK);
-        footer.setLayout(new BoxLayout(footer, BoxLayout.Y_AXIS));
-        footer.setBorder(new EmptyBorder(4, 0, 4, 0));
-        JSeparator footerSeparator = new JSeparator();
-        footerSeparator.setForeground(new Color(50, 45, 42));
-        footerSeparator.setBackground(BG_DARK);
-        JLabel footerLabel = new JLabel("Data from prices.runescape.wiki");
-        footerLabel.setForeground(TEXT_DIM);
-        footerLabel.setFont(new Font("Monospaced", Font.PLAIN, 11));
-        footerLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        footer.add(footerSeparator);
-        footer.add(footerLabel);
+// Slide-up button bar (hidden by default)
+        JPanel slidePanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 4));
+        slidePanel.setMinimumSize(new Dimension(230, 50));
+        slidePanel.setPreferredSize(new Dimension(230, 50));
+        slidePanel.setBackground(new Color(20, 18, 19));
+        slidePanel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(50, 45, 42)),
+                BorderFactory.createEmptyBorder(2, 4, 2, 4)
+        ));
+        slidePanel.setVisible(false);
+
+        JButton reportBtn = new JButton("Report Issue");
+        reportBtn.setForeground(GOLD);
+        reportBtn.setBackground(new Color(20, 18, 19));
+        reportBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+        reportBtn.setBorder(BorderFactory.createLineBorder(GOLD, 1));
+        reportBtn.setFocusPainted(false);
+        reportBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        reportBtn.addActionListener(e -> openGitHubForm("bug"));
+
+        JButton featureBtn = new JButton("Request Feature");
+        featureBtn.setForeground(GOLD);
+        featureBtn.setBackground(new Color(20, 18, 19));
+        featureBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+        featureBtn.setBorder(BorderFactory.createLineBorder(GOLD, 1));
+        featureBtn.setFocusPainted(false);
+        featureBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        featureBtn.addActionListener(e -> openGitHubForm("feature"));
+
+        JButton updatesBtn = new JButton("Updates");
+        updatesBtn.setForeground(GOLD);
+        updatesBtn.setBackground(new Color(20, 18, 19));
+        updatesBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+        updatesBtn.setBorder(BorderFactory.createLineBorder(GOLD, 1));
+        updatesBtn.setFocusPainted(false);
+        updatesBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        updatesBtn.addActionListener(e -> openUpdatesDialog());
+
+        slidePanel.add(reportBtn);
+        slidePanel.add(featureBtn);
+        slidePanel.add(updatesBtn);
+
+        // Main footer bar with icons + attribution
+        JPanel footerBar = new JPanel(new BorderLayout());
+        footerBar.setBackground(new Color(20, 18, 19));
+        footerBar.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(50, 45, 42)));
+
+        JPanel iconsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 4));
+        iconsPanel.setBackground(new Color(20, 18, 19));
+
+        JLabel bugIcon = new JLabel("⚠");
+        bugIcon.setFont(new Font("Monospaced", Font.PLAIN, 11));
+        bugIcon.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        JLabel featureIcon = new JLabel("💡");
+        featureIcon.setFont(new Font("Monospaced", Font.PLAIN, 11));
+        featureIcon.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        boolean hasUpdate = !CURRENT_VERSION.equals(config.lastSeenVersion());
+        JLabel updatesIcon = new JLabel("📋");
+        updatesIcon.setFont(new Font("Monospaced", Font.PLAIN, 11));
+        updatesIcon.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        updatesIcon.setForeground(hasUpdate ? GOLD : TEXT_DIM);
+        updatesIconRef = updatesIcon;
+
+        iconsPanel.add(bugIcon);
+        iconsPanel.add(featureIcon);
+        iconsPanel.add(updatesIcon);
+
+        JLabel attribution = new JLabel("Data from prices.runescape.wiki    ");
+        attribution.setForeground(TEXT_DIM);
+        attribution.setFont(new Font("Monospaced", Font.PLAIN, 10));
+        attribution.setBorder(new EmptyBorder(0, 0, 0, 4));
+        attribution.setFont(new Font("Monospaced", Font.PLAIN, 9));
+
+        footerBar.add(iconsPanel, BorderLayout.WEST);
+        footerBar.add(attribution, BorderLayout.CENTER);
+        attribution.setHorizontalAlignment(SwingConstants.RIGHT);
+
+        // Hover listener to show/hide slide panel
+        MouseAdapter footerHover = new MouseAdapter() {
+            public void mouseEntered(MouseEvent e) {
+                slidePanel.setVisible(true);
+                final int targetH = 50;
+                final int[] curH = {0};
+                slidePanel.setPreferredSize(new Dimension(230, 0));
+                slidePanel.revalidate();
+                javax.swing.Timer openTimer = new javax.swing.Timer(12, null);
+                openTimer.addActionListener(ev -> {
+                    curH[0] = Math.min(curH[0] + 8, targetH);
+                    slidePanel.setPreferredSize(new Dimension(230, curH[0]));
+                    slidePanel.revalidate();
+                    slidePanel.repaint();
+                    if (curH[0] >= targetH) {
+                        slidePanel.setPreferredSize(new Dimension(230, targetH));
+                        ((javax.swing.Timer)ev.getSource()).stop();
+                    }
+                });
+                openTimer.start();
+            }
+            public void mouseExited(MouseEvent e) {
+                java.awt.Point p = e.getPoint();
+                java.awt.Rectangle footerBounds = footerBar.getBounds();
+                java.awt.Rectangle slideBounds = slidePanel.getBounds();
+                if (!footerBounds.contains(p) && !slideBounds.contains(SwingUtilities.convertPoint(footerBar, p, slidePanel.getParent()))) {
+                    final int[] curH = {slidePanel.getPreferredSize().height};
+                    javax.swing.Timer closeTimer = new javax.swing.Timer(12, null);
+                    closeTimer.addActionListener(ev -> {
+                        curH[0] = Math.max(curH[0] - 8, 0);
+                        slidePanel.setPreferredSize(new Dimension(230, curH[0]));
+                        slidePanel.revalidate();
+                        slidePanel.repaint();
+                        if (curH[0] <= 0) {
+                            slidePanel.setVisible(false);
+                            ((javax.swing.Timer)ev.getSource()).stop();
+                        }
+                    });
+                    closeTimer.start();
+                }
+            }
+        };
+
+        footerBar.addMouseListener(footerHover);
+        slidePanel.addMouseListener(new MouseAdapter() {
+            public void mouseExited(MouseEvent e) {
+                java.awt.Point p = SwingUtilities.convertPoint(slidePanel, e.getPoint(), slidePanel.getParent());
+                java.awt.Rectangle footerBounds = footerBar.getBounds();
+                java.awt.Rectangle slideBounds = slidePanel.getBounds();
+                if (!footerBounds.contains(p) && !slideBounds.contains(p)) {
+                    slidePanel.setVisible(false);
+                    slidePanel.revalidate();
+                    slidePanel.repaint();
+                }
+            }
+        });
+
+        JPanel footerContainer = new JPanel(new BorderLayout());
+        footerContainer.setBackground(new Color(20, 18, 19));
+        footerContainer.add(slidePanel, BorderLayout.NORTH);
+        footerContainer.add(footerBar, BorderLayout.SOUTH);
+
         add(wrapper, BorderLayout.CENTER);
-        getWrappedPanel().add(footer, BorderLayout.SOUTH);
+        getWrappedPanel().add(footerContainer, BorderLayout.SOUTH);
     }
 
     private JPanel buildHeader()
@@ -6451,6 +6582,206 @@ private String[] buildItemDataFromCache(String name)
         });
 
         return row;
+    }
+
+    private void openGitHubForm(String type)
+    {
+        String title = type.equals("bug") ? "Bug Report" : "Feature Request";
+        String label = type.equals("bug") ? "bug" : "enhancement";
+        String urlTemplate = type.equals("bug")
+                ? "https://github.com/xOwip/ge-companion/issues/new?labels=bug&title="
+                : "https://github.com/xOwip/ge-companion/issues/new?labels=enhancement&title=";
+
+        JDialog dialog = new JDialog();
+        dialog.setTitle(title);
+        dialog.setModal(false);
+        dialog.setResizable(false);
+
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        content.setBackground(new Color(30, 28, 26));
+        content.setBorder(new EmptyBorder(10, 12, 10, 12));
+
+        JLabel titleLabel = new JLabel(type.equals("bug") ? "⚠ Report an Issue" : "💡 Request a Feature");
+        titleLabel.setForeground(GOLD);
+        titleLabel.setFont(new Font("Monospaced", Font.BOLD, FONT_META));
+        titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(titleLabel);
+        content.add(Box.createVerticalStrut(8));
+
+        JLabel titleFieldLabel = new JLabel("Title:");
+        titleFieldLabel.setForeground(TEXT_DIM);
+        titleFieldLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+        titleFieldLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(titleFieldLabel);
+        content.add(Box.createVerticalStrut(3));
+
+        JTextField titleField = new JTextField(25);
+        titleField.setBackground(new Color(14, 12, 13));
+        titleField.setForeground(TEXT_PRIMARY);
+        titleField.setCaretColor(TEXT_PRIMARY);
+        titleField.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(58, 53, 48)),
+                new EmptyBorder(3, 5, 3, 5)
+        ));
+        titleField.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+        titleField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 28));
+        titleField.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(titleField);
+        content.add(Box.createVerticalStrut(8));
+
+        JLabel descLabel = new JLabel("Description:");
+        descLabel.setForeground(TEXT_DIM);
+        descLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+        descLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(descLabel);
+        content.add(Box.createVerticalStrut(3));
+
+        JTextArea descArea = new JTextArea(5, 25);
+        descArea.setBackground(new Color(14, 12, 13));
+        descArea.setForeground(TEXT_PRIMARY);
+        descArea.setCaretColor(TEXT_PRIMARY);
+        descArea.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(58, 53, 48)),
+                new EmptyBorder(3, 5, 3, 5)
+        ));
+        descArea.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+        descArea.setLineWrap(true);
+        descArea.setWrapStyleWord(true);
+        JScrollPane descScroll = new JScrollPane(descArea);
+        descScroll.setAlignmentX(Component.LEFT_ALIGNMENT);
+        descScroll.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+        content.add(descScroll);
+        content.add(Box.createVerticalStrut(10));
+
+        JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
+        btnRow.setBackground(new Color(30, 28, 26));
+        btnRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JButton cancelBtn = new JButton("Cancel");
+        cancelBtn.setForeground(TEXT_DIM);
+        cancelBtn.setBackground(new Color(30, 28, 26));
+        cancelBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+        cancelBtn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+        cancelBtn.setFocusPainted(false);
+        cancelBtn.addActionListener(e -> dialog.dispose());
+
+        JButton submitBtn = new JButton("Open on GitHub");
+        submitBtn.setForeground(GOLD);
+        submitBtn.setBackground(new Color(30, 28, 26));
+        submitBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+        submitBtn.setBorder(BorderFactory.createLineBorder(GOLD));
+        submitBtn.setFocusPainted(false);
+        submitBtn.addActionListener(e -> {
+            try {
+                String encodedTitle = java.net.URLEncoder.encode(titleField.getText(), "UTF-8");
+                String encodedBody = java.net.URLEncoder.encode(descArea.getText(), "UTF-8");
+                String url = urlTemplate + encodedTitle + "&body=" + encodedBody;
+                java.awt.Desktop.getDesktop().browse(new java.net.URI(url));
+                dialog.dispose();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        });
+
+        btnRow.add(cancelBtn);
+        btnRow.add(submitBtn);
+        content.add(btnRow);
+
+        dialog.setContentPane(content);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+
+    private void openUpdatesDialog()
+    {
+// Save current version so icon updates
+        if (configManager != null) {
+            configManager.setConfiguration("gecompanion", "lastSeenVersion", CURRENT_VERSION);
+            if (updatesIconRef != null) {
+                updatesIconRef.setForeground(TEXT_DIM);
+                updatesIconRef.repaint();
+            }
+        }
+
+        JDialog dialog = new JDialog();
+        dialog.setTitle("What's New");
+        dialog.setModal(false);
+        dialog.setResizable(false);
+
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        content.setBackground(new Color(30, 28, 26));
+        content.setBorder(new EmptyBorder(10, 12, 10, 12));
+
+        JLabel titleLabel = new JLabel("📋 What's New");
+        titleLabel.setForeground(GOLD);
+        titleLabel.setFont(new Font("Monospaced", Font.BOLD, FONT_META));
+        titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(titleLabel);
+        content.add(Box.createVerticalStrut(10));
+
+// v1.1
+        JLabel v11Label = new JLabel("v1.1 — July 11, 2026");
+        v11Label.setForeground(GOLD);
+        v11Label.setFont(new Font("Monospaced", Font.BOLD, FONT_STAT_LABEL));
+        v11Label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(v11Label);
+        content.add(Box.createVerticalStrut(3));
+        for (String line : new String[]{
+                "• Live price updates on item rows",
+                "• Live delta % and GP change updates",
+                "• Search field placeholder text",
+                "• Anchored footer bar",
+                "• Report Issue / Request Feature / Updates"
+        }) {
+            JLabel l = new JLabel(line);
+            l.setForeground(TEXT_DIM);
+            l.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+            l.setAlignmentX(Component.LEFT_ALIGNMENT);
+            content.add(l);
+        }
+        content.add(Box.createVerticalStrut(8));
+
+        // v1.0
+        JLabel v10Label = new JLabel("v1.0 — July 8, 2026");
+        v10Label.setForeground(GOLD);
+        v10Label.setFont(new Font("Monospaced", Font.BOLD, FONT_STAT_LABEL));
+        v10Label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(v10Label);
+        content.add(Box.createVerticalStrut(3));
+        for (String line : new String[]{
+                "• Initial release on Plugin Hub",
+                "• Live GE prices from OSRS Wiki",
+                "• Interactive price charts",
+                "• Personal watchlist",
+                "• Bank value tracker",
+                "• Right-click Price Check",
+                "• Flipping stats panel"
+        }) {
+            JLabel l = new JLabel(line);
+            l.setForeground(TEXT_DIM);
+            l.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+            l.setAlignmentX(Component.LEFT_ALIGNMENT);
+            content.add(l);
+        }
+        content.add(Box.createVerticalStrut(8));
+
+        JButton closeBtn = new JButton("Close");
+        closeBtn.setForeground(TEXT_DIM);
+        closeBtn.setBackground(new Color(30, 28, 26));
+        closeBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+        closeBtn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+        closeBtn.setFocusPainted(false);
+        closeBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
+        closeBtn.addActionListener(e -> dialog.dispose());
+        content.add(closeBtn);
+
+        dialog.setContentPane(content);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
     }
 
     private String formatWithCommas(String value)

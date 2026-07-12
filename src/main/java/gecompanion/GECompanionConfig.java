@@ -157,4 +157,12 @@ public interface GECompanionConfig extends Config
 			hidden = true
 	)
 	default boolean showSearchTip() { return true; }
+
+	@ConfigItem(
+			keyName = "lastSeenVersion",
+			name = "Last seen version",
+			description = "Tracks the last version the user viewed in the Updates dialog",
+			hidden = true
+	)
+	default String lastSeenVersion() { return ""; }
 }
