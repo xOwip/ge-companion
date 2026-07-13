@@ -19,6 +19,7 @@ import net.runelite.api.Client;
 import net.runelite.api.ItemContainer;
 import net.runelite.api.InventoryID;
 import net.runelite.api.Item;
+import net.runelite.api.ItemComposition;
 import net.runelite.api.events.ItemContainerChanged;
 import net.runelite.api.events.MenuEntryAdded;
 import net.runelite.api.MenuEntry;
@@ -77,6 +78,7 @@ public class GECompanionPlugin extends Plugin
 	private net.runelite.client.game.ItemManager itemManager;
 
 	public net.runelite.client.game.ItemManager getItemManager() { return itemManager; }
+
 	private GECompanionPanel panel;
 	private NavigationButton navButton;
 	private ScheduledExecutorService scheduler;
@@ -459,7 +461,17 @@ private void fetchMapping()
 			if (item.getId() <= 0 || item.getQuantity() <= 0) continue;
 
 // Check if item ID exists directly in nameToId
-			int lookupId = panel.getItemVariantMap().getOrDefault(item.getId(), item.getId());
+			int originalId = item.getId();
+			int lookupId = panel.getItemVariantMap().getOrDefault(originalId, originalId);
+			boolean isVariantItem = (originalId != lookupId);
+
+			// Get original item name for variant indicator
+			String originalName = null;
+			if (isVariantItem) {
+				ItemComposition originalComp = itemManager.getItemComposition(originalId);
+				if (originalComp != null) originalName = originalComp.getName();
+			}
+
 			String foundName = null;
 			for (java.util.Map.Entry<String, Integer> entry : nameToId.entrySet())
 			{
@@ -480,7 +492,12 @@ private void fetchMapping()
 								.append(word.substring(1)).append(" ");
 				}
 				String displayName = sb.toString().trim();
-				newBankItems.add(displayName);
+				// Append original name as suffix if variant (separated by |)
+				if (isVariantItem && originalName != null) {
+					newBankItems.add(displayName + "|" + originalName);
+				} else {
+					newBankItems.add(displayName);
+				}
 				newBankQuantities.put(displayName, item.getQuantity());
 			}
 		}

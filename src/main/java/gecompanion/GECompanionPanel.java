@@ -46,7 +46,7 @@ public class GECompanionPanel extends PluginPanel
     private static final Color BG_ROW_HOVER = new Color(45, 40, 38);
     private static final Color BG_ROW_SELECTED = new Color(26, 24, 20);
     private static final Color STAT_BLUE = new Color(74, 122, 191);
-    private static final String CURRENT_VERSION = "1.1";
+    private static final String CURRENT_VERSION = "1.1.1";
 
     private final GECompanionConfig config;
     private final GECompanionPlugin plugin;
@@ -3528,7 +3528,7 @@ private String openBankItemName = null;
             JLabel gainersLabel = new JLabel("▲ Top Gainers (by " + config.sortMode().getLabel() + ")");
             gainersLabel.setForeground(GREEN_UP);
             gainersLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_SECTION));
-            gainersLabel.setToolTipText("<html>Based on items in your bank at last scan.<br>Items must be priced above 10,000 gp each,<br>with a total stack value above the threshold set in plugin settings.</html>");
+            gainersLabel.setToolTipText("<html>Based on items in your bank at last scan.<br>Items must be priced above 10,000 gp each,<br>with a total stack value above the threshold set in plugin settings.<br><span style='color:#D4AF37'>*</span> = Item remapped to its tradeable base for price lookup.</html>");
             gainersHeader.add(gainersLabel, BorderLayout.WEST);
             JLabel gCountLabel = new JLabel(String.valueOf(config.gainersCount()));
             gCountLabel.setForeground(TEXT_DIM);
@@ -3676,7 +3676,7 @@ private String openBankItemName = null;
             JLabel losersLabel = new JLabel("▼ Top Losers (by " + config.sortMode().getLabel() + ")");
             losersLabel.setForeground(RED_DOWN);
             losersLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_SECTION));
-            losersLabel.setToolTipText("<html>Based on items in your bank at last scan.<br>Items must be priced above 10,000 gp each,<br>with a total stack value above the threshold set in plugin settings.</html>");
+            losersLabel.setToolTipText("<html>Based on items in your bank at last scan.<br>Items must be priced above 10,000 gp each,<br>with a total stack value above the threshold set in plugin settings.<br><span style='color:#D4AF37'>*</span> = Item remapped to its tradeable base for price lookup.</html>");
             losersHeader.add(losersLabel, BorderLayout.WEST);
             JLabel lCountLabel = new JLabel(String.valueOf(config.losersCount()));
             lCountLabel.setForeground(TEXT_DIM);
@@ -3873,6 +3873,8 @@ private String openBankItemName = null;
         String price = item[1];
         String delta = item[5];
         String gpChange = item.length > 7 ? item[7] : "0 gp";
+        boolean isVariant = item.length > 13 && Boolean.parseBoolean(item[13]);
+        String originalBankName = item.length > 14 ? item[14] : null;
 
         boolean isUp = delta.startsWith("+");
         boolean isDown = delta.startsWith("-");
@@ -3909,7 +3911,23 @@ private String openBankItemName = null;
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 68));
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
         row.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        JPanel iconPanel = new JPanel();
+        JPanel iconPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (isVariant) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setFont(new Font("Monospaced", Font.BOLD, 10));
+                    g2.setColor(GOLD);
+                    FontMetrics fm = g2.getFontMetrics();
+                    String badge = "*";
+                    int bw = fm.stringWidth(badge);
+                    g2.drawString(badge, getWidth() - bw - 2, fm.getAscent() + 1);
+                    g2.dispose();
+                }
+            }
+        };
         iconPanel.setPreferredSize(new Dimension(42, 42));
         iconPanel.setBackground(new Color(14, 12, 13));
         iconPanel.setOpaque(true);
@@ -3927,7 +3945,13 @@ private String openBankItemName = null;
         JPanel iconWrapper = new JPanel(new java.awt.GridBagLayout());
         iconWrapper.setBackground(bgColor);
         iconWrapper.add(iconPanel);
-        iconWrapper.setToolTipText(name);
+        if (isVariant) {
+            Integer origId = item.length > 12 ? Integer.parseInt(item[12]) : null;
+            String displayOriginal = (originalBankName != null && !originalBankName.isEmpty()) ? originalBankName : name;
+            iconWrapper.setToolTipText("<html>" + displayOriginal + "<br><span style='color:#D4AF37'>→ " + name + " (tradeable base)</span></html>");
+        } else {
+            iconWrapper.setToolTipText(name);
+        }
         row.add(iconWrapper, BorderLayout.WEST);
 
         JPanel info = new JPanel();
@@ -4562,11 +4586,21 @@ private String openBankItemName = null;
             }
         }).start();
     }
-private String[] buildItemDataFromCache(String name)
+    private String[] buildItemDataFromCache(String name)
     {
+        // Extract original name if variant (format: "displayName|originalName")
+        String originalBankName = null;
+        boolean isVariant = false;
+        if (name.contains("|")) {
+            String[] parts = name.split("\\|", 2);
+            name = parts[0];
+            originalBankName = parts[1];
+            isVariant = true;
+        }
+
         String normalizedName = name.toLowerCase()
-            .replace('\u2019', '\'')
-            .replace('\u2018', '\'');
+                .replace('\u2019', '\'')
+                .replace('\u2018', '\'');
         Integer id = nameToId.get(normalizedName);
         if (id == null) id = nameToId.get(name.toLowerCase());
         if (id == null) return null;
@@ -4598,7 +4632,7 @@ private String[] buildItemDataFromCache(String name)
         long lastTraded = (pd.highTime >= pd.lowTime) ? pd.high : pd.low;
         String lastTradedStr = lastTraded > 0 ? String.valueOf(lastTraded) : "0";
         String lastTradedTime = pd.getTimeSince();
-        return new String[]{name, price, buyPrice, sellPrice, "0", delta, limitStr, gpChangeStr, buyQty, sellQty, lastTradedStr, lastTradedTime, String.valueOf(id)};
+        return new String[]{name, price, buyPrice, sellPrice, "0", delta, limitStr, gpChangeStr, buyQty, sellQty, lastTradedStr, lastTradedTime, String.valueOf(id), String.valueOf(isVariant), originalBankName != null ? originalBankName : ""};
     }
 
     private JPanel buildTimeFrameBar()
@@ -6720,6 +6754,24 @@ private String[] buildItemDataFromCache(String name)
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         content.add(titleLabel);
         content.add(Box.createVerticalStrut(10));
+
+// v1.1.1
+        JLabel v111Label = new JLabel("v1.1.1 — July 13, 2026");
+        v111Label.setForeground(GOLD);
+        v111Label.setFont(new Font("Monospaced", Font.BOLD, FONT_STAT_LABEL));
+        v111Label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(v111Label);
+        content.add(Box.createVerticalStrut(3));
+        for (String line : new String[]{
+                "• Variant item indicator (* gold badge) on Bank tab",
+                "• Hover item icon to see original bank item name",
+                "• Hover Top Gainers/Losers header for * explanation"
+        }) {
+            JLabel l = new JLabel(line); l.setForeground(TEXT_DIM);
+            l.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+            l.setAlignmentX(Component.LEFT_ALIGNMENT); content.add(l);
+        }
+        content.add(Box.createVerticalStrut(8));
 
 // v1.1
         JLabel v11Label = new JLabel("v1.1 — July 11, 2026");
