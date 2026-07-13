@@ -1816,6 +1816,78 @@ private String openBankItemName = null;
             tipWrapper.add(tipBox, BorderLayout.CENTER);
         }
 
+// What's New box for returning users on update
+        final JPanel[] whatsNewWrapperRef = {null};
+        boolean hasNewUpdate = !CURRENT_VERSION.equals(config.lastSeenVersion()) && !config.lastSeenVersion().isEmpty();
+        if (hasNewUpdate) {
+            JPanel whatsNewBox = new JPanel();
+            whatsNewBox.setLayout(new BoxLayout(whatsNewBox, BoxLayout.Y_AXIS));
+            whatsNewBox.setBackground(new Color(10, 8, 9));
+            whatsNewBox.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(GOLD, 1),
+                    BorderFactory.createEmptyBorder(6, 10, 6, 10)
+            ));
+            whatsNewBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+            whatsNewBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 999));
+
+            JPanel whatsNewHeader = new JPanel(new BorderLayout());
+            whatsNewHeader.setBackground(new Color(10, 8, 9));
+            JLabel whatsNewLabel = new JLabel("NEW");
+            whatsNewLabel.setForeground(GOLD);
+            whatsNewLabel.setFont(new Font("Monospaced", Font.BOLD, FONT_STAT_LABEL));
+            JLabel whatsNewClose = new JLabel("✕");
+            whatsNewClose.setForeground(TEXT_DIM);
+            whatsNewClose.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
+            whatsNewClose.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            whatsNewHeader.add(whatsNewLabel, BorderLayout.WEST);
+            whatsNewHeader.add(whatsNewClose, BorderLayout.EAST);
+
+            whatsNewBox.add(whatsNewHeader);
+
+            JLabel whatsNewText = new JLabel("<html><body style='width:150px;color:#888888;font-family:monospaced;font-size:9px;'><span style='color:#D4AF37;'>v" + CURRENT_VERSION + "</span> is here!<br>• Variant item * indicator on Bank tab<br>• Report Issue / Request Feature buttons<br>• Live price updates on all item rows</body></html>");
+            whatsNewText.setBorder(new EmptyBorder(4, 0, 0, 0));
+            whatsNewBox.add(whatsNewText);
+            whatsNewBox.add(Box.createVerticalStrut(4));
+whatsNewBox.add(Box.createVerticalStrut(4));
+JLabel seeMoreLabel = new JLabel("<html><body style='width:150px;color:#D4AF37;font-family:monospaced;font-size:9px;'>See full changelog →</body></html>");
+seeMoreLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+seeMoreLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+seeMoreLabel.addMouseListener(new MouseAdapter() {
+    public void mouseClicked(MouseEvent e) { openUpdatesDialog(); }
+    public void mouseEntered(MouseEvent e) { seeMoreLabel.setText("<html><body style='width:150px;color:#FFD700;font-family:monospaced;font-size:9px;'>See full changelog →</body></html>"); }
+    public void mouseExited(MouseEvent e) { seeMoreLabel.setText("<html><body style='width:150px;color:#D4AF37;font-family:monospaced;font-size:9px;'>See full changelog →</body></html>"); }
+});
+whatsNewBox.add(seeMoreLabel);
+
+            whatsNewClose.addMouseListener(new MouseAdapter() {
+                public void mouseClicked(MouseEvent e) {
+                    if (configManager != null) {
+                        configManager.setConfiguration("gecompanion", "lastSeenVersion", CURRENT_VERSION);
+                        if (updatesIconRef != null) {
+                            updatesIconRef.setForeground(TEXT_DIM);
+                            updatesIconRef.repaint();
+                        }
+                    }
+                    Container parent = whatsNewWrapperRef[0].getParent();
+                    if (parent != null) {
+                        parent.remove(whatsNewWrapperRef[0]);
+                        parent.revalidate();
+                        parent.repaint();
+                    }
+                }
+                public void mouseEntered(MouseEvent e) { whatsNewClose.setForeground(TEXT_PRIMARY); }
+                public void mouseExited(MouseEvent e) { whatsNewClose.setForeground(TEXT_DIM); }
+            });
+
+            whatsNewWrapperRef[0] = new JPanel(new BorderLayout());
+            JPanel whatsNewWrapper = whatsNewWrapperRef[0];
+            whatsNewWrapper.setBackground(BG_DARK);
+            whatsNewWrapper.setBorder(new EmptyBorder(6, 6, 4, 6));
+            whatsNewWrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
+            whatsNewWrapper.setMaximumSize(new Dimension(Integer.MAX_VALUE, 999));
+            whatsNewWrapper.add(whatsNewBox, BorderLayout.CENTER);
+        }
+
         recentSearchesPanel = new JPanel();
         recentSearchesPanel.setLayout(new BoxLayout(recentSearchesPanel, BoxLayout.Y_AXIS));
         recentSearchesPanel.setBackground(BG_DARK);
@@ -1895,6 +1967,9 @@ private String openBankItemName = null;
         listWrapper.setBackground(BG_DARK);
         if (config.showSearchTip()) {
             recentSearchesPanel.add(tipWrapperRef[0]);
+        }
+        if (hasNewUpdate && whatsNewWrapperRef[0] != null) {
+            recentSearchesPanel.add(whatsNewWrapperRef[0]);
         }
         listWrapper.add(recentSearchesPanel, BorderLayout.NORTH);
         listWrapper.add(searchResultsPanel, BorderLayout.CENTER);
