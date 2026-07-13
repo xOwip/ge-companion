@@ -89,6 +89,9 @@ Switch between 1H, 6H, and 24H to see how your bank is performing over
 different timeframes. Expand any item in either the top gainers or top losers 
 section to see its full detail panel and chart.
 
+Items that have been remapped to their tradeable base for price lookup are marked 
+with a gold * on their icon — hover the icon to see the original item name from your bank.
+
 ![Bank tab](gifs/bank.gif)
 
 ### Right-click Price Check
@@ -146,6 +149,13 @@ All data stays on your machine.
 | Top Losers count | 5 | How many losers to display (1–10) |
 | Min bank item value | 50,000 gp | Minimum stack value to appear in gainers/losers |
 | Show bank value change | On | Track and display bank value history |
+
+---
+
+## Feedback
+Found a bug or have a feature request? Use the **Report Issue** or **Request Feature** 
+buttons anchored at the bottom of the plugin panel to submit directly to GitHub — no 
+copy-pasting required.
 
 ---
 
