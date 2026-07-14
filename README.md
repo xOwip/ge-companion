@@ -1,12 +1,21 @@
+<div align="center">
+
 # GE Companion
-A RuneLite plugin that brings live Grand Exchange prices, interactive price charts,
-a personal watchlist, and bank value tracking directly into your client.
+
+---
+A RuneLite plugin that brings live Grand Exchange prices, interactive price charts, a personal watchlist, and bank value tracking directly into your client.
 
 **No account. No API key. No setup. Just install and go.**
 
----
+![version](https://img.shields.io/badge/version-1.1.1-blue)
+![license](https://img.shields.io/badge/license-BSD--2--Clause-orange)
+[![Plugin Hub](https://img.shields.io/badge/RuneLite-Plugin%20Hub-red)](https://runelite.net/plugin-hub/show/ge-companion)
 
 ![Overview](screenshots/overview_bordered.png)
+
+</div>
+
+---
 
 ## Features
 
