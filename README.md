@@ -7,8 +7,9 @@ A RuneLite plugin that brings live Grand Exchange prices, interactive price char
 
 **No account. No API key. No setup. Just install and go.**
 
-![version](https://img.shields.io/badge/version-1.1.1-blue)
-![license](https://img.shields.io/badge/license-BSD--2--Clause-orange)
+[![Plugin Hub installs](https://img.shields.io/endpoint?url=https://api.runelite.net/pluginhub/shields/installs/plugin/ge-companion&label=installs&color=brightgreen)](https://runelite.net/plugin-hub/show/ge-companion)
+[![Version](https://img.shields.io/badge/version-1.1.1-blue)](https://github.com/xOwip/ge-companion/releases)
+[![License](https://img.shields.io/badge/license-BSD--2--Clause-orange)](LICENSE)
 [![Plugin Hub](https://img.shields.io/badge/RuneLite-Plugin%20Hub-red)](https://runelite.net/plugin-hub/show/ge-companion)
 
 ![Overview](screenshots/overview_bordered.png)
