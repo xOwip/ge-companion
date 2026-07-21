@@ -165,4 +165,12 @@ public interface GECompanionConfig extends Config
 			hidden = true
 	)
 	default String lastSeenVersion() { return ""; }
+
+	@ConfigItem(
+			keyName = "priceAlerts",
+			name = "Price alerts",
+			description = "Stored price alerts for watchlist items",
+			hidden = true
+	)
+	default String priceAlerts() { return ""; }
 }

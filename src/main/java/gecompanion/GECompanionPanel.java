@@ -54,6 +54,8 @@ public class GECompanionPanel extends PluginPanel
     private final java.util.Map<Integer, JLabel> livePriceLabels = new java.util.HashMap<>();
     private final java.util.Map<Integer, JLabel> liveDeltaLabels = new java.util.HashMap<>();
     private final java.util.Map<Integer, JLabel> liveGpChangeLabels = new java.util.HashMap<>();
+    // Price alerts: itemId -> "above:1500000000" or "below:1500000000"
+    private final java.util.Map<Integer, String> priceAlerts = new java.util.HashMap<>();
     private JLabel updatesIconRef = null;
 
     private int activeTab = 1;
@@ -243,6 +245,7 @@ private String openBankItemName = null;
         activeTimeFrame = config.defaultTimeFrame().getValue();
         loadBankValueLog();
         loadPinnedItems();
+        loadPriceAlerts();
         loadRecentSearches();
         searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener()
         {
@@ -787,6 +790,35 @@ private String openBankItemName = null;
     {
         String joined = String.join(",", pinnedItems);
         plugin.saveConfig("pinnedItems", joined);
+    }
+
+    private void savePriceAlerts()
+    {
+        StringBuilder sb = new StringBuilder();
+        for (java.util.Map.Entry<Integer, String> entry : priceAlerts.entrySet())
+        {
+            if (sb.length() > 0) sb.append(",");
+            sb.append(entry.getKey()).append(":").append(entry.getValue());
+        }
+        plugin.saveConfig("priceAlerts", sb.toString());
+    }
+
+    private void loadPriceAlerts()
+    {
+        priceAlerts.clear();
+        String saved = plugin.loadConfig("priceAlerts");
+        if (saved == null || saved.isEmpty()) return;
+        for (String entry : saved.split(","))
+        {
+            String[] parts = entry.split(":", 2);
+            if (parts.length == 2)
+            {
+                try {
+                    int id = Integer.parseInt(parts[0]);
+                    priceAlerts.put(id, parts[1]);
+                } catch (NumberFormatException e) { }
+            }
+        }
     }
 
     private void startLiveTimer()
@@ -2792,8 +2824,22 @@ whatsNewBox.add(seeMoreLabel);
             final Integer finalItemId = itemId;
             JLabel bellIcon = new JLabel("🔔");
             bellIcon.setFont(new Font("Monospaced", Font.PLAIN, 11));
-            bellIcon.setForeground(TEXT_DIM);
-            bellIcon.setVisible(false);
+            String existingAlert = (finalItemId != null) ? priceAlerts.get(finalItemId) : null;
+            if (existingAlert != null) {
+                bellIcon.setForeground(GOLD);
+                bellIcon.setVisible(true);
+                String[] alertParts = existingAlert.split(":", 2);
+                if (alertParts.length == 2) {
+                    boolean isAbove = alertParts[0].equals("above");
+                    String alertPrice = formatFullPrice(alertParts[1]);
+                    bellIcon.setToolTipText("Alert: " + (isAbove ? "AT OR ABOVE " : "AT OR BELOW ") + alertPrice + " gp");
+                    bellIcon.putClientProperty("hasAlert", true);
+                }
+            } else {
+                bellIcon.setForeground(TEXT_DIM);
+                bellIcon.setVisible(false);
+                bellIcon.putClientProperty("hasAlert", false);
+            }
             bellIcon.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             bellIcon.addMouseListener(new MouseAdapter() {
                 public void mouseClicked(MouseEvent e) {
@@ -3181,8 +3227,18 @@ whatsNewBox.add(seeMoreLabel);
                     if (bellPanelRef[0] != null) {
                         bellPanelRef[0].setOpaque(false);
                         bellPanelRef[0].repaint();
+// Only hide bell if no active alert
+                        boolean bellHasAlert = false;
                         for (java.awt.Component c : bellPanelRef[0].getComponents()) {
-                            c.setVisible(false);
+                            if (c instanceof JLabel && Boolean.TRUE.equals(((JLabel)c).getClientProperty("hasAlert"))) {
+                                bellHasAlert = true;
+                                break;
+                            }
+                        }
+                        if (!bellHasAlert) {
+                            for (java.awt.Component c : bellPanelRef[0].getComponents()) {
+                                c.setVisible(false);
+                            }
                         }
                     }
                 }
@@ -6866,8 +6922,14 @@ whatsNewBox.add(seeMoreLabel);
         clearBtn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
         clearBtn.setFocusPainted(false);
         clearBtn.addActionListener(e -> {
+            if (itemId != null) {
+                priceAlerts.remove(itemId);
+                savePriceAlerts();
+            }
             bellIcon.setForeground(TEXT_DIM);
             bellIcon.setVisible(false);
+            bellIcon.setToolTipText(null);
+            bellIcon.putClientProperty("hasAlert", false);
             dialog.dispose();
         });
 
@@ -6885,8 +6947,15 @@ whatsNewBox.add(seeMoreLabel);
             try {
                 long targetPrice = Long.parseLong(priceText);
                 boolean isAbove = isAboveRef[0];
+                if (itemId != null) {
+                    String alertValue = (isAbove ? "above:" : "below:") + targetPrice;
+                    priceAlerts.put(itemId, alertValue);
+                    savePriceAlerts();
+                    bellIcon.setToolTipText("Alert: " + (isAbove ? "AT OR ABOVE " : "AT OR BELOW ") + formatFullPrice(String.valueOf(targetPrice)) + " gp");
+                }
                 bellIcon.setForeground(GOLD);
                 bellIcon.setVisible(true);
+                bellIcon.putClientProperty("hasAlert", true);
                 dialog.dispose();
             } catch (NumberFormatException ex) {
                 priceField.setBorder(BorderFactory.createCompoundBorder(
