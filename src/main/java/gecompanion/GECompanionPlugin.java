@@ -75,6 +75,9 @@ public class GECompanionPlugin extends Plugin
 	private ConfigManager configManager;
 
 	@Inject
+	private net.runelite.client.Notifier notifier;
+
+	@Inject
 	private net.runelite.client.game.ItemManager itemManager;
 
 	public net.runelite.client.game.ItemManager getItemManager() { return itemManager; }
@@ -560,6 +563,21 @@ private void fetchMapping()
 	}
 
 	public OkHttpClient getOkHttpClient() { return okHttpClient; }
+
+	public void fireAlert(String itemName, long currentPrice, boolean isAbove, long targetPrice)
+	{
+		String msg = "GE Companion: " + itemName + " has reached your price target of " +
+				net.runelite.client.util.QuantityFormatter.formatNumber(targetPrice) + " gp! Current: " +
+				net.runelite.client.util.QuantityFormatter.formatNumber(currentPrice) + " gp";
+		notifier.notify(msg);
+		if (client.getGameState() == net.runelite.api.GameState.LOGGED_IN)
+		{
+			client.addChatMessage(net.runelite.api.ChatMessageType.GAMEMESSAGE, "",
+					"<col=D4AF37>[GE Companion]</col> " + itemName + " has reached your price target of " +
+							net.runelite.client.util.QuantityFormatter.formatNumber(targetPrice) + " gp! Current: " +
+							net.runelite.client.util.QuantityFormatter.formatNumber(currentPrice) + " gp", "");
+		}
+	}
 	public java.util.Map<Integer, Long> getAvgPrice1h() { return avgPrice1h; }
 	public java.util.Map<Integer, Long> getAvgPrice6h() { return avgPrice6h; }
 	public java.util.Map<Integer, Long> getAvgPrice24h() { return avgPrice24h; }

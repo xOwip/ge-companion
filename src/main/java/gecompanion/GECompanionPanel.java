@@ -1197,7 +1197,41 @@ private String openBankItemName = null;
             liveHeaderPriceLabel.setText(formatFullPrice(String.valueOf(mid)) + " gp");
         }
 
-        // Update compacted item row price labels
+// Check price alerts
+        for (java.util.Map.Entry<Integer, String> alertEntry : new java.util.HashMap<>(priceAlerts).entrySet())
+        {
+            int alertId = alertEntry.getKey();
+            String alertValue = alertEntry.getValue();
+            PriceData alertPd = priceCache.get(alertId);
+            if (alertPd == null) continue;
+            long currentPrice = alertPd.getMid();
+            String[] parts = alertValue.split(":", 2);
+            if (parts.length != 2) continue;
+            boolean isAbove = parts[0].equals("above");
+            long targetPrice = Long.parseLong(parts[1]);
+            boolean triggered = isAbove ? currentPrice >= targetPrice : currentPrice <= targetPrice;
+            if (triggered)
+            {
+                // Find item name
+                String alertItemName = "Unknown";
+                for (java.util.Map.Entry<String, Integer> nameEntry : nameToId.entrySet())
+                {
+                    if (nameEntry.getValue() == alertId) { alertItemName = nameEntry.getKey(); break; }
+                }
+                final String finalName = alertItemName;
+                final long finalPrice = currentPrice;
+                final boolean finalIsAbove = isAbove;
+                final long finalTarget = targetPrice;
+                javax.swing.SwingUtilities.invokeLater(() -> {
+                    plugin.fireAlert(finalName, finalPrice, finalIsAbove, finalTarget);
+                });
+                // Remove alert after firing so it doesn't spam
+                priceAlerts.remove(alertId);
+                savePriceAlerts();
+            }
+        }
+
+// Update compacted item row price labels
         for (java.util.Map.Entry<Integer, JLabel> entry : livePriceLabels.entrySet())
         {
             int id = entry.getKey();
@@ -6804,8 +6838,21 @@ whatsNewBox.add(seeMoreLabel);
 
     private void openBellAlertPanel(JLabel bellIcon, JPanel bellPanel, Integer itemId, String itemName)
     {
+        // Check for existing alert
+        String existingAlert = (itemId != null) ? priceAlerts.get(itemId) : null;
+        boolean hasExisting = existingAlert != null;
+        boolean existingIsAbove = false;
+        long existingPrice = 0;
+        if (hasExisting) {
+            String[] parts = existingAlert.split(":", 2);
+            if (parts.length == 2) {
+                existingIsAbove = parts[0].equals("above");
+                try { existingPrice = Long.parseLong(parts[1]); } catch (NumberFormatException e) { }
+            }
+        }
+
         JDialog dialog = new JDialog();
-        dialog.setTitle("Price Alert — " + itemName);
+        dialog.setTitle((hasExisting ? "Edit Alert" : "Price Alert") + " — " + itemName);
         dialog.setModal(false);
         dialog.setResizable(false);
 
@@ -6814,7 +6861,7 @@ whatsNewBox.add(seeMoreLabel);
         content.setBackground(new Color(30, 28, 26));
         content.setBorder(new EmptyBorder(10, 12, 10, 12));
 
-        JLabel titleLabel = new JLabel("🔔 Price Alert");
+        JLabel titleLabel = new JLabel(hasExisting ? "🔔 Edit Alert" : "🔔 Price Alert");
         titleLabel.setForeground(GOLD);
         titleLabel.setFont(new Font("Monospaced", Font.BOLD, FONT_META));
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -6835,7 +6882,7 @@ whatsNewBox.add(seeMoreLabel);
         toggleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         content.add(toggleLabel);
         content.add(Box.createVerticalStrut(4));
-        final boolean[] isAboveRef = {false}; // default: BELOW
+        final boolean[] isAboveRef = {hasExisting ? existingIsAbove : false};
         JPanel toggleRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         toggleRow.setBackground(new Color(30, 28, 26));
         toggleRow.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -6850,13 +6897,22 @@ whatsNewBox.add(seeMoreLabel);
         belowToggle.setOpaque(true);
         belowToggle.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-// Initial state — BELOW selected
-        aboveToggle.setBackground(new Color(30, 28, 26));
-        aboveToggle.setForeground(TEXT_DIM);
-        aboveToggle.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
-        belowToggle.setBackground(GOLD);
-        belowToggle.setForeground(new Color(14, 12, 13));
-        belowToggle.setBorder(BorderFactory.createLineBorder(GOLD));
+// Initial state — based on existing alert or default BELOW
+        if (hasExisting && existingIsAbove) {
+            aboveToggle.setBackground(GOLD);
+            aboveToggle.setForeground(new Color(14, 12, 13));
+            aboveToggle.setBorder(BorderFactory.createLineBorder(GOLD));
+            belowToggle.setBackground(new Color(30, 28, 26));
+            belowToggle.setForeground(TEXT_DIM);
+            belowToggle.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+        } else {
+            aboveToggle.setBackground(new Color(30, 28, 26));
+            aboveToggle.setForeground(TEXT_DIM);
+            aboveToggle.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+            belowToggle.setBackground(GOLD);
+            belowToggle.setForeground(new Color(14, 12, 13));
+            belowToggle.setBorder(BorderFactory.createLineBorder(GOLD));
+        }
 
         aboveToggle.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
@@ -6896,7 +6952,8 @@ whatsNewBox.add(seeMoreLabel);
         content.add(priceLabel);
         content.add(Box.createVerticalStrut(3));
 
-        JTextField priceField = new JTextField(20);
+        JTextField priceField = new JTextField(hasExisting && existingPrice > 0 ?
+                String.format("%,d", existingPrice) : "", 20);
         priceField.setBackground(new Color(14, 12, 13));
         priceField.setForeground(TEXT_PRIMARY);
         priceField.setCaretColor(TEXT_PRIMARY);
