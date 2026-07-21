@@ -222,6 +222,7 @@ public class GECompanionPanel extends PluginPanel
     private JPanel currentOpenWatchlistInfo = null;
     private JPanel currentOpenWatchlistIconWrapper = null;
     private JPanel currentOpenWatchlistDeltaRow = null;
+    private JPanel currentOpenWatchlistBellPanel = null;
     private JPanel currentOpenBankRow = null;
     private Color currentOpenSearchRowColor = BG_DARK;
     private Color currentOpenWatchlistRowColor = BG_DARK;
@@ -2782,7 +2783,25 @@ whatsNewBox.add(seeMoreLabel);
         info.add(priceLabel);
         info.add(deltaLimitRow);
         row.add(info, BorderLayout.CENTER);
-        // ── rearrange arrows (edit mode) ──────────────────────────────
+
+// Bell icon for price alerts (only shown when not in edit mode)
+        final JPanel[] bellPanelRef = {null};
+        if (!watchlistEditMode) {
+            final Integer finalItemId = itemId;
+            JLabel bellIcon = new JLabel("🔔");
+            bellIcon.setFont(new Font("Monospaced", Font.PLAIN, 11));
+            bellIcon.setForeground(TEXT_DIM);
+            bellIcon.setVisible(false);
+            bellIcon.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            bellPanelRef[0] = new JPanel(new java.awt.GridBagLayout());
+            JPanel bellPanel = bellPanelRef[0];
+            bellPanel.setOpaque(false);
+            bellPanel.setPreferredSize(new Dimension(22, 68));
+            bellPanel.add(bellIcon);
+            row.add(bellPanel, BorderLayout.EAST);
+        }
+
+// ── rearrange arrows (edit mode) ──────────────────────────────
         if (watchlistEditMode) {
             final int totalItems = pinnedItems.size();
             JPanel arrowPanel = new JPanel();
@@ -2929,9 +2948,21 @@ whatsNewBox.add(seeMoreLabel);
                             if (currentOpenWatchlistInfo != null) { currentOpenWatchlistInfo.setBackground(currentOpenWatchlistRowColor); currentOpenWatchlistInfo = null; }
                             if (currentOpenWatchlistIconWrapper != null) { currentOpenWatchlistIconWrapper.setBackground(currentOpenWatchlistRowColor); currentOpenWatchlistIconWrapper = null; }
                             if (currentOpenWatchlistDeltaRow != null) { currentOpenWatchlistDeltaRow.setBackground(currentOpenWatchlistRowColor); currentOpenWatchlistDeltaRow = null; }
+                            if (currentOpenWatchlistBellPanel != null) { currentOpenWatchlistBellPanel.setOpaque(false); currentOpenWatchlistBellPanel.repaint(); currentOpenWatchlistBellPanel = null; }
                             watchlistListPanel.revalidate();
                             watchlistListPanel.repaint();
                             closeTimer.stop();
+                            // Re-trigger hover if mouse is still over the row
+                            java.awt.Point mousePos = java.awt.MouseInfo.getPointerInfo().getLocation();
+                            javax.swing.SwingUtilities.convertPointFromScreen(mousePos, row);
+                            if (row.contains(mousePos)) {
+                                row.setBackground(BG_ROW_HOVER);
+                                info.setBackground(BG_ROW_HOVER);
+                                iconWrapper.setBackground(BG_ROW_HOVER);
+                                deltaLimitRow.setBackground(BG_ROW_HOVER);
+                                if (bellPanelRef[0] != null) bellPanelRef[0].setOpaque(true);
+                                if (bellPanelRef[0] != null) bellPanelRef[0].setBackground(BG_ROW_HOVER);
+                            }
                         }
                     });
                     closeTimer.start();
@@ -3033,6 +3064,7 @@ whatsNewBox.add(seeMoreLabel);
                 currentOpenWatchlistInfo = info;
                 currentOpenWatchlistIconWrapper = iconWrapper;
                 currentOpenWatchlistDeltaRow = deltaLimitRow;
+                currentOpenWatchlistBellPanel = bellPanelRef[0];
 
                 detailSlot.removeAll();
                 detailSlot.add(buildInlineDetail(item, true), BorderLayout.CENTER);
@@ -3122,6 +3154,12 @@ whatsNewBox.add(seeMoreLabel);
                     deltaLimitRow.setBackground(BG_ROW_HOVER);
                     if (watchlistEditMode) row.getComponent(row.getComponentCount()-1).setBackground(BG_ROW_HOVER);
                 }
+                if (bellPanelRef[0] != null) {
+                    // find bellIcon inside bellPanel and show it
+                    for (java.awt.Component c : bellPanelRef[0].getComponents()) {
+                        c.setVisible(true);
+                    }
+                }
             }
             public void mouseExited(MouseEvent e)
             {
@@ -3132,6 +3170,13 @@ whatsNewBox.add(seeMoreLabel);
                     iconWrapper.setBackground(rowBg);
                     deltaLimitRow.setBackground(rowBg);
                     if (watchlistEditMode) row.getComponent(row.getComponentCount()-1).setBackground(rowBg);
+                    if (bellPanelRef[0] != null) {
+                        bellPanelRef[0].setOpaque(false);
+                        bellPanelRef[0].repaint();
+                        for (java.awt.Component c : bellPanelRef[0].getComponents()) {
+                            c.setVisible(false);
+                        }
+                    }
                 }
             }
         });
