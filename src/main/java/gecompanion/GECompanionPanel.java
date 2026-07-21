@@ -223,6 +223,8 @@ public class GECompanionPanel extends PluginPanel
     private JPanel currentOpenWatchlistIconWrapper = null;
     private JPanel currentOpenWatchlistDeltaRow = null;
     private JPanel currentOpenWatchlistBellPanel = null;
+    private javax.swing.JPanel activeBellFloatPanel = null;
+    private javax.swing.JLayeredPane activeBellLayeredPane = null;
     private JPanel currentOpenBankRow = null;
     private Color currentOpenSearchRowColor = BG_DARK;
     private Color currentOpenWatchlistRowColor = BG_DARK;
@@ -2793,6 +2795,12 @@ whatsNewBox.add(seeMoreLabel);
             bellIcon.setForeground(TEXT_DIM);
             bellIcon.setVisible(false);
             bellIcon.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            bellIcon.addMouseListener(new MouseAdapter() {
+                public void mouseClicked(MouseEvent e) {
+                    e.consume();
+                    openBellAlertPanel(bellIcon, bellPanelRef[0], finalItemId, name);
+                }
+            });
             bellPanelRef[0] = new JPanel(new java.awt.GridBagLayout());
             JPanel bellPanel = bellPanelRef[0];
             bellPanel.setOpaque(false);
@@ -6736,6 +6744,166 @@ whatsNewBox.add(seeMoreLabel);
         });
 
         return row;
+    }
+
+    private void openBellAlertPanel(JLabel bellIcon, JPanel bellPanel, Integer itemId, String itemName)
+    {
+        JDialog dialog = new JDialog();
+        dialog.setTitle("Price Alert — " + itemName);
+        dialog.setModal(false);
+        dialog.setResizable(false);
+
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        content.setBackground(new Color(30, 28, 26));
+        content.setBorder(new EmptyBorder(10, 12, 10, 12));
+
+        JLabel titleLabel = new JLabel("🔔 Price Alert");
+        titleLabel.setForeground(GOLD);
+        titleLabel.setFont(new Font("Monospaced", Font.BOLD, FONT_META));
+        titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(titleLabel);
+        content.add(Box.createVerticalStrut(4));
+
+        JLabel itemLabel = new JLabel(itemName);
+        itemLabel.setForeground(TEXT_DIM);
+        itemLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+        itemLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(itemLabel);
+        content.add(Box.createVerticalStrut(10));
+
+// Toggle — AT OR ABOVE / AT OR BELOW
+        JLabel toggleLabel = new JLabel("Notify me when price is:");
+        toggleLabel.setForeground(TEXT_DIM);
+        toggleLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+        toggleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(toggleLabel);
+        content.add(Box.createVerticalStrut(4));
+        final boolean[] isAboveRef = {false}; // default: BELOW
+        JPanel toggleRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        toggleRow.setBackground(new Color(30, 28, 26));
+        toggleRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel aboveToggle = new JLabel("  AT OR ABOVE  ");
+        aboveToggle.setFont(new Font("Monospaced", Font.BOLD, FONT_STAT_LABEL));
+        aboveToggle.setOpaque(true);
+        aboveToggle.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        JLabel belowToggle = new JLabel("  AT OR BELOW  ");
+        belowToggle.setFont(new Font("Monospaced", Font.BOLD, FONT_STAT_LABEL));
+        belowToggle.setOpaque(true);
+        belowToggle.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+// Initial state — BELOW selected
+        aboveToggle.setBackground(new Color(30, 28, 26));
+        aboveToggle.setForeground(TEXT_DIM);
+        aboveToggle.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+        belowToggle.setBackground(GOLD);
+        belowToggle.setForeground(new Color(14, 12, 13));
+        belowToggle.setBorder(BorderFactory.createLineBorder(GOLD));
+
+        aboveToggle.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                isAboveRef[0] = true;
+                aboveToggle.setBackground(GOLD);
+                aboveToggle.setForeground(new Color(14, 12, 13));
+                aboveToggle.setBorder(BorderFactory.createLineBorder(GOLD));
+                belowToggle.setBackground(new Color(30, 28, 26));
+                belowToggle.setForeground(TEXT_DIM);
+                belowToggle.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+            }
+        });
+
+        belowToggle.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                isAboveRef[0] = false;
+                belowToggle.setBackground(GOLD);
+                belowToggle.setForeground(new Color(14, 12, 13));
+                belowToggle.setBorder(BorderFactory.createLineBorder(GOLD));
+                aboveToggle.setBackground(new Color(30, 28, 26));
+                aboveToggle.setForeground(TEXT_DIM);
+                aboveToggle.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+            }
+        });
+
+        toggleRow.add(aboveToggle);
+        toggleRow.add(Box.createHorizontalStrut(4));
+        toggleRow.add(belowToggle);
+        content.add(toggleRow);
+        content.add(Box.createVerticalStrut(8));
+
+        // Price input
+        JLabel priceLabel = new JLabel("Target Price (gp):");
+        priceLabel.setForeground(TEXT_DIM);
+        priceLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+        priceLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(priceLabel);
+        content.add(Box.createVerticalStrut(3));
+
+        JTextField priceField = new JTextField(20);
+        priceField.setBackground(new Color(14, 12, 13));
+        priceField.setForeground(TEXT_PRIMARY);
+        priceField.setCaretColor(TEXT_PRIMARY);
+        priceField.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(58, 53, 48)),
+                BorderFactory.createEmptyBorder(3, 5, 3, 5)
+        ));
+        priceField.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+        priceField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 28));
+        priceField.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(priceField);
+        content.add(Box.createVerticalStrut(10));
+
+        // Buttons
+        JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 0));
+        btnRow.setBackground(new Color(30, 28, 26));
+        btnRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JButton clearBtn = new JButton("Clear Alert");
+        clearBtn.setForeground(TEXT_DIM);
+        clearBtn.setBackground(new Color(30, 28, 26));
+        clearBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+        clearBtn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+        clearBtn.setFocusPainted(false);
+        clearBtn.addActionListener(e -> {
+            bellIcon.setForeground(TEXT_DIM);
+            bellIcon.setVisible(false);
+            dialog.dispose();
+        });
+
+        JButton setBtn = new JButton("Set Alert");
+        setBtn.setForeground(GOLD);
+        setBtn.setBackground(new Color(30, 28, 26));
+        setBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+        setBtn.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(GOLD),
+                BorderFactory.createEmptyBorder(0, 6, 0, 6)
+        ));
+        setBtn.setFocusPainted(false);
+        setBtn.addActionListener(e -> {
+            String priceText = priceField.getText().replaceAll(",", "").trim();
+            try {
+                long targetPrice = Long.parseLong(priceText);
+                boolean isAbove = isAboveRef[0];
+                bellIcon.setForeground(GOLD);
+                bellIcon.setVisible(true);
+                dialog.dispose();
+            } catch (NumberFormatException ex) {
+                priceField.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(RED_DOWN),
+                        BorderFactory.createEmptyBorder(3, 5, 3, 5)
+                ));
+            }
+        });
+
+        btnRow.add(clearBtn);
+        btnRow.add(setBtn);
+        content.add(btnRow);
+
+        dialog.setContentPane(content);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
     }
 
     private void openGitHubForm(String type)
