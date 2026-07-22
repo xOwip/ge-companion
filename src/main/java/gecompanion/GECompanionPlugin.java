@@ -202,7 +202,10 @@ public class GECompanionPlugin extends Plugin
 				fetchTimeframeAverages("6h", avgPrice6h);
 
 				// Update panel on EDT
-				javax.swing.SwingUtilities.invokeLater(() -> panel.onPricesUpdated(priceCache, nameToId, avgPrice24h, avgPrice1h, avgPrice6h, itemLimits, buyVolume1h, sellVolume1h, volumeCache));
+				javax.swing.SwingUtilities.invokeLater(() -> {
+					panel.onPricesUpdated(priceCache, nameToId, avgPrice24h, avgPrice1h, avgPrice6h, itemLimits, buyVolume1h, sellVolume1h, volumeCache);
+					panel.checkPriceAlerts();
+				});
 			}
 		}
 		catch (Exception e)

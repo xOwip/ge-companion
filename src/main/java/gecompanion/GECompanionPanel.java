@@ -794,6 +794,40 @@ private String openBankItemName = null;
         plugin.saveConfig("pinnedItems", joined);
     }
 
+    public void checkPriceAlerts()
+    {
+        for (java.util.Map.Entry<Integer, String> alertEntry : new java.util.HashMap<>(priceAlerts).entrySet())
+        {
+            int alertId = alertEntry.getKey();
+            String alertValue = alertEntry.getValue();
+            PriceData alertPd = priceCache.get(alertId);
+            if (alertPd == null) continue;
+            long currentPrice = alertPd.getMid();
+            String[] parts = alertValue.split(":", 2);
+            if (parts.length != 2) continue;
+            boolean isAbove = parts[0].equals("above");
+            long targetPrice = Long.parseLong(parts[1]);
+            boolean triggered = isAbove ? currentPrice >= targetPrice : currentPrice <= targetPrice;
+            if (triggered)
+            {
+                String alertItemName = "Unknown";
+                for (java.util.Map.Entry<String, Integer> nameEntry : nameToId.entrySet())
+                {
+                    if (nameEntry.getValue() == alertId) { alertItemName = nameEntry.getKey(); break; }
+                }
+                final String finalName = alertItemName;
+                final long finalPrice = currentPrice;
+                final boolean finalIsAbove = isAbove;
+                final long finalTarget = targetPrice;
+                plugin.fireAlert(finalName, finalPrice, finalIsAbove, finalTarget);
+                priceAlerts.remove(alertId);
+                savePriceAlerts();
+                firedAlerts.add(alertId);
+                alertFiredTimes.put(alertId, System.currentTimeMillis());
+            }
+        }
+    }
+
     private void savePriceAlerts()
     {
         StringBuilder sb = new StringBuilder();
@@ -1199,41 +1233,7 @@ private String openBankItemName = null;
             liveHeaderPriceLabel.setText(formatFullPrice(String.valueOf(mid)) + " gp");
         }
 
-// Check price alerts
-        for (java.util.Map.Entry<Integer, String> alertEntry : new java.util.HashMap<>(priceAlerts).entrySet())
-        {
-            int alertId = alertEntry.getKey();
-            String alertValue = alertEntry.getValue();
-            PriceData alertPd = priceCache.get(alertId);
-            if (alertPd == null) continue;
-            long currentPrice = alertPd.getMid();
-            String[] parts = alertValue.split(":", 2);
-            if (parts.length != 2) continue;
-            boolean isAbove = parts[0].equals("above");
-            long targetPrice = Long.parseLong(parts[1]);
-            boolean triggered = isAbove ? currentPrice >= targetPrice : currentPrice <= targetPrice;
-            if (triggered)
-            {
-                // Find item name
-                String alertItemName = "Unknown";
-                for (java.util.Map.Entry<String, Integer> nameEntry : nameToId.entrySet())
-                {
-                    if (nameEntry.getValue() == alertId) { alertItemName = nameEntry.getKey(); break; }
-                }
-                final String finalName = alertItemName;
-                final long finalPrice = currentPrice;
-                final boolean finalIsAbove = isAbove;
-                final long finalTarget = targetPrice;
-                javax.swing.SwingUtilities.invokeLater(() -> {
-                    plugin.fireAlert(finalName, finalPrice, finalIsAbove, finalTarget);
-                });
-                // Remove alert after firing so it doesn't spam
-                priceAlerts.remove(alertId);
-                savePriceAlerts();
-                firedAlerts.add(alertId);
-                alertFiredTimes.put(alertId, System.currentTimeMillis());
-            }
-        }
+        checkPriceAlerts();
 
 // Update compacted item row price labels
         for (java.util.Map.Entry<Integer, JLabel> entry : livePriceLabels.entrySet())
@@ -3044,6 +3044,23 @@ whatsNewBox.add(seeMoreLabel);
                         } catch (Exception ex) { }
                     });
                     popup.add(wikiItem);
+                    // Price Alert menu item
+                    final Integer rcItemId = nameToId.get(name.toLowerCase().replace('\u2019', '\'').replace('\u2018', '\''));
+                    boolean hasActiveAlert = rcItemId != null && priceAlerts.containsKey(rcItemId);
+                    boolean hasFiredAlert = rcItemId != null && firedAlerts.contains(rcItemId);
+                    String alertMenuText = hasFiredAlert ? "🔔 Alert Triggered" : hasActiveAlert ? "🔔 Edit Alert" : "🔔 Set Price Alert";
+                    javax.swing.JMenuItem alertItem = new javax.swing.JMenuItem(alertMenuText);
+                    alertItem.addActionListener(ev -> {
+                        if (bellPanelRef[0] != null) {
+                            openBellAlertPanel(
+                                    (JLabel) bellPanelRef[0].getComponent(0),
+                                    bellPanelRef[0],
+                                    rcItemId,
+                                    name
+                            );
+                        }
+                    });
+                    popup.add(alertItem);
                     popup.show(row, e.getX(), e.getY());
                     return;
                 }
