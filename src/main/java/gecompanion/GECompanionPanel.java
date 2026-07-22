@@ -46,7 +46,7 @@ public class GECompanionPanel extends PluginPanel
     private static final Color BG_ROW_HOVER = new Color(45, 40, 38);
     private static final Color BG_ROW_SELECTED = new Color(26, 24, 20);
     private static final Color STAT_BLUE = new Color(74, 122, 191);
-    private static final String CURRENT_VERSION = "1.1.1";
+    private static final String CURRENT_VERSION = "1.2";
 
     private final GECompanionConfig config;
     private final GECompanionPlugin plugin;
