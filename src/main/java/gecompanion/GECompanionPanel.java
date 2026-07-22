@@ -56,6 +56,8 @@ public class GECompanionPanel extends PluginPanel
     private final java.util.Map<Integer, JLabel> liveGpChangeLabels = new java.util.HashMap<>();
     // Price alerts: itemId -> "above:1500000000" or "below:1500000000"
     private final java.util.Map<Integer, String> priceAlerts = new java.util.HashMap<>();
+    private final java.util.Set<Integer> firedAlerts = new java.util.HashSet<>();
+    private final java.util.Map<Integer, Long> alertFiredTimes = new java.util.HashMap<>();
     private JLabel updatesIconRef = null;
 
     private int activeTab = 1;
@@ -1228,6 +1230,8 @@ private String openBankItemName = null;
                 // Remove alert after firing so it doesn't spam
                 priceAlerts.remove(alertId);
                 savePriceAlerts();
+                firedAlerts.add(alertId);
+                alertFiredTimes.put(alertId, System.currentTimeMillis());
             }
         }
 
@@ -2856,10 +2860,38 @@ whatsNewBox.add(seeMoreLabel);
         final JPanel[] bellPanelRef = {null};
         if (!watchlistEditMode) {
             final Integer finalItemId = itemId;
-            JLabel bellIcon = new JLabel("🔔");
+            JLabel bellIcon = new JLabel("🔔") {
+                @Override
+                public String getToolTipText() {
+                    if (finalItemId != null && firedAlerts.contains(finalItemId)) {
+                        Long ft = alertFiredTimes.get(finalItemId);
+                        if (ft != null) {
+                            long elapsed = System.currentTimeMillis() - ft;
+                            long mins = elapsed / 60000;
+                            long secs = (elapsed % 60000) / 1000;
+                            String ago = mins > 0 ? mins + " min ago" : secs + "s ago";
+                            java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("h:mm a");
+                            String time = sdf.format(new java.util.Date(ft));
+                            return "Price target reached! Triggered at " + time + " (" + ago + ") · Click to dismiss.";
+                        }
+                        return "Price target reached! Click to dismiss.";
+                    }
+                    return super.getToolTipText();
+                }
+            };
             bellIcon.setFont(new Font("Monospaced", Font.PLAIN, 11));
+            bellIcon.setToolTipText(""); // Enable tooltip system — actual text from getToolTipText()
+            javax.swing.ToolTipManager.sharedInstance().registerComponent(bellIcon);
             String existingAlert = (finalItemId != null) ? priceAlerts.get(finalItemId) : null;
-            if (existingAlert != null) {
+            boolean alertFired = (finalItemId != null) && firedAlerts.contains(finalItemId);
+            if (alertFired) {
+                bellIcon.setForeground(new Color(100, 220, 255));
+                bellIcon.setVisible(true);
+// Dynamic tooltip - recalculates time on each hover
+                bellIcon.setToolTipText("Price target reached! Click to dismiss.");
+                bellIcon.putClientProperty("hasAlert", true);
+                bellIcon.putClientProperty("alertFired", true);
+            } else if (existingAlert != null) {
                 bellIcon.setForeground(GOLD);
                 bellIcon.setVisible(true);
                 String[] alertParts = existingAlert.split(":", 2);
@@ -2868,11 +2900,13 @@ whatsNewBox.add(seeMoreLabel);
                     String alertPrice = formatFullPrice(alertParts[1]);
                     bellIcon.setToolTipText("Alert: " + (isAbove ? "AT OR ABOVE " : "AT OR BELOW ") + alertPrice + " gp");
                     bellIcon.putClientProperty("hasAlert", true);
+                    bellIcon.putClientProperty("alertFired", false);
                 }
             } else {
                 bellIcon.setForeground(TEXT_DIM);
                 bellIcon.setVisible(false);
                 bellIcon.putClientProperty("hasAlert", false);
+                bellIcon.putClientProperty("alertFired", false);
             }
             bellIcon.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             bellIcon.addMouseListener(new MouseAdapter() {
@@ -6838,8 +6872,9 @@ whatsNewBox.add(seeMoreLabel);
 
     private void openBellAlertPanel(JLabel bellIcon, JPanel bellPanel, Integer itemId, String itemName)
     {
-        // Check for existing alert
+// Check for existing alert or fired alert
         String existingAlert = (itemId != null) ? priceAlerts.get(itemId) : null;
+        boolean alertFired = (itemId != null) && firedAlerts.contains(itemId);
         boolean hasExisting = existingAlert != null;
         boolean existingIsAbove = false;
         long existingPrice = 0;
@@ -6849,6 +6884,77 @@ whatsNewBox.add(seeMoreLabel);
                 existingIsAbove = parts[0].equals("above");
                 try { existingPrice = Long.parseLong(parts[1]); } catch (NumberFormatException e) { }
             }
+        }
+
+// If alert fired, show simple acknowledgment dialog
+        if (alertFired) {
+            JDialog firedDialog = new JDialog();
+            firedDialog.setTitle("Alert Triggered! — " + itemName);
+            firedDialog.setModal(false);
+            firedDialog.setResizable(false);
+            JPanel firedContent = new JPanel();
+            firedContent.setLayout(new BoxLayout(firedContent, BoxLayout.Y_AXIS));
+            firedContent.setBackground(new Color(30, 28, 26));
+            firedContent.setBorder(new EmptyBorder(10, 12, 10, 12));
+            JLabel firedTitle = new JLabel("🔔 Price Target Reached!");
+            firedTitle.setForeground(new Color(100, 220, 255));
+            firedTitle.setFont(new Font("Monospaced", Font.BOLD, FONT_META));
+            firedTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+            firedContent.add(firedTitle);
+            firedContent.add(Box.createVerticalStrut(8));
+            Long firedTime = alertFiredTimes.get(itemId);
+            String timeInfo = "";
+            if (firedTime != null) {
+                long elapsed = System.currentTimeMillis() - firedTime;
+                long mins = elapsed / 60000;
+                long secs = (elapsed % 60000) / 1000;
+                String ago = mins > 0 ? mins + " min ago" : secs + "s ago";
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("h:mm a");
+                String time = sdf.format(new java.util.Date(firedTime));
+                timeInfo = "<br><span style='color:#6464AA;'>Triggered at " + time + " · " + ago + "</span>";
+            }
+            JLabel firedMsg = new JLabel("<html><body style='width:180px;color:#888888;font-family:monospaced;font-size:9px;'>" + itemName + " has reached your price target!" + timeInfo + "</body></html>");
+            firedMsg.setAlignmentX(Component.LEFT_ALIGNMENT);
+            firedContent.add(firedMsg);
+            firedContent.add(Box.createVerticalStrut(10));
+            JPanel firedBtnRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 0));
+            firedBtnRow.setBackground(new Color(30, 28, 26));
+            JButton dismissBtn = new JButton("Dismiss");
+            dismissBtn.setForeground(TEXT_DIM);
+            dismissBtn.setBackground(new Color(30, 28, 26));
+            dismissBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+            dismissBtn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+            dismissBtn.setFocusPainted(false);
+            dismissBtn.addActionListener(e -> {
+                if (itemId != null) { firedAlerts.remove(itemId); alertFiredTimes.remove(itemId); }
+                bellIcon.setForeground(TEXT_DIM);
+                bellIcon.setVisible(false);
+                bellIcon.putClientProperty("hasAlert", false);
+                bellIcon.putClientProperty("alertFired", false);
+                firedDialog.dispose();
+            });
+            JButton newAlertBtn = new JButton("Set New Alert");
+            newAlertBtn.setForeground(GOLD);
+            newAlertBtn.setBackground(new Color(30, 28, 26));
+            newAlertBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+            newAlertBtn.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(GOLD),
+                    BorderFactory.createEmptyBorder(0, 6, 0, 6)
+            ));
+            newAlertBtn.setFocusPainted(false);
+            newAlertBtn.addActionListener(e -> {
+                if (itemId != null) { firedAlerts.remove(itemId); alertFiredTimes.remove(itemId); }
+                firedDialog.dispose();
+                openBellAlertPanel(bellIcon, bellPanel, itemId, itemName);
+            });
+            firedBtnRow.add(dismissBtn);
+            firedBtnRow.add(newAlertBtn);
+            firedContent.add(firedBtnRow);
+            firedDialog.setContentPane(firedContent);
+            firedDialog.pack();
+            firedDialog.setLocationRelativeTo(this);
+            firedDialog.setVisible(true);
+            return;
         }
 
         JDialog dialog = new JDialog();
