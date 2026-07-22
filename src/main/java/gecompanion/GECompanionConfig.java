@@ -3,6 +3,7 @@ package gecompanion;
 import net.runelite.client.config.Config;
 import net.runelite.client.config.ConfigGroup;
 import net.runelite.client.config.ConfigItem;
+import net.runelite.client.config.Alpha;
 import net.runelite.client.config.ConfigSection;
 import net.runelite.client.config.Range;
 
@@ -173,4 +174,12 @@ public interface GECompanionConfig extends Config
 			hidden = true
 	)
 	default String priceAlerts() { return ""; }
+
+	@ConfigItem(
+			keyName = "chatPrefixColor",
+			name = "Chat prefix color",
+			description = "Color of the [GE Companion] prefix in chat notifications"
+	)
+	@Alpha
+	default java.awt.Color chatPrefixColor() { return new java.awt.Color(0xD4AF37); }
 }

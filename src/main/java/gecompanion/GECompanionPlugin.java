@@ -581,7 +581,8 @@ private void fetchMapping()
 		notifier.notify(msg);
 		if (client.getGameState() == net.runelite.api.GameState.LOGGED_IN)
 		{
-			final String chatMsg = "<col=D4AF37>[GE Companion]</col> " +
+			String prefixColor = String.format("%06X", config.chatPrefixColor().getRGB() & 0xFFFFFF);
+			final String chatMsg = "<col=" + prefixColor + ">[GE Companion]</col> " +
 					itemName + " has reached your price target of " +
 					net.runelite.client.util.QuantityFormatter.formatNumber(targetPrice) + " gp! Current: " +
 					net.runelite.client.util.QuantityFormatter.formatNumber(currentPrice) + " gp";
