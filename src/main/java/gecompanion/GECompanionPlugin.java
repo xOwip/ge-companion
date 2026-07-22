@@ -78,6 +78,12 @@ public class GECompanionPlugin extends Plugin
 	private net.runelite.client.Notifier notifier;
 
 	@Inject
+	private net.runelite.client.chat.ChatMessageManager chatMessageManager;
+
+	@Inject
+	private net.runelite.client.callback.ClientThread clientThread;
+
+	@Inject
 	private net.runelite.client.game.ItemManager itemManager;
 
 	public net.runelite.client.game.ItemManager getItemManager() { return itemManager; }
@@ -572,10 +578,16 @@ private void fetchMapping()
 		notifier.notify(msg);
 		if (client.getGameState() == net.runelite.api.GameState.LOGGED_IN)
 		{
-			client.addChatMessage(net.runelite.api.ChatMessageType.GAMEMESSAGE, "",
-					"<col=D4AF37>[GE Companion]</col> " + itemName + " has reached your price target of " +
-							net.runelite.client.util.QuantityFormatter.formatNumber(targetPrice) + " gp! Current: " +
-							net.runelite.client.util.QuantityFormatter.formatNumber(currentPrice) + " gp", "");
+			final String chatMsg = "<col=D4AF37>[GE Companion]</col> " +
+					itemName + " has reached your price target of " +
+					net.runelite.client.util.QuantityFormatter.formatNumber(targetPrice) + " gp! Current: " +
+					net.runelite.client.util.QuantityFormatter.formatNumber(currentPrice) + " gp";
+			clientThread.invokeLater(() ->
+					chatMessageManager.queue(net.runelite.client.chat.QueuedMessage.builder()
+							.type(net.runelite.api.ChatMessageType.GAMEMESSAGE)
+							.runeLiteFormattedMessage(chatMsg)
+							.build())
+			);
 		}
 	}
 	public java.util.Map<Integer, Long> getAvgPrice1h() { return avgPrice1h; }
