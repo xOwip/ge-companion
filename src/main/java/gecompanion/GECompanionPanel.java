@@ -7071,7 +7071,13 @@ whatsNewBox.add(seeMoreLabel);
         priceField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 28));
         priceField.setAlignmentX(Component.LEFT_ALIGNMENT);
         content.add(priceField);
-        content.add(Box.createVerticalStrut(10));
+        content.add(Box.createVerticalStrut(3));
+        JLabel hintLabel = new JLabel("Shortcuts: 1k, 500m, 1.5b");
+        hintLabel.setForeground(TEXT_DIM);
+        hintLabel.setFont(new Font("Monospaced", Font.PLAIN, 9));
+        hintLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(hintLabel);
+        content.add(Box.createVerticalStrut(8));
 
         // Buttons
         JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 0));
@@ -7106,9 +7112,10 @@ whatsNewBox.add(seeMoreLabel);
         ));
         setBtn.setFocusPainted(false);
         setBtn.addActionListener(e -> {
-            String priceText = priceField.getText().replaceAll(",", "").trim();
+            String priceText = priceField.getText().trim();
+            long targetPrice = parsePriceInput(priceText);
             try {
-                long targetPrice = Long.parseLong(priceText);
+                if (targetPrice <= 0) throw new NumberFormatException("invalid");
                 boolean isAbove = isAboveRef[0];
                 if (itemId != null) {
                     String alertValue = (isAbove ? "above:" : "below:") + targetPrice;
@@ -7353,6 +7360,18 @@ whatsNewBox.add(seeMoreLabel);
         dialog.pack();
         dialog.setLocationRelativeTo(this);
         dialog.setVisible(true);
+    }
+
+    private long parsePriceInput(String input)
+    {
+        if (input == null || input.trim().isEmpty()) return -1;
+        String s = input.trim().toLowerCase().replaceAll(",", "").replaceAll(" ", "");
+        try {
+            if (s.endsWith("b")) return (long)(Double.parseDouble(s.replace("b", "")) * 1_000_000_000L);
+            if (s.endsWith("m")) return (long)(Double.parseDouble(s.replace("m", "")) * 1_000_000L);
+            if (s.endsWith("k")) return (long)(Double.parseDouble(s.replace("k", "")) * 1_000L);
+            return Long.parseLong(s);
+        } catch (NumberFormatException e) { return -1; }
     }
 
     private String formatWithCommas(String value)
