@@ -429,7 +429,9 @@ private String openBankItemName = null;
         itemVariantMap.put(23975, 23956); itemVariantMap.put(23977, 23956); // Crystal body
         itemVariantMap.put(23971, 23956); itemVariantMap.put(23973, 23956); // Crystal helm
         itemVariantMap.put(23979, 23956); itemVariantMap.put(23981, 23956); // Crystal legs
-        itemVariantMap.put(23889, 23956); itemVariantMap.put(23890, 23956); itemVariantMap.put(23891, 23956); // Crystal body (basic/attuned/perfected)
+        itemVariantMap.put(23889, 23956); // Crystal body (basic)
+        itemVariantMap.put(23890, 23956); // Crystal body (attuned)
+        itemVariantMap.put(23891, 23956); // Crystal body (perfected)
         itemVariantMap.put(25496, 23956); // Crystal body (beta)
         itemVariantMap.put(33166, 23956); // Crystal body (Last Man Standing)
         itemVariantMap.put(27709, 23956); itemVariantMap.put(27711, 23956); // Crystal body (Ithell)
