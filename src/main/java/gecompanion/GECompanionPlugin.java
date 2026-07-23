@@ -136,6 +136,9 @@ public class GECompanionPlugin extends Plugin
 		// Register !bank chat command
 		chatCommandManager.registerCommandAsync("!bank", this::handleBankCommand);
 		chatCommandManager.registerCommandAsync("!wealth", this::handleBankCommand);
+		chatCommandManager.registerCommandAsync("!totalwealth", this::handleBankCommand);
+		chatCommandManager.registerCommandAsync("!tw", this::handleBankCommand);
+		chatCommandManager.registerCommandAsync("!b", this::handleBankCommand);
 
 		log.debug("GE Companion started!");
 	}
@@ -151,6 +154,9 @@ public class GECompanionPlugin extends Plugin
 		}
 		chatCommandManager.unregisterCommand("!bank");
 		chatCommandManager.unregisterCommand("!wealth");
+		chatCommandManager.unregisterCommand("!totalwealth");
+		chatCommandManager.unregisterCommand("!tw");
+		chatCommandManager.unregisterCommand("!b");
 		log.debug("GE Companion stopped!");
 	}
 
