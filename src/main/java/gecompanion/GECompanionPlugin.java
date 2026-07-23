@@ -523,7 +523,7 @@ private void fetchMapping()
 			bankOnlyValue += price * item.getQuantity();
 		}
 
-		// Total wealth = bank + inventory + equipment
+// Total wealth = bank + inventory + equipment
 		long totalWealthValue = bankOnlyValue;
 
 		ItemContainer invContainer = client.getItemContainer(InventoryID.INVENTORY);
@@ -534,6 +534,8 @@ private void fetchMapping()
 				if (item.getId() <= 0 || item.getQuantity() <= 0) continue;
 				long price = itemManager.getItemPrice(item.getId());
 				totalWealthValue += price * item.getQuantity();
+				// Add inventory items to bank items list for Top Gainers/Losers
+				addItemToList(item, newBankItems, newBankQuantities);
 			}
 		}
 
@@ -545,6 +547,8 @@ private void fetchMapping()
 				if (item.getId() <= 0 || item.getQuantity() <= 0) continue;
 				long price = itemManager.getItemPrice(item.getId());
 				totalWealthValue += price * item.getQuantity();
+				// Add equipment items to bank items list for Top Gainers/Losers
+				addItemToList(item, newBankItems, newBankQuantities);
 			}
 		}
 
@@ -553,6 +557,48 @@ private void fetchMapping()
 		javax.swing.SwingUtilities.invokeLater(() -> {
 			panel.updateBankItems(newBankItems, newBankQuantities, finalBankOnly, finalTotalWealth);
 		});
+	}
+
+	private void addItemToList(Item item, java.util.List<String> itemList, java.util.Map<String, Integer> quantities)
+	{
+		int originalId = item.getId();
+		int lookupId = panel.getItemVariantMap().getOrDefault(originalId, originalId);
+		boolean isVariantItem = (originalId != lookupId);
+
+		String originalName = null;
+		if (isVariantItem) {
+			ItemComposition originalComp = itemManager.getItemComposition(originalId);
+			if (originalComp != null) originalName = originalComp.getName();
+		}
+
+		String foundName = null;
+		for (java.util.Map.Entry<String, Integer> entry : nameToId.entrySet())
+		{
+			if (entry.getValue() == lookupId)
+			{
+				foundName = entry.getKey();
+				break;
+			}
+		}
+		if (foundName != null)
+		{
+			String[] words = foundName.split(" ");
+			StringBuilder sb = new StringBuilder();
+			for (String word : words)
+			{
+				if (word.length() > 0)
+					sb.append(Character.toUpperCase(word.charAt(0)))
+							.append(word.substring(1)).append(" ");
+			}
+			String displayName = sb.toString().trim();
+			if (isVariantItem && originalName != null) {
+				displayName = displayName + "|" + originalName;
+			}
+			if (!itemList.contains(displayName)) {
+				itemList.add(displayName);
+			}
+			quantities.merge(displayName, item.getQuantity(), Integer::sum);
+		}
 	}
 
 	public void saveConfig(String key, String value)
