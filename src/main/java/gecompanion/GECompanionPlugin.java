@@ -81,6 +81,9 @@ public class GECompanionPlugin extends Plugin
 	private net.runelite.client.chat.ChatMessageManager chatMessageManager;
 
 	@Inject
+	private net.runelite.client.chat.ChatCommandManager chatCommandManager;
+
+	@Inject
 	private net.runelite.client.callback.ClientThread clientThread;
 
 	@Inject
@@ -130,6 +133,10 @@ public class GECompanionPlugin extends Plugin
 		scheduler = Executors.newSingleThreadScheduledExecutor();
 		scheduler.scheduleAtFixedRate(this::fetchPrices, 0, 60, TimeUnit.SECONDS);
 
+		// Register !bank chat command
+		chatCommandManager.registerCommandAsync("!bank", this::handleBankCommand);
+		chatCommandManager.registerCommandAsync("!wealth", this::handleBankCommand);
+
 		log.debug("GE Companion started!");
 	}
 
@@ -142,6 +149,8 @@ public class GECompanionPlugin extends Plugin
 		{
 			scheduler.shutdown();
 		}
+		chatCommandManager.unregisterCommand("!bank");
+		chatCommandManager.unregisterCommand("!wealth");
 		log.debug("GE Companion stopped!");
 	}
 
@@ -557,6 +566,135 @@ private void fetchMapping()
 		javax.swing.SwingUtilities.invokeLater(() -> {
 			panel.updateBankItems(newBankItems, newBankQuantities, finalBankOnly, finalTotalWealth);
 		});
+	}
+
+	private void handleBankCommand(net.runelite.api.events.ChatMessage chatMessage, String message)
+	{
+		if (client.getGameState() != net.runelite.api.GameState.LOGGED_IN) return;
+
+		String[] parts = message.trim().split("\\s+");
+		String timeframe = parts.length > 1 ? parts[1].toLowerCase() : null;
+// Normalize shorthand timeframes
+		if (timeframe != null) {
+			switch (timeframe) {
+				case "1": case "1h": timeframe = "1h"; break;
+				case "6": case "6h": timeframe = "6h"; break;
+				case "24": case "24h": timeframe = "24h"; break;
+				case "7": case "7d": timeframe = "7d"; break;
+				case "30": case "30d": timeframe = "30d"; break;
+				case "3": case "3m": timeframe = "3m"; break;
+				case "1y": case "365": timeframe = "1y"; break;
+				case "all": timeframe = "all"; break;
+			}
+		}
+
+		long wealth = panel.getTotalWealthValue();
+		String prefix = "";
+
+		if (wealth == 0) {
+			sendLocalMessage("No bank data — open your bank first!");
+			return;
+		}
+
+		String wealthStr = "<col=ffffff>" + String.format("%,d", wealth) + "</col> gp";
+
+		if (timeframe == null) {
+			updateChatMessage(chatMessage, prefix + "Total Wealth: " + wealthStr);
+			return;
+		}
+
+		java.util.List<long[]> log = panel.getBankValueLog();
+		if (log == null || log.isEmpty()) {
+			sendLocalMessage("No bank history available — open your bank a few times to build history!");
+			return;
+		}
+
+		long nowMs = System.currentTimeMillis();
+		long cutoffMs = 0;
+		String label = "";
+		switch (timeframe) {
+			case "1h": cutoffMs = nowMs - 3600_000L; label = "1H"; break;
+			case "6h": cutoffMs = nowMs - 21600_000L; label = "6H"; break;
+			case "24h": cutoffMs = nowMs - 86400_000L; label = "24H"; break;
+			case "7d": cutoffMs = nowMs - 604800_000L; label = "7D"; break;
+			case "30d": cutoffMs = nowMs - 2592000_000L; label = "30D"; break;
+			case "3m": cutoffMs = nowMs - 7776000_000L; label = "3M"; break;
+			case "1y": cutoffMs = nowMs - 31536000_000L; label = "1Y"; break;
+			case "all": cutoffMs = Long.MAX_VALUE; label = "All Time"; break;
+			default:
+				sendLocalMessage("Unknown timeframe: " + timeframe + ". Try: !bank 1h, 6h, 24h, 7d, 30d, 3m, 1y, all");
+				return;
+		}
+
+		final long cutoff = cutoffMs;
+// For "all time" find the oldest entry; otherwise find the entry closest to cutoff
+		long[] oldEntry = null;
+		if (cutoffMs == Long.MAX_VALUE) {
+// All time — find oldest entry
+			oldEntry = log.stream()
+					.min(java.util.Comparator.comparingLong(e -> e[0]))
+					.orElse(null);
+		} else {
+			long oldWealth2 = log.stream()
+					.filter(e -> e[0] * 1000 <= cutoff)
+					.mapToLong(e -> e.length > 2 ? e[2] : e[1])
+					.reduce((a, b) -> b)
+					.orElse(0);
+			if (oldWealth2 > 0) {
+				oldEntry = new long[]{cutoff / 1000, 0, oldWealth2};
+			}
+		}
+
+		if (oldEntry == null || (oldEntry.length > 2 ? oldEntry[2] : oldEntry[1]) == 0) {
+			sendLocalMessage("No " + label + " history yet — bank value is recorded each time you open your bank. Open your bank more frequently to build history!");
+			return;
+		}
+
+		long oldWealth = oldEntry.length > 2 ? oldEntry[2] : oldEntry[1];
+		long change = wealth - oldWealth;
+		double pct = ((double) change / oldWealth) * 100.0;
+
+// For all time, add how long ago the oldest entry was
+		String timeAgo = "";
+		if (cutoffMs == Long.MAX_VALUE && oldEntry[0] > 0) {
+			long elapsed = (System.currentTimeMillis() / 1000) - oldEntry[0];
+			long days = elapsed / 86400;
+			long hours = (elapsed % 86400) / 3600;
+			timeAgo = ", " + (days > 0 ? days + "d " : "") + hours + "h ago";
+		}
+		String changeColor = change >= 0 ? "00ff00" : "ff0000";
+		String changeStr = (change >= 0 ? "+" : "-") + net.runelite.client.util.QuantityFormatter.formatNumber(Math.abs(change)) + " gp";
+		String pctStr = String.format("%+.2f%%", pct);
+		updateChatMessage(chatMessage, prefix + "Total Wealth (" + label + "): " + wealthStr +
+				" (<col=" + changeColor + ">" + changeStr + ", " + pctStr + "</col>" + timeAgo + ")");
+	}
+
+	private void sendLocalMessage(String msg)
+	{
+		clientThread.invokeLater(() ->
+				chatMessageManager.queue(net.runelite.client.chat.QueuedMessage.builder()
+						.type(net.runelite.api.ChatMessageType.CONSOLE)
+						.runeLiteFormattedMessage(msg)
+						.build())
+		);
+	}
+
+	private void updateChatMessage(net.runelite.api.events.ChatMessage chatMessage, String msg)
+	{
+		clientThread.invokeLater(() -> {
+			chatMessage.getMessageNode().setValue(msg);
+			client.refreshChat();
+		});
+	}
+
+	private void sendBankChatMessage(String msg)
+	{
+		clientThread.invokeLater(() ->
+				chatMessageManager.queue(net.runelite.client.chat.QueuedMessage.builder()
+						.type(net.runelite.api.ChatMessageType.GAMEMESSAGE)
+						.runeLiteFormattedMessage(msg)
+						.build())
+		);
 	}
 
 	private void addItemToList(Item item, java.util.List<String> itemList, java.util.Map<String, Integer> quantities)

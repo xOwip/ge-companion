@@ -807,6 +807,9 @@ private String openBankItemName = null;
         plugin.saveConfig("pinnedItems", joined);
     }
 
+    public long getTotalWealthValue() { return totalWealthValue; }
+    public java.util.List<long[]> getBankValueLog() { return bankValueLog; }
+
     public void checkPriceAlerts()
     {
         for (java.util.Map.Entry<Integer, String> alertEntry : new java.util.HashMap<>(priceAlerts).entrySet())
@@ -3450,7 +3453,7 @@ whatsNewBox.add(seeMoreLabel);
                 ? "Total value of Bank + Inventory + Equipment — click to switch to Bank only"
                 : "Bank contents only (matches RuneLite Bank plugin) — click to switch to Total Wealth";
         JLabel heroLabel = new JLabel(heroLabelText, SwingConstants.CENTER);
-        heroLabel.setForeground(showTotalWealth ? GOLD : TEXT_DIM);
+        heroLabel.setForeground(TEXT_DIM);
         heroLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
         heroLabel.setToolTipText(heroLabelTooltip);
         heroLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -3463,7 +3466,7 @@ whatsNewBox.add(seeMoreLabel);
                 showTab(activeTab);
             }
             public void mouseEntered(MouseEvent e) { heroLabel.setForeground(GOLD); }
-            public void mouseExited(MouseEvent e) { heroLabel.setForeground(showTotalWealth ? GOLD : TEXT_DIM); }
+            public void mouseExited(MouseEvent e) { heroLabel.setForeground(TEXT_DIM); }
         });
         liveBankValueHeaderLabel = heroLabel;
         gbc.gridy = 3;
