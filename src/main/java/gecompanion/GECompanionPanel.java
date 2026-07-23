@@ -4253,7 +4253,7 @@ whatsNewBox.add(seeMoreLabel);
         if (isVariant) {
             Integer origId = item.length > 12 ? Integer.parseInt(item[12]) : null;
             String displayOriginal = (originalBankName != null && !originalBankName.isEmpty()) ? originalBankName : name;
-            iconWrapper.setToolTipText("<html>" + displayOriginal + "<br><span style='color:#D4AF37'>→ " + name + " (tradeable base)</span></html>");
+            iconWrapper.setToolTipText("<html>" + displayOriginal + "<br><span style='color:#D4AF37'>→ " + name + " [tradeable base]</span></html>");
         } else {
             iconWrapper.setToolTipText(name);
         }
