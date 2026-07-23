@@ -176,6 +176,14 @@ public interface GECompanionConfig extends Config
 	default String priceAlerts() { return ""; }
 
 	@ConfigItem(
+			keyName = "showTotalWealth",
+			name = "Show Total Wealth",
+			description = "Show Total Wealth (Bank + Inventory + Equipment) instead of bank-only value",
+			hidden = true
+	)
+	default boolean showTotalWealth() { return false; }
+
+	@ConfigItem(
 			keyName = "chatPrefixColor",
 			name = "Chat prefix color",
 			description = "Color of the [GE Companion] prefix in chat notifications"

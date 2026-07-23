@@ -133,6 +133,8 @@ public class GECompanionPanel extends PluginPanel
     // Live label references for zero-disruption refresh
     private JLabel liveHeaderPriceLabel = null;
     private JLabel liveBankValueLabel = null;
+    private JLabel liveBankValueHeaderLabel = null;
+    private boolean showTotalWealth = false; // loaded from config in constructor
     private javax.swing.JPanel activeStatsFloatPanel = null;
     private javax.swing.JLayeredPane activeStatsLayeredPane = null;
     private JLabel liveFloatVolumeLabel = null;
@@ -248,6 +250,7 @@ private String openBankItemName = null;
         loadBankValueLog();
         loadPinnedItems();
         loadPriceAlerts();
+        showTotalWealth = config.showTotalWealth();
         loadRecentSearches();
         searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener()
         {
@@ -276,6 +279,7 @@ private String openBankItemName = null;
     }
 
     private long totalBankValue = 0;
+    private long totalWealthValue = 0;
     private java.util.List<long[]> bankValueLog = new java.util.ArrayList<>();
 
     public void updateBankItems(java.util.List<String> items, java.util.Map<String, Integer> quantities, long bankOnlyValue, long totalWealthValue)
@@ -299,10 +303,12 @@ private String openBankItemName = null;
         this.bankQuantities.clear();
         this.bankQuantities.putAll(quantities);
         this.totalBankValue = bankOnlyValue;
+        this.totalWealthValue = totalWealthValue;
 // update bank value label in place if visible
         if (liveBankValueLabel != null && activeTab == 2) {
             boolean bankHidden = plugin.isBankValueHidden();
-            String bankValueStr = bankOnlyValue == 0 ? "No bank data" : formatFullPrice(String.valueOf(bankOnlyValue)) + " gp";
+            long displayVal = showTotalWealth ? totalWealthValue : bankOnlyValue;
+            String bankValueStr = displayVal == 0 ? "No bank data" : formatFullPrice(String.valueOf(displayVal)) + " gp";
             String heroText = bankHidden ? "Click to reveal" : bankValueStr;
             liveBankValueLabel.setText(heroText);
             liveBankValueLabel.setForeground(bankHidden ? TEXT_DIM : PRICE_GOLD);
@@ -678,11 +684,18 @@ private String openBankItemName = null;
             try { totalBankValue = Long.parseLong(savedValue.trim()); }
             catch (NumberFormatException e) { }
         }
+        String savedWealth = plugin.loadConfig("wealthValue");
+        if (savedWealth != null && !savedWealth.trim().isEmpty())
+        {
+            try { totalWealthValue = Long.parseLong(savedWealth.trim()); }
+            catch (NumberFormatException e) { }
+        }
     }
 
     private void saveBankData()
     {
         plugin.saveConfig("bankValue", String.valueOf(totalBankValue));
+        plugin.saveConfig("wealthValue", String.valueOf(totalWealthValue));
     }
 
     private void loadBankValueLog()
@@ -3432,10 +3445,27 @@ whatsNewBox.add(seeMoreLabel);
         gbc.insets = new java.awt.Insets(0, 0, 0, 0);
 
         // Row 4: "TOTAL BANK VALUE" label
-        JLabel heroLabel = new JLabel("TOTAL BANK VALUE", SwingConstants.CENTER);
-        heroLabel.setForeground(TEXT_DIM);
+        String heroLabelText = showTotalWealth ? "TOTAL WEALTH ⇄" : "TOTAL BANK VALUE ⇄";
+        String heroLabelTooltip = showTotalWealth
+                ? "Total value of Bank + Inventory + Equipment — click to switch to Bank only"
+                : "Bank contents only (matches RuneLite Bank plugin) — click to switch to Total Wealth";
+        JLabel heroLabel = new JLabel(heroLabelText, SwingConstants.CENTER);
+        heroLabel.setForeground(showTotalWealth ? GOLD : TEXT_DIM);
         heroLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
-        heroLabel.setToolTipText("Matches RuneLite's official Bank plugin — bank contents only, excluding inventory and equipment");
+        heroLabel.setToolTipText(heroLabelTooltip);
+        heroLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        heroLabel.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                showTotalWealth = !showTotalWealth;
+                if (configManager != null) {
+                    configManager.setConfiguration("gecompanion", "showTotalWealth", showTotalWealth);
+                }
+                showTab(activeTab);
+            }
+            public void mouseEntered(MouseEvent e) { heroLabel.setForeground(GOLD); }
+            public void mouseExited(MouseEvent e) { heroLabel.setForeground(showTotalWealth ? GOLD : TEXT_DIM); }
+        });
+        liveBankValueHeaderLabel = heroLabel;
         gbc.gridy = 3;
         gbc.insets = new java.awt.Insets(8, 6, 2, 6);
         borderedSection.add(heroLabel, gbc);
@@ -3460,7 +3490,8 @@ whatsNewBox.add(seeMoreLabel);
             lastUpdatedStr = "Last updated " + (secondsAgo / 3600) + "h ago";
 
         // Row 5: Bank value
-        String bankValueStr = totalBankValue == 0 ? "No bank data" : formatFullPrice(String.valueOf(totalBankValue)) + " gp";
+        long displayValue = showTotalWealth ? totalWealthValue : totalBankValue;
+        String bankValueStr = displayValue == 0 ? "No bank data" : formatFullPrice(String.valueOf(displayValue)) + " gp";
         boolean bankHidden = plugin.isBankValueHidden();
         String heroText = bankHidden ? "Click to reveal" : bankValueStr;
         JLabel heroValue = new JLabel(heroText, SwingConstants.CENTER);
@@ -3575,7 +3606,9 @@ whatsNewBox.add(seeMoreLabel);
         JLabel bankChangeLabel = new JLabel(changeDisplayStr, SwingConstants.CENTER);
         bankChangeLabel.setForeground(showChangeData ? bankChangeColor : TEXT_DIM);
         bankChangeLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
-        bankChangeLabel.setToolTipText("<html>This tracks your Bank + Inventory + Equipment combined to reduce volatility,<br>so it may differ from the bank-only Total Bank Value shown above.<br><br>To verify: Bank all items, then expand the details below and check<br>Total Bank Value − Wealth = Bank Change Value</html>");
+        bankChangeLabel.setToolTipText(showTotalWealth
+    ? "<html>Tracks Bank + Inventory + Equipment combined —<br>same calculation as Total Wealth shown above.</html>"
+    : "<html>This tracks your Bank + Inventory + Equipment combined to reduce volatility,<br>so it may differ from the bank-only Total Bank Value shown above.<br><br>To verify: Bank all items, then expand the details below and check<br>Total Bank Value − Wealth = Bank Change Value</html>");
         gbc.gridy = 5;
         gbc.insets = new java.awt.Insets(0, 6, 0, 6);
         if (!showChangeData)
