@@ -2903,14 +2903,14 @@ whatsNewBox.add(seeMoreLabel);
             String existingAlert = (finalItemId != null) ? priceAlerts.get(finalItemId) : null;
             boolean alertFired = (finalItemId != null) && firedAlerts.contains(finalItemId);
             if (alertFired) {
-                bellIcon.setForeground(new Color(100, 220, 255));
+                bellIcon.setForeground(config.alertFiredColor());
                 bellIcon.setVisible(true);
 // Dynamic tooltip - recalculates time on each hover
                 bellIcon.setToolTipText("Price target reached! Click to dismiss.");
                 bellIcon.putClientProperty("hasAlert", true);
                 bellIcon.putClientProperty("alertFired", true);
             } else if (existingAlert != null) {
-                bellIcon.setForeground(GOLD);
+                bellIcon.setForeground(config.alertBellColor());
                 bellIcon.setVisible(true);
                 String[] alertParts = existingAlert.split(":", 2);
                 if (alertParts.length == 2) {
@@ -6989,7 +6989,7 @@ whatsNewBox.add(seeMoreLabel);
             bellLabel.setForeground(new Color(100, 220, 255));
             bellLabel.setFont(new Font("Dialog", Font.PLAIN, FONT_META));
             JLabel firedTitle = new JLabel("Price Target Reached!");
-            firedTitle.setForeground(new Color(100, 220, 255));
+            firedTitle.setForeground(config.alertFiredColor());
             firedTitle.setFont(new Font("Monospaced", Font.BOLD, FONT_META));
             titleRow.add(bellLabel);
             titleRow.add(firedTitle);
@@ -7216,7 +7216,7 @@ whatsNewBox.add(seeMoreLabel);
                     savePriceAlerts();
                     bellIcon.setToolTipText("Alert: " + (isAbove ? "AT OR ABOVE " : "AT OR BELOW ") + formatFullPrice(String.valueOf(targetPrice)) + " gp");
                 }
-                bellIcon.setForeground(GOLD);
+                bellIcon.setForeground(config.alertBellColor());
                 bellIcon.setVisible(true);
                 bellIcon.putClientProperty("hasAlert", true);
                 dialog.dispose();

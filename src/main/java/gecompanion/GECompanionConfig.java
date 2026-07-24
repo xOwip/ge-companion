@@ -11,11 +11,27 @@ import net.runelite.client.config.Range;
 public interface GECompanionConfig extends Config
 {
 
+	// ── GENERAL ──
+	@ConfigSection(
+			name = "General",
+			description = "General settings",
+			position = 0
+	)
+	String generalSection = "general";
+
+	// ── NOTIFICATIONS ──
+	@ConfigSection(
+			name = "Notifications",
+			description = "Price alert notification settings",
+			position = 1
+	)
+	String notificationsSection = "notifications";
+
 	// ── BANK ──
 	@ConfigSection(
 			name = "Bank",
 			description = "Bank tab settings",
-			position = 1
+			position = 2
 	)
 	String bankSection = "bank";
 
@@ -23,7 +39,8 @@ public interface GECompanionConfig extends Config
 			keyName = "rightClickLookup",
 			name = "Right-click item lookup",
 			description = "Show Price Check option when right-clicking items to open them in GE Companion",
-			position = 0
+			position = 1,
+			section = "general"
 	)
 	default boolean rightClickLookup() { return true; }
 
@@ -60,7 +77,7 @@ public interface GECompanionConfig extends Config
 	@ConfigSection(
 			name = "Charts & Watchlist",
 			description = "Price chart and watchlist settings",
-			position = 2
+			position = 3
 	)
 	String watchlistSection = "watchlist";
 
@@ -68,7 +85,8 @@ public interface GECompanionConfig extends Config
 			keyName = "defaultTab",
 			name = "Default tab",
 			description = "Which tab opens when the plugin loads",
-			position = 0
+			position = 0,
+			section = "general"
 	)
 	default DefaultTab defaultTab() { return DefaultTab.SEARCH; }
 
@@ -192,9 +210,28 @@ public interface GECompanionConfig extends Config
 	default boolean seenWealthToggle() { return false; }
 
 	@ConfigItem(
+			keyName = "alertBellColor",
+			name = "Active alert bell color",
+			description = "Color of the bell icon when a price alert is active",
+			section = "notifications"
+	)
+	@Alpha
+	default java.awt.Color alertBellColor() { return new java.awt.Color(0xD4AF37); }
+
+	@ConfigItem(
+			keyName = "alertFiredColor",
+			name = "Triggered alert bell color",
+			description = "Color of the bell icon when a price alert has triggered",
+			section = "notifications"
+	)
+	@Alpha
+	default java.awt.Color alertFiredColor() { return new java.awt.Color(0x64DCFF); }
+
+	@ConfigItem(
 			keyName = "chatPrefixColor",
 			name = "Chat prefix color",
-			description = "Color of the [GE Companion] prefix in chat notifications"
+			description = "Color of the [GE Companion] prefix in chat notifications",
+			section = "notifications"
 	)
 	@Alpha
 	default java.awt.Color chatPrefixColor() { return new java.awt.Color(0xD4AF37); }
