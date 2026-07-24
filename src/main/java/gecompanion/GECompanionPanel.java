@@ -3925,13 +3925,26 @@ whatsNewBox.add(seeMoreLabel);
         {
             // Sort by delta for gainers/losers
             java.util.List<String[]> allBankItems = new java.util.ArrayList<>();
-            java.util.Set<String> seenNames = new java.util.HashSet<>();
+            java.util.Set<String> seenBaseNames = new java.util.HashSet<>();
+            java.util.Map<String, java.util.List<String>> variantOwned = new java.util.HashMap<>();
             for (String name : bankItems)
             {
-                if (seenNames.contains(name)) continue;
-                seenNames.add(name);
+                // Strip variant suffix if present
+                String cleanName = name.contains("|") ? name.split("\\|", 2)[0] : name;
+                String originalVariant = name.contains("|") ? name.split("\\|", 2)[1] : null;
+
                 String[] item = buildItemDataFromCache(name);
-                if (item != null) allBankItems.add(item);
+                if (item == null) continue;
+
+                String baseName = item[0]; // tradeable base name
+                if (!seenBaseNames.contains(baseName)) {
+                    seenBaseNames.add(baseName);
+                    allBankItems.add(item);
+                }
+                // Track owned variants for tooltip
+                if (originalVariant != null) {
+                    variantOwned.computeIfAbsent(baseName, k -> new java.util.ArrayList<>()).add(originalVariant);
+                }
             }
 
 // Filter by minimum value threshold
@@ -3972,7 +3985,7 @@ whatsNewBox.add(seeMoreLabel);
             int gainersCount = Math.min(config.gainersCount(), gainers.size());
             for (int i = 0; i < gainersCount; i++) {
                 displayedGainersLosers.add(gainers.get(i)[0]);
-                listPanel.add(buildBankItemBlock(gainers.get(i), true, i));
+                listPanel.add(buildBankItemBlock(gainers.get(i), true, i, variantOwned));
             }
 
             // Top Losers
@@ -4056,7 +4069,7 @@ whatsNewBox.add(seeMoreLabel);
             int losersCount = Math.min(config.losersCount(), losers.size());
             for (int i = 0; i < losersCount; i++) {
                 displayedGainersLosers.add(losers.get(i)[0]);
-                listPanel.add(buildBankItemBlock(losers.get(i), true, i));
+                listPanel.add(buildBankItemBlock(losers.get(i), true, i, variantOwned));
             }
 
 // All Items — collapsible
@@ -4133,7 +4146,7 @@ whatsNewBox.add(seeMoreLabel);
                     } else {
                         int bankAllIndex = 0;
                         for (String[] i : filtered)
-                            bankResultsPanel.add(buildBankItemBlock(i, false, bankAllIndex++));
+                            bankResultsPanel.add(buildBankItemBlock(i, false, bankAllIndex++, variantOwned));
                     }
                 }
                 bankResultsPanel.revalidate();
@@ -4174,7 +4187,7 @@ whatsNewBox.add(seeMoreLabel);
         return panel;
     }
 
-    private JPanel buildBankItemBlock(String[] item, boolean colorCode, int index)
+    private JPanel buildBankItemBlock(String[] item, boolean colorCode, int index, java.util.Map<String, java.util.List<String>> variantOwned)
     {
         String name = item[0];
         String price = item[1];
@@ -4182,6 +4195,8 @@ whatsNewBox.add(seeMoreLabel);
         String gpChange = item.length > 7 ? item[7] : "0 gp";
         boolean isVariant = item.length > 13 && Boolean.parseBoolean(item[13]);
         String originalBankName = item.length > 14 ? item[14] : null;
+// Get all owned variants for this tradeable base
+        java.util.List<String> ownedVariants = variantOwned != null ? variantOwned.get(name) : null;
 
         boolean isUp = delta.startsWith("+");
         boolean isDown = delta.startsWith("-");
@@ -4254,8 +4269,18 @@ whatsNewBox.add(seeMoreLabel);
         iconWrapper.add(iconPanel);
         if (isVariant) {
             Integer origId = item.length > 12 ? Integer.parseInt(item[12]) : null;
-            String displayOriginal = (originalBankName != null && !originalBankName.isEmpty()) ? originalBankName : name;
-            iconWrapper.setToolTipText("<html>" + displayOriginal + "<br><span style='color:#D4AF37'>→ " + name + " [tradeable base]</span></html>");
+            if (ownedVariants != null && ownedVariants.size() > 1) {
+                // Multiple variants — list all owned
+                StringBuilder variantTip = new StringBuilder("<html>Tradeable base of:<br>");
+                for (String v : ownedVariants) {
+                    variantTip.append("<span style='color:#D4AF37'>• ").append(v).append("</span><br>");
+                }
+                variantTip.append("→ ").append(name).append(" [tradeable base]</html>");
+                iconWrapper.setToolTipText(variantTip.toString());
+            } else {
+                String displayOriginal = (originalBankName != null && !originalBankName.isEmpty()) ? originalBankName : name;
+                iconWrapper.setToolTipText("<html>" + displayOriginal + "<br><span style='color:#D4AF37'>→ " + name + " [tradeable base]</span></html>");
+            }
         } else {
             iconWrapper.setToolTipText(name);
         }
