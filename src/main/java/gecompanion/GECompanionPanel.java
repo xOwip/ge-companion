@@ -3450,10 +3450,14 @@ whatsNewBox.add(seeMoreLabel);
         gbc.insets = new java.awt.Insets(0, 0, 0, 0);
 
         // Row 4: "TOTAL BANK VALUE" label
-        String heroLabelText = showTotalWealth ? "TOTAL WEALTH ⇄" : "TOTAL BANK VALUE ⇄";
+        boolean seenToggle = config.seenWealthToggle();
+        String heroLabelText = showTotalWealth ? "TOTAL WEALTH ⇄" :
+                (!seenToggle ? "<html>TOTAL BANK VALUE ⇄  <span style='color:#D4AF37'>New!</span></html>" : "TOTAL BANK VALUE ⇄");
         String heroLabelTooltip = showTotalWealth
                 ? "Total value of Bank + Inventory + Equipment — click to switch to Bank only"
-                : "Bank contents only (matches RuneLite Bank plugin) — click to switch to Total Wealth";
+                : (!seenToggle
+                   ? "New! Click to switch to Total Wealth — tracks Bank + Inventory + Equipment combined"
+                   : "Bank contents only (matches RuneLite Bank plugin) — click to switch to Total Wealth");
         JLabel heroLabel = new JLabel(heroLabelText, SwingConstants.CENTER);
         heroLabel.setForeground(TEXT_DIM);
         heroLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
@@ -3464,12 +3468,14 @@ whatsNewBox.add(seeMoreLabel);
                 showTotalWealth = !showTotalWealth;
                 if (configManager != null) {
                     configManager.setConfiguration("gecompanion", "showTotalWealth", showTotalWealth);
+                    configManager.setConfiguration("gecompanion", "seenWealthToggle", true);
                 }
                 showTab(activeTab);
             }
             public void mouseEntered(MouseEvent e) { heroLabel.setForeground(GOLD); }
             public void mouseExited(MouseEvent e) { heroLabel.setForeground(TEXT_DIM); }
         });
+
         liveBankValueHeaderLabel = heroLabel;
         gbc.gridy = 3;
         gbc.insets = new java.awt.Insets(8, 6, 2, 6);

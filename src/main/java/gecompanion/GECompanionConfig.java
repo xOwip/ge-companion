@@ -184,6 +184,14 @@ public interface GECompanionConfig extends Config
 	default boolean showTotalWealth() { return false; }
 
 	@ConfigItem(
+			keyName = "seenWealthToggle",
+			name = "Seen wealth toggle",
+			description = "Whether the user has seen the Total Wealth toggle",
+			hidden = true
+	)
+	default boolean seenWealthToggle() { return false; }
+
+	@ConfigItem(
 			keyName = "chatPrefixColor",
 			name = "Chat prefix color",
 			description = "Color of the [GE Companion] prefix in chat notifications"
