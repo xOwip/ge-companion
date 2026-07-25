@@ -7222,7 +7222,7 @@ whatsNewBox.add(seeMoreLabel);
 // Show in overlay checkbox
         boolean existingOverlay = hasExisting && existingAlert != null && existingAlert.contains(":overlay")
                 || (!hasExisting && config.showPriceAlertOverlay());
-        javax.swing.JCheckBox overlayCheckbox = new javax.swing.JCheckBox("Show in price alert overlay");
+        javax.swing.JCheckBox overlayCheckbox = new javax.swing.JCheckBox("Show price alert in overlay");
         overlayCheckbox.setSelected(existingOverlay);
         overlayCheckbox.setForeground(TEXT_DIM);
         overlayCheckbox.setBackground(new Color(30, 28, 26));
