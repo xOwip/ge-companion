@@ -1886,6 +1886,7 @@ private String openBankItemName = null;
                 public void mouseClicked(MouseEvent e) {
                     if (configManager != null) {
                         configManager.setConfiguration("gecompanion", "showSearchTip", false);
+                        configManager.sendConfig();
                     }
                     Container parent = tipWrapperRef[0].getParent();
                     if (parent != null) {
@@ -1954,6 +1955,7 @@ whatsNewBox.add(seeMoreLabel);
                 public void mouseClicked(MouseEvent e) {
                     if (configManager != null) {
                         configManager.setConfiguration("gecompanion", "lastSeenVersion", CURRENT_VERSION);
+                        configManager.sendConfig();
                         if (updatesIconRef != null) {
                             updatesIconRef.setForeground(TEXT_DIM);
                             updatesIconRef.repaint();
@@ -3469,6 +3471,7 @@ whatsNewBox.add(seeMoreLabel);
                 if (configManager != null) {
                     configManager.setConfiguration("gecompanion", "showTotalWealth", showTotalWealth);
                     configManager.setConfiguration("gecompanion", "seenWealthToggle", true);
+                    configManager.sendConfig();
                 }
                 showTab(activeTab);
             }
@@ -7012,7 +7015,7 @@ whatsNewBox.add(seeMoreLabel);
             firedContent.add(Box.createVerticalStrut(10));
             JPanel firedBtnRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 0));
             firedBtnRow.setBackground(new Color(30, 28, 26));
-            JButton dismissBtn = new JButton("Dismiss");
+            JButton dismissBtn = new JButton(" Dismiss ");
             dismissBtn.setForeground(TEXT_DIM);
             dismissBtn.setBackground(new Color(30, 28, 26));
             dismissBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
@@ -7177,7 +7180,7 @@ whatsNewBox.add(seeMoreLabel);
         btnRow.setBackground(new Color(30, 28, 26));
         btnRow.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JButton clearBtn = new JButton("Clear Alert");
+        JButton clearBtn = new JButton(" Clear Alert ");
         clearBtn.setForeground(TEXT_DIM);
         clearBtn.setBackground(new Color(30, 28, 26));
         clearBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
@@ -7312,7 +7315,7 @@ whatsNewBox.add(seeMoreLabel);
         btnRow.setBackground(new Color(30, 28, 26));
         btnRow.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JButton cancelBtn = new JButton("Cancel");
+        JButton cancelBtn = new JButton(" Cancel ");
         cancelBtn.setForeground(TEXT_DIM);
         cancelBtn.setBackground(new Color(30, 28, 26));
         cancelBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
@@ -7320,7 +7323,7 @@ whatsNewBox.add(seeMoreLabel);
         cancelBtn.setFocusPainted(false);
         cancelBtn.addActionListener(e -> dialog.dispose());
 
-        JButton submitBtn = new JButton("Open on GitHub");
+        JButton submitBtn = new JButton(" Open on GitHub ");
         submitBtn.setForeground(GOLD);
         submitBtn.setBackground(new Color(30, 28, 26));
         submitBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
@@ -7352,6 +7355,7 @@ whatsNewBox.add(seeMoreLabel);
 // Save current version so icon updates
         if (configManager != null) {
             configManager.setConfiguration("gecompanion", "lastSeenVersion", CURRENT_VERSION);
+            configManager.sendConfig();
             if (updatesIconRef != null) {
                 updatesIconRef.setForeground(TEXT_DIM);
                 updatesIconRef.repaint();
@@ -7439,7 +7443,7 @@ whatsNewBox.add(seeMoreLabel);
         }
         content.add(Box.createVerticalStrut(8));
 
-        JButton closeBtn = new JButton("Close");
+        JButton closeBtn = new JButton(" Close ");
         closeBtn.setForeground(TEXT_DIM);
         closeBtn.setBackground(new Color(30, 28, 26));
         closeBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));

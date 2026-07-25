@@ -748,6 +748,7 @@ private void fetchMapping()
 	public void saveConfig(String key, String value)
 	{
 		configManager.setConfiguration("gecompanion", key, value);
+		configManager.sendConfig();
 	}
 
 	public String loadConfig(String key)
