@@ -78,6 +78,12 @@ public class GECompanionPlugin extends Plugin
 	private net.runelite.client.Notifier notifier;
 
 	@Inject
+	private net.runelite.client.ui.overlay.OverlayManager overlayManager;
+
+	@Inject
+	private GECompanionOverlay overlay;
+
+	@Inject
 	private net.runelite.client.chat.ChatMessageManager chatMessageManager;
 
 	@Inject
@@ -132,6 +138,8 @@ public class GECompanionPlugin extends Plugin
 		// Start price refresh scheduler
 		scheduler = Executors.newSingleThreadScheduledExecutor();
 		scheduler.scheduleAtFixedRate(this::fetchPrices, 0, 60, TimeUnit.SECONDS);
+		overlayManager.add(overlay);
+		overlay.setPanel(panel);
 
 		// Register !bank chat command
 		chatCommandManager.registerCommandAsync("!bank", this::handleBankCommand);
@@ -152,6 +160,7 @@ public class GECompanionPlugin extends Plugin
 		{
 			scheduler.shutdown();
 		}
+		overlayManager.remove(overlay);
 		chatCommandManager.unregisterCommand("!bank");
 		chatCommandManager.unregisterCommand("!wealth");
 		chatCommandManager.unregisterCommand("!totalwealth");

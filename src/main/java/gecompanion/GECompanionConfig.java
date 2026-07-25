@@ -210,6 +210,15 @@ public interface GECompanionConfig extends Config
 	default boolean seenWealthToggle() { return false; }
 
 	@ConfigItem(
+			keyName = "showPriceAlertOverlay",
+			name = "Show price alert overlay",
+			description = "Display active price alerts as an in-game overlay",
+			section = "notifications"
+	)
+	default boolean showPriceAlertOverlay() { return false; }
+
+
+	@ConfigItem(
 			keyName = "alertBellColor",
 			name = "Active alert bell color",
 			description = "Color of the bell icon when a price alert is active",

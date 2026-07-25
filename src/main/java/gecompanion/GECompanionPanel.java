@@ -810,6 +810,27 @@ private String openBankItemName = null;
     }
 
     public long getTotalWealthValue() { return totalWealthValue; }
+    public java.util.Map<Integer, String> getPriceAlertsForOverlay() { return priceAlerts; }
+    public java.util.Set<Integer> getFiredAlertsForOverlay() { return firedAlerts; }
+    public long getCurrentPrice(int itemId) { PriceData pd = priceCache.get(itemId); return pd != null ? pd.getMid() : 0; }
+    public String formatPricePublic(String price) { return formatPrice(price); }
+    public java.awt.image.BufferedImage getItemIconForOverlay(int itemId) {
+        return plugin.getItemManager().getImage(itemId);
+    }
+    public String getItemName(int itemId) {
+        for (java.util.Map.Entry<String, Integer> entry : nameToId.entrySet()) {
+            if (entry.getValue().equals(itemId)) {
+                String name = entry.getKey();
+                String[] words = name.split(" ");
+                StringBuilder sb = new StringBuilder();
+                for (String word : words) {
+                    if (word.length() > 0) sb.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1)).append(" ");
+                }
+                return sb.toString().trim();
+            }
+        }
+        return null;
+    }
     public java.util.List<long[]> getBankValueLog() { return bankValueLog; }
 
     public void checkPriceAlerts()
@@ -821,10 +842,11 @@ private String openBankItemName = null;
             PriceData alertPd = priceCache.get(alertId);
             if (alertPd == null) continue;
             long currentPrice = alertPd.getMid();
-            String[] parts = alertValue.split(":", 2);
-            if (parts.length != 2) continue;
+            String[] parts = alertValue.split(":");
+            if (parts.length < 2) continue;
             boolean isAbove = parts[0].equals("above");
-            long targetPrice = Long.parseLong(parts[1]);
+            long targetPrice = 0;
+            try { targetPrice = Long.parseLong(parts[1]); } catch (NumberFormatException e) { continue; }
             boolean triggered = isAbove ? currentPrice >= targetPrice : currentPrice <= targetPrice;
             if (triggered)
             {
@@ -7175,6 +7197,18 @@ whatsNewBox.add(seeMoreLabel);
         content.add(hintLabel);
         content.add(Box.createVerticalStrut(8));
 
+// Show in overlay checkbox
+        boolean existingOverlay = hasExisting && existingAlert != null && existingAlert.contains(":overlay");
+        javax.swing.JCheckBox overlayCheckbox = new javax.swing.JCheckBox("Show in price alert overlay");
+        overlayCheckbox.setSelected(existingOverlay);
+        overlayCheckbox.setForeground(TEXT_DIM);
+        overlayCheckbox.setBackground(new Color(30, 28, 26));
+        overlayCheckbox.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+        overlayCheckbox.setAlignmentX(Component.LEFT_ALIGNMENT);
+        overlayCheckbox.setOpaque(false);
+        content.add(overlayCheckbox);
+        content.add(Box.createVerticalStrut(8));
+
         // Buttons
         JPanel btnRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 0));
         btnRow.setBackground(new Color(30, 28, 26));
@@ -7214,8 +7248,13 @@ whatsNewBox.add(seeMoreLabel);
                 if (targetPrice <= 0) throw new NumberFormatException("invalid");
                 boolean isAbove = isAboveRef[0];
                 if (itemId != null) {
-                    String alertValue = (isAbove ? "above:" : "below:") + targetPrice;
+                    boolean showInOverlay = overlayCheckbox.isSelected();
+                    String alertValue = (isAbove ? "above:" : "below:") + targetPrice + (showInOverlay ? ":overlay" : ":nooverlay");
                     priceAlerts.put(itemId, alertValue);
+                    if (showInOverlay && configManager != null) {
+                        configManager.setConfiguration("gecompanion", "showPriceAlertOverlay", true);
+                        configManager.sendConfig();
+                    }
                     savePriceAlerts();
                     bellIcon.setToolTipText("Alert: " + (isAbove ? "AT OR ABOVE " : "AT OR BELOW ") + formatFullPrice(String.valueOf(targetPrice)) + " gp");
                 }
