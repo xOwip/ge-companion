@@ -3103,6 +3103,28 @@ whatsNewBox.add(seeMoreLabel);
                         }
                     });
                     popup.add(alertItem);
+
+                    // Show in overlay / Hide from overlay
+                    if (rcItemId != null && priceAlerts.containsKey(rcItemId)) {
+                        String alertVal = priceAlerts.get(rcItemId);
+                        boolean inOverlay = alertVal.contains(":overlay");
+                        javax.swing.JMenuItem overlayItem = new javax.swing.JMenuItem(inOverlay ? "🔔 Hide overlay" : "🔔 Show overlay");
+                        overlayItem.addActionListener(ev -> {
+                            String current = priceAlerts.get(rcItemId);
+                            if (current == null) return;
+                            String updated = inOverlay
+                                    ? current.replace(":overlay", ":nooverlay")
+                                    : current.replace(":nooverlay", ":overlay");
+                            priceAlerts.put(rcItemId, updated);
+                            savePriceAlerts();
+                            if (!inOverlay && configManager != null) {
+                                configManager.setConfiguration("gecompanion", "showPriceAlertOverlay", true);
+                                configManager.sendConfig();
+                            }
+                            showTab(activeTab);
+                        });
+                        popup.add(overlayItem);
+                    }
                     popup.show(row, e.getX(), e.getY());
                     return;
                 }
