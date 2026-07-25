@@ -7274,10 +7274,6 @@ whatsNewBox.add(seeMoreLabel);
                     boolean showInOverlay = overlayCheckbox.isSelected();
                     String alertValue = (isAbove ? "above:" : "below:") + targetPrice + (showInOverlay ? ":overlay" : ":nooverlay");
                     priceAlerts.put(itemId, alertValue);
-                    if (showInOverlay && configManager != null) {
-                        configManager.setConfiguration("gecompanion", "showPriceAlertOverlay", true);
-                        configManager.sendConfig();
-                    }
                     savePriceAlerts();
                     bellIcon.setToolTipText("Alert: " + (isAbove ? "AT OR ABOVE " : "AT OR BELOW ") + formatFullPrice(String.valueOf(targetPrice)) + " gp");
                 }
