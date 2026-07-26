@@ -2930,7 +2930,7 @@ whatsNewBox.add(seeMoreLabel);
                     return super.getToolTipText();
                 }
             };
-            bellIcon.setFont(new Font("Monospaced", Font.PLAIN, 11));
+            bellIcon.setFont(new Font("Monospaced", Font.PLAIN, 14));
             bellIcon.setToolTipText(""); // Enable tooltip system — actual text from getToolTipText()
             javax.swing.ToolTipManager.sharedInstance().registerComponent(bellIcon);
             String existingAlert = (finalItemId != null) ? priceAlerts.get(finalItemId) : null;
