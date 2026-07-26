@@ -831,17 +831,21 @@ private void fetchMapping()
 
 	public void fireAlert(String itemName, long currentPrice, boolean isAbove, long targetPrice)
 	{
-		String msg = "GE Companion: " + itemName + " has reached your price target of " +
+		String direction = isAbove ? "AT OR ABOVE" : "AT OR BELOW";
+		String msg = "GE Companion: " + itemName + " is " + direction + " your target of " +
 				net.runelite.client.util.QuantityFormatter.formatNumber(targetPrice) + " gp! Current: " +
 				net.runelite.client.util.QuantityFormatter.formatNumber(currentPrice) + " gp";
 		notifier.notify(msg);
 		if (client.getGameState() == net.runelite.api.GameState.LOGGED_IN)
 		{
 			String prefixColor = String.format("%06X", config.chatPrefixColor().getRGB() & 0xFFFFFF);
+			String firedHex = String.format("%06X", config.alertFiredColor().getRGB() & 0xFFFFFF);
 			final String chatMsg = "<col=" + prefixColor + ">[GE Companion]</col> " +
-					itemName + " has reached your price target of " +
-					net.runelite.client.util.QuantityFormatter.formatNumber(targetPrice) + " gp! Current: " +
-					net.runelite.client.util.QuantityFormatter.formatNumber(currentPrice) + " gp";
+					"<col=ffffff>" + itemName + "</col>" +
+					"<col=" + prefixColor + "> is " + direction + " your target of </col>" +
+					"<col=" + firedHex + ">" + net.runelite.client.util.QuantityFormatter.formatNumber(targetPrice) + " gp</col>" +
+					"<col=" + prefixColor + ">! Current: </col>" +
+					"<col=ffffff>" + net.runelite.client.util.QuantityFormatter.formatNumber(currentPrice) + " gp</col>";
 			clientThread.invokeLater(() ->
 					chatMessageManager.queue(net.runelite.client.chat.QueuedMessage.builder()
 							.type(net.runelite.api.ChatMessageType.GAMEMESSAGE)
