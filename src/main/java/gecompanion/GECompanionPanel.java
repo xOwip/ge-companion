@@ -58,6 +58,8 @@ public class GECompanionPanel extends PluginPanel
     private final java.util.Map<Integer, String> priceAlerts = new java.util.HashMap<>();
     private final java.util.Set<Integer> firedAlerts = new java.util.HashSet<>();
     private final java.util.Map<Integer, Long> alertFiredTimes = new java.util.HashMap<>();
+    private final java.util.Map<Integer, Long> firedAlertTargets = new java.util.HashMap<>();
+    private final java.util.Map<Integer, Boolean> firedAlertDirections = new java.util.HashMap<>();
     private JLabel updatesIconRef = null;
 
     private int activeTab = 1;
@@ -813,6 +815,8 @@ private String openBankItemName = null;
     public java.util.Map<Integer, String> getPriceAlertsForOverlay() { return priceAlerts; }
     public java.util.Set<Integer> getFiredAlertsForOverlay() { return firedAlerts; }
     public Long getAlertFiredTime(int itemId) { return alertFiredTimes.get(itemId); }
+    public Long getFiredAlertTarget(int itemId) { return firedAlertTargets.get(itemId); }
+    public Boolean getFiredAlertDirection(int itemId) { return firedAlertDirections.get(itemId); }
     public long getCurrentPrice(int itemId) { PriceData pd = priceCache.get(itemId); return pd != null ? pd.getMid() : 0; }
     public String formatPricePublic(String price) { return formatPrice(price); }
     public java.awt.image.BufferedImage getItemIconForOverlay(int itemId) {
@@ -865,6 +869,8 @@ private String openBankItemName = null;
                 savePriceAlerts();
                 firedAlerts.add(alertId);
                 alertFiredTimes.put(alertId, System.currentTimeMillis());
+                firedAlertTargets.put(alertId, targetPrice);
+                firedAlertDirections.put(alertId, isAbove);
                 plugin.updateAlertInfoBoxes();
             }
         }

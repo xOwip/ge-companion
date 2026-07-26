@@ -87,7 +87,12 @@ public class GECompanionOverlay extends Overlay {
             long currentPrice = panel.getCurrentPrice(itemId);
             long targetPrice = 0;
             boolean isAbove = false;
-            if (!isFired && alertValue.contains(":")) {
+            if (isFired) {
+                Long ft = panel.getFiredAlertTarget(itemId);
+                Boolean fd = panel.getFiredAlertDirection(itemId);
+                if (ft != null) targetPrice = ft;
+                if (fd != null) isAbove = fd;
+            } else if (alertValue.contains(":")) {
                 String[] parts = alertValue.split(":");
                 if (parts.length >= 2) {
                     isAbove = parts[0].equals("above");
@@ -105,7 +110,7 @@ public class GECompanionOverlay extends Overlay {
                 textColor = config.alertBellColor();
             }
 
-            int boxHeight = iconSize + padding * 2 + 12;
+            int boxHeight = isFired ? iconSize + padding * 2 + 24 : iconSize + padding * 2 + 12;
 
             // Box background
             graphics.setColor(new Color(26, 26, 26, 186));
@@ -148,7 +153,13 @@ public class GECompanionOverlay extends Overlay {
 // Target or triggered
             if (isFired) {
                 graphics.setColor(config.alertFiredColor());
-                graphics.drawString("Target reached! ✓", textX, y + padding + 35);
+                String direction2 = isAbove ? " ▲" : " ▼";
+                String targetStr2 = targetPrice > 0 ? targetPriceStr + " gp" + direction2 : "?";
+                graphics.setColor(new Color(0xD4AF37));
+                graphics.drawString("Target:", textX, y + padding + 35);
+                graphics.setColor(config.alertFiredColor());
+                graphics.drawString(" " + targetStr2, textX + 45, y + padding + 35);
+                graphics.drawString("Target reached! ✓", textX, y + padding + 47);
             } else {
                 String targetStr = targetPrice > 0 ? targetPriceStr + " gp " + direction : "?";
                 graphics.setColor(new Color(0xD4AF37));

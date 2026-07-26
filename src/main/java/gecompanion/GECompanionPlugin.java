@@ -823,7 +823,9 @@ private void fetchMapping()
 		if (fired != null) {
 			for (Integer firedId : fired) {
 				if (alerts == null || !alerts.containsKey(firedId)) {
-					addAlertInfoBox(firedId, false, 0);
+					Long firedTarget = panel.getFiredAlertTarget(firedId);
+					Boolean firedIsAbove = panel.getFiredAlertDirection(firedId);
+					addAlertInfoBox(firedId, firedIsAbove != null ? firedIsAbove : false, firedTarget != null ? firedTarget : 0);
 				}
 			}
 		}

@@ -70,6 +70,7 @@ public class GECompanionAlertInfoBox extends InfoBox
             }
             return "<col=" + orangeHex + ">" + name + "</col><br>" +
                     "<col=" + goldHex + ">Now:</col>    <col=" + firedHex + ">" + nowPrice + "</col><br>" +
+                    "<col=" + goldHex + ">Target:</col> <col=" + firedHex + ">" + targetPriceStr + " " + (isAbove ? "▲" : "▼") + "</col><br>" +
                     "<col=" + firedHex + ">Target reached! ✓</col>" +
                     (timeAgo.isEmpty() ? "" : "<br><col=aaaaaa>" + timeAgo + "</col>");
         } else {
