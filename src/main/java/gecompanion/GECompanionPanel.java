@@ -3191,6 +3191,7 @@ whatsNewBox.add(seeMoreLabel);
                             }
                         }
                         currentOpenWatchlistRow = null;
+                        if (currentOpenWatchlistBellPanel != null) { currentOpenWatchlistBellPanel.setOpaque(false); currentOpenWatchlistBellPanel.repaint(); currentOpenWatchlistBellPanel = null; }
                     }
                     selectedWatchlistItemName = null;
                     watchlistReopenAction = null;
@@ -3236,6 +3237,7 @@ whatsNewBox.add(seeMoreLabel);
                             if (currentOpenWatchlistInfo != null) { currentOpenWatchlistInfo.setBackground(currentOpenWatchlistRowColor); currentOpenWatchlistInfo = null; }
                             if (currentOpenWatchlistIconWrapper != null) { currentOpenWatchlistIconWrapper.setBackground(currentOpenWatchlistRowColor); currentOpenWatchlistIconWrapper = null; }
                             if (currentOpenWatchlistDeltaRow != null) { currentOpenWatchlistDeltaRow.setBackground(currentOpenWatchlistRowColor); currentOpenWatchlistDeltaRow = null; }
+                            if (currentOpenWatchlistBellPanel != null) { currentOpenWatchlistBellPanel.setOpaque(false); currentOpenWatchlistBellPanel.repaint(); currentOpenWatchlistBellPanel = null; }
                             watchlistListPanel.revalidate();
                             watchlistListPanel.repaint();
                             closeTimer2.stop();
@@ -3260,9 +3262,15 @@ whatsNewBox.add(seeMoreLabel);
                             c.setBackground(currentOpenWatchlistRowColor);
                         }
                     }
+                    if (currentOpenWatchlistBellPanel != null) {
+                        currentOpenWatchlistBellPanel.setOpaque(false);
+                        currentOpenWatchlistBellPanel.repaint();
+                        currentOpenWatchlistBellPanel = null;
+                    }
                 }
 
-                // Open this one
+// Open this one — reset bell panel state first
+                if (bellPanelRef[0] != null) { bellPanelRef[0].setOpaque(false); bellPanelRef[0].repaint(); }
                 selectedWatchlistItemName = name;
                 currentOpenWatchlistRow = row;
                 currentOpenWatchlistRowColor = rowBg;
@@ -3361,7 +3369,6 @@ whatsNewBox.add(seeMoreLabel);
                     if (watchlistEditMode) row.getComponent(row.getComponentCount()-1).setBackground(BG_ROW_HOVER);
                 }
                 if (bellPanelRef[0] != null) {
-                    // find bellIcon inside bellPanel and show it
                     for (java.awt.Component c : bellPanelRef[0].getComponents()) {
                         c.setVisible(true);
                     }
