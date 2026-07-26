@@ -812,6 +812,7 @@ private String openBankItemName = null;
     public long getTotalWealthValue() { return totalWealthValue; }
     public java.util.Map<Integer, String> getPriceAlertsForOverlay() { return priceAlerts; }
     public java.util.Set<Integer> getFiredAlertsForOverlay() { return firedAlerts; }
+    public Long getAlertFiredTime(int itemId) { return alertFiredTimes.get(itemId); }
     public long getCurrentPrice(int itemId) { PriceData pd = priceCache.get(itemId); return pd != null ? pd.getMid() : 0; }
     public String formatPricePublic(String price) { return formatPrice(price); }
     public java.awt.image.BufferedImage getItemIconForOverlay(int itemId) {
@@ -864,6 +865,7 @@ private String openBankItemName = null;
                 savePriceAlerts();
                 firedAlerts.add(alertId);
                 alertFiredTimes.put(alertId, System.currentTimeMillis());
+                plugin.updateAlertInfoBoxes();
             }
         }
     }
@@ -877,6 +879,7 @@ private String openBankItemName = null;
             sb.append(entry.getKey()).append(":").append(entry.getValue());
         }
         plugin.saveConfig("priceAlerts", sb.toString());
+        plugin.updateAlertInfoBoxes();
     }
 
     private void loadPriceAlerts()
@@ -7522,9 +7525,9 @@ whatsNewBox.add(seeMoreLabel);
         if (input == null || input.trim().isEmpty()) return -1;
         String s = input.trim().toLowerCase().replaceAll(",", "").replaceAll(" ", "");
         try {
-            if (s.endsWith("b")) return (long)(Double.parseDouble(s.replace("b", "")) * 1_000_000_000L);
-            if (s.endsWith("m")) return (long)(Double.parseDouble(s.replace("m", "")) * 1_000_000L);
-            if (s.endsWith("k")) return (long)(Double.parseDouble(s.replace("k", "")) * 1_000L);
+            if (s.endsWith("b")) return Math.round(Double.parseDouble(s.replace("b", "")) * 1_000_000_000.0);
+            if (s.endsWith("m")) return Math.round(Double.parseDouble(s.replace("m", "")) * 1_000_000.0);
+            if (s.endsWith("k")) return Math.round(Double.parseDouble(s.replace("k", "")) * 1_000.0);
             return Long.parseLong(s);
         } catch (NumberFormatException e) { return -1; }
     }

@@ -217,6 +217,14 @@ public interface GECompanionConfig extends Config
 	)
 	default boolean showPriceAlertOverlay() { return false; }
 
+	@ConfigItem(
+			keyName = "overlayDisplayMode",
+			name = "Overlay display mode",
+			description = "Compact = small icon with tooltip, Full = detailed panel",
+			section = "notifications"
+	)
+	default OverlayDisplayMode overlayDisplayMode() { return OverlayDisplayMode.COMPACT; }
+
 
 	@ConfigItem(
 			keyName = "alertBellColor",

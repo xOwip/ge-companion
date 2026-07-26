@@ -44,6 +44,7 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.awt.image.BufferedImage;
 
 @Slf4j
 @PluginDescriptor(
@@ -79,6 +80,9 @@ public class GECompanionPlugin extends Plugin
 
 	@Inject
 	private net.runelite.client.ui.overlay.OverlayManager overlayManager;
+
+	@Inject
+	private net.runelite.client.ui.overlay.infobox.InfoBoxManager infoBoxManager;
 
 	@Inject
 	private GECompanionOverlay overlay;
@@ -140,6 +144,7 @@ public class GECompanionPlugin extends Plugin
 		scheduler.scheduleAtFixedRate(this::fetchPrices, 0, 60, TimeUnit.SECONDS);
 		overlayManager.add(overlay);
 		overlay.setPanel(panel);
+		updateAlertInfoBoxes();
 
 		// Register !bank chat command
 		chatCommandManager.registerCommandAsync("!bank", this::handleBankCommand);
@@ -772,6 +777,54 @@ private void fetchMapping()
 	}
 
 	public OkHttpClient getOkHttpClient() { return okHttpClient; }
+
+	public void addAlertInfoBox(int itemId, boolean isAbove, long targetPrice)
+	{
+		BufferedImage icon = itemManager.getImage(itemId);
+		if (icon == null) return;
+		GECompanionAlertInfoBox infoBox = new GECompanionAlertInfoBox(icon, this, itemId, panel, config, isAbove, targetPrice);
+		infoBoxManager.addInfoBox(infoBox);
+	}
+
+	public void removeAlertInfoBox(int itemId)
+	{
+		infoBoxManager.removeIf(infoBox -> infoBox instanceof GECompanionAlertInfoBox &&
+				((GECompanionAlertInfoBox) infoBox).getItemId() == itemId);
+	}
+
+	public void updateAlertInfoBoxes()
+	{
+		infoBoxManager.removeIf(infoBox -> infoBox instanceof GECompanionAlertInfoBox);
+		if (panel == null) return;
+		if (config.overlayDisplayMode() != OverlayDisplayMode.COMPACT) return;
+
+		// Add InfoBoxes for active overlay alerts
+		java.util.Map<Integer, String> alerts = panel.getPriceAlertsForOverlay();
+		if (alerts != null) {
+			for (java.util.Map.Entry<Integer, String> entry : alerts.entrySet()) {
+				if (entry.getValue().contains(":overlay")) {
+					String[] parts = entry.getValue().split(":");
+					if (parts.length >= 2) {
+						boolean isAbove = parts[0].equals("above");
+						try {
+							long target = Long.parseLong(parts[1]);
+							addAlertInfoBox(entry.getKey(), isAbove, target);
+						} catch (NumberFormatException e) {}
+					}
+				}
+			}
+		}
+
+		// Also add InfoBoxes for fired alerts
+		java.util.Set<Integer> fired = panel.getFiredAlertsForOverlay();
+		if (fired != null) {
+			for (Integer firedId : fired) {
+				if (alerts == null || !alerts.containsKey(firedId)) {
+					addAlertInfoBox(firedId, false, 0);
+				}
+			}
+		}
+	}
 
 	public void fireAlert(String itemName, long currentPrice, boolean isAbove, long targetPrice)
 	{

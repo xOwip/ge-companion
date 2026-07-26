@@ -30,6 +30,7 @@ public class GECompanionOverlay extends Overlay {
     @Override
     public Dimension render(Graphics2D graphics) {
         if (!config.showPriceAlertOverlay()) return null;
+        if (config.overlayDisplayMode() == OverlayDisplayMode.COMPACT) return null;
         if (panel == null) return null;
 
         Map<Integer, String> alerts = panel.getPriceAlertsForOverlay();
@@ -134,18 +135,24 @@ public class GECompanionOverlay extends Overlay {
 
             graphics.setFont(net.runelite.client.ui.FontManager.getRunescapeSmallFont());
 
-// Item name
-            graphics.setColor(Color.WHITE);
+// Item name — burnt orange
+            graphics.setColor(new Color(0xFF981F));
             graphics.drawString(name != null ? name : "Unknown", textX, y + padding + 11);
-// Current price
-            graphics.setColor(textColor);
-            graphics.drawString("Now:    " + priceStr + " gp", textX, y + padding + 23);
+// "Now:" label in gold, price in white or fired color
+            graphics.setColor(new Color(0xD4AF37));
+            graphics.drawString("Now:", textX, y + padding + 23);
+            graphics.setColor(isFired ? config.alertFiredColor() : Color.WHITE);
+            graphics.drawString("    " + priceStr + " gp", textX, y + padding + 23);
 // Target or triggered
             if (isFired) {
+                graphics.setColor(config.alertFiredColor());
                 graphics.drawString("Target reached! ✓", textX, y + padding + 35);
             } else {
                 String targetStr = targetPrice > 0 ? targetPriceStr + " gp " + direction : "?";
-                graphics.drawString("Target: " + targetStr, textX, y + padding + 35);
+                graphics.setColor(new Color(0xD4AF37));
+                graphics.drawString("Target:", textX, y + padding + 35);
+                graphics.setColor(Color.WHITE);
+                graphics.drawString(" " + targetStr, textX + 45, y + padding + 35);
             }
 
             y += boxHeight + gap;
