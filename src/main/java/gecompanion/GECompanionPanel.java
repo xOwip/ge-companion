@@ -2940,9 +2940,9 @@ whatsNewBox.add(seeMoreLabel);
                 bellIcon.setForeground(config.alertBellColor());
                 bellIcon.setVisible(true);
                 String[] alertParts = existingAlert.split(":", 2);
-                if (alertParts.length == 2) {
+                if (alertParts.length >= 2) {
                     boolean isAbove = alertParts[0].equals("above");
-                    String alertPrice = formatFullPrice(alertParts[1]);
+                    String alertPrice = formatFullPrice(alertParts[1].replaceAll(":overlay|:nooverlay", ""));
                     bellIcon.setToolTipText("Alert: " + (isAbove ? "AT OR ABOVE " : "AT OR BELOW ") + alertPrice + " gp");
                     bellIcon.putClientProperty("hasAlert", true);
                     bellIcon.putClientProperty("alertFired", false);
