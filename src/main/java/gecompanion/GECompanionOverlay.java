@@ -139,10 +139,12 @@ public class GECompanionOverlay extends Overlay {
             graphics.setColor(new Color(0xFF981F));
             graphics.drawString(name != null ? name : "Unknown", textX, y + padding + 11);
 // "Now:" label in gold, price in white or fired color
+            java.awt.FontMetrics fmLabel = graphics.getFontMetrics();
+            int labelWidth = fmLabel.stringWidth("Target: ");
             graphics.setColor(new Color(0xD4AF37));
-            graphics.drawString("Now:", textX, y + padding + 23);
+            graphics.drawString("Now:    ", textX, y + padding + 23);
             graphics.setColor(isFired ? config.alertFiredColor() : Color.WHITE);
-            graphics.drawString("    " + priceStr + " gp", textX, y + padding + 23);
+            graphics.drawString(priceStr + " gp", textX + labelWidth, y + padding + 23);
 // Target or triggered
             if (isFired) {
                 graphics.setColor(config.alertFiredColor());
@@ -150,9 +152,9 @@ public class GECompanionOverlay extends Overlay {
             } else {
                 String targetStr = targetPrice > 0 ? targetPriceStr + " gp " + direction : "?";
                 graphics.setColor(new Color(0xD4AF37));
-                graphics.drawString("Target:", textX, y + padding + 35);
+                graphics.drawString("Target: ", textX, y + padding + 35);
                 graphics.setColor(Color.WHITE);
-                graphics.drawString(" " + targetStr, textX + 45, y + padding + 35);
+                graphics.drawString(targetStr, textX + labelWidth, y + padding + 35);
             }
 
             y += boxHeight + gap;

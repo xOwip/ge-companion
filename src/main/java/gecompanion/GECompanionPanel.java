@@ -7069,7 +7069,7 @@ whatsNewBox.add(seeMoreLabel);
             dismissBtn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
             dismissBtn.setFocusPainted(false);
             dismissBtn.addActionListener(e -> {
-                if (itemId != null) { firedAlerts.remove(itemId); alertFiredTimes.remove(itemId); }
+                if (itemId != null) { firedAlerts.remove(itemId); alertFiredTimes.remove(itemId); plugin.updateAlertInfoBoxes(); }
                 bellIcon.setForeground(TEXT_DIM);
                 bellIcon.setVisible(false);
                 bellIcon.putClientProperty("hasAlert", false);
@@ -7086,7 +7086,7 @@ whatsNewBox.add(seeMoreLabel);
             ));
             newAlertBtn.setFocusPainted(false);
             newAlertBtn.addActionListener(e -> {
-                if (itemId != null) { firedAlerts.remove(itemId); alertFiredTimes.remove(itemId); }
+                if (itemId != null) { firedAlerts.remove(itemId); alertFiredTimes.remove(itemId); plugin.updateAlertInfoBoxes(); }
                 firedDialog.dispose();
                 openBellAlertPanel(bellIcon, bellPanel, itemId, itemName);
             });

@@ -429,6 +429,9 @@ private void fetchMapping()
 	public void onConfigChanged(net.runelite.client.events.ConfigChanged event)
 	{
 		if (!event.getGroup().equals("gecompanion")) return;
+		if (event.getKey().equals("overlayDisplayMode") || event.getKey().equals("showPriceAlertOverlay")) {
+			javax.swing.SwingUtilities.invokeLater(() -> updateAlertInfoBoxes());
+		}
         if (event.getKey().equals("resetBankHistory"))
         {
             if ("true".equals(event.getNewValue()))
