@@ -245,6 +245,24 @@ public interface GECompanionConfig extends Config
 	default java.awt.Color alertFiredColor() { return new java.awt.Color(0x64DCFF); }
 
 	@ConfigItem(
+			keyName = "alertFiredBgColor",
+			name = "Triggered overlay background color",
+			description = "Background tint color of the InfoBox when a price alert triggers",
+			section = "notifications"
+	)
+	@Alpha
+	default java.awt.Color alertFiredBgColor() { return new java.awt.Color(0x64DCFF); }
+
+	@ConfigItem(
+			keyName = "alertFiredBgOpacity",
+			name = "Triggered overlay background opacity",
+			description = "Opacity of the InfoBox background tint when triggered (0=invisible, 255=solid)",
+			section = "notifications"
+	)
+	@Range(min = 0, max = 255)
+	default int alertFiredBgOpacity() { return 100; }
+
+	@ConfigItem(
 			keyName = "chatPrefixColor",
 			name = "Chat prefix color",
 			description = "Color of the [GE Companion] prefix in chat notifications",

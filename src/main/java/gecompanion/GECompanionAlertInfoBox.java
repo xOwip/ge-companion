@@ -40,7 +40,7 @@ public class GECompanionAlertInfoBox extends InfoBox
                 originalImage.getWidth(), originalImage.getHeight(), java.awt.image.BufferedImage.TYPE_INT_ARGB);
         java.awt.Graphics2D g2 = tinted.createGraphics();
         // Draw transparent tint first
-        g2.setColor(new java.awt.Color(config.alertFiredColor().getRed(), config.alertFiredColor().getGreen(), config.alertFiredColor().getBlue(), 80));
+        g2.setColor(new java.awt.Color(config.alertFiredBgColor().getRed(), config.alertFiredBgColor().getGreen(), config.alertFiredBgColor().getBlue(), config.alertFiredBgOpacity()));
         g2.fillRect(0, 0, tinted.getWidth(), tinted.getHeight());
         // Draw icon on top
         g2.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 1.0f));
