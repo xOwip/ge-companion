@@ -7034,7 +7034,7 @@ whatsNewBox.add(seeMoreLabel);
             String[] parts = existingAlert.split(":", 2);
             if (parts.length == 2) {
                 existingIsAbove = parts[0].equals("above");
-                try { existingPrice = Long.parseLong(parts[1]); } catch (NumberFormatException e) { }
+                try { existingPrice = Long.parseLong(parts[1].replaceAll(":overlay|:nooverlay", "")); } catch (NumberFormatException e) { }
             }
         }
 
