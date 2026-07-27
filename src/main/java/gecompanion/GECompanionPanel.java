@@ -872,6 +872,9 @@ private String openBankItemName = null;
                 firedAlertTargets.put(alertId, targetPrice);
                 firedAlertDirections.put(alertId, isAbove);
                 plugin.updateAlertInfoBoxes();
+                javax.swing.Timer delayedUpdate = new javax.swing.Timer(100, e -> plugin.updateAlertInfoBoxes());
+                delayedUpdate.setRepeats(false);
+                delayedUpdate.start();
             }
         }
     }

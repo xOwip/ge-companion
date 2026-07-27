@@ -13,15 +13,40 @@ public class GECompanionAlertInfoBox extends InfoBox
     private final boolean isAbove;
     private final long targetPrice;
 
-    public GECompanionAlertInfoBox(BufferedImage image, Plugin plugin, int itemId,
+    private final java.awt.image.BufferedImage originalImage;
+
+    public GECompanionAlertInfoBox(java.awt.image.BufferedImage image, Plugin plugin, int itemId,
                                    GECompanionPanel panel, GECompanionConfig config, boolean isAbove, long targetPrice)
     {
         super(image, plugin);
+        this.originalImage = image;
         this.itemId = itemId;
         this.panel = panel;
         this.config = config;
         this.isAbove = isAbove;
         this.targetPrice = targetPrice;
+    }
+
+    @Override
+    public java.awt.image.BufferedImage getImage()
+    {
+        boolean isFired = panel.getFiredAlertsForOverlay().contains(itemId);
+        if (!isFired) return originalImage;
+        if (originalImage == null) return null;
+        if (originalImage.getWidth() <= 0 || originalImage.getHeight() <= 0) return originalImage;
+
+        // Create blue tinted version
+        java.awt.image.BufferedImage tinted = new java.awt.image.BufferedImage(
+                originalImage.getWidth(), originalImage.getHeight(), java.awt.image.BufferedImage.TYPE_INT_ARGB);
+        java.awt.Graphics2D g2 = tinted.createGraphics();
+        // Draw transparent tint first
+        g2.setColor(new java.awt.Color(config.alertFiredColor().getRed(), config.alertFiredColor().getGreen(), config.alertFiredColor().getBlue(), 80));
+        g2.fillRect(0, 0, tinted.getWidth(), tinted.getHeight());
+        // Draw icon on top
+        g2.setComposite(java.awt.AlphaComposite.getInstance(java.awt.AlphaComposite.SRC_OVER, 1.0f));
+        g2.drawImage(originalImage, 0, 0, null);
+        g2.dispose();
+        return tinted;
     }
 
     @Override
