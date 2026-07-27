@@ -1970,7 +1970,7 @@ private String openBankItemName = null;
 
             whatsNewBox.add(whatsNewHeader);
 
-            JLabel whatsNewText = new JLabel("<html><body style='width:150px;color:#888888;font-family:monospaced;font-size:9px;'><span style='color:#D4AF37;'>v" + CURRENT_VERSION + "</span> is here!<br>• Variant item * indicator on Bank tab<br>• Report Issue / Request Feature buttons<br>• Live price updates on all item rows</body></html>");
+            JLabel whatsNewText = new JLabel("<html><body style='width:150px;color:#888888;font-family:monospaced;font-size:9px;'><span style='color:#D4AF37;'>v" + CURRENT_VERSION + "</span> is here!<br>• Price alerts with bell icon on watchlist<br>• In-game overlay for active alerts<br>• Total Wealth toggle in Bank tab<br>• !bank chat command suite<br>• Variant item deduplication<br>• Variant * badge on Bank tab icons</body></html>");
             whatsNewText.setBorder(new EmptyBorder(4, 0, 0, 0));
             whatsNewBox.add(whatsNewText);
             whatsNewBox.add(Box.createVerticalStrut(4));
@@ -7456,21 +7456,33 @@ whatsNewBox.add(seeMoreLabel);
         content.add(titleLabel);
         content.add(Box.createVerticalStrut(10));
 
-// v1.1.1
-        JLabel v111Label = new JLabel("v1.1.1 — July 13, 2026");
-        v111Label.setForeground(GOLD);
-        v111Label.setFont(new Font("Monospaced", Font.BOLD, FONT_STAT_LABEL));
-        v111Label.setAlignmentX(Component.LEFT_ALIGNMENT);
-        content.add(v111Label);
+// v1.2
+        JLabel v12Label = new JLabel("v1.2 — July 2026");
+        v12Label.setForeground(GOLD);
+        v12Label.setFont(new Font("Monospaced", Font.BOLD, FONT_STAT_LABEL));
+        v12Label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(v12Label);
         content.add(Box.createVerticalStrut(3));
         for (String line : new String[]{
-                "• Variant item indicator (* gold badge) on Bank tab",
-                "• Hover item icon to see original bank item name",
-                "• Hover Top Gainers/Losers header for * explanation"
+                "• Price alerts — bell icon on watchlist rows",
+                "• Set alerts AT OR ABOVE / AT OR BELOW a target price",
+                "• RuneLite notification + in-game chat message on trigger",
+                "• Price alert overlay panel (compact InfoBox + full mode)",
+                "• !bank command — type in chat to show total wealth",
+                "  Timeframes: !bank 1h, 6h, 24h, 7d, 30d, 3m, 1y, all",
+                "  Aliases: !wealth, !tw, !b",
+                "• Total Wealth toggle in Bank tab (Bank + Inv + Equip)",
+                "• Top Gainers/Losers includes inventory and equipment",
+                "• Variant item deduplication with combined tooltips",
+                "• Configurable bell and chat prefix colors",
+                "• Variant item * badge on Bank tab icons",
+                "• Hover item icon to see original bank item name"
         }) {
-            JLabel l = new JLabel(line); l.setForeground(TEXT_DIM);
+            JLabel l = new JLabel(line);
+            l.setForeground(TEXT_DIM);
             l.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
-            l.setAlignmentX(Component.LEFT_ALIGNMENT); content.add(l);
+            l.setAlignmentX(Component.LEFT_ALIGNMENT);
+            content.add(l);
         }
         content.add(Box.createVerticalStrut(8));
 
