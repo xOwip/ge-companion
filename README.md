@@ -155,10 +155,6 @@ Supports timeframes: `!bank 1h`, `!bank 6h`, `!bank 24h`, `!bank 7d`,
 
 Also works as `!wealth`, `!tw`, and `!b`.
 
-Other players with GE Companion installed will see your formatted wealth output —
-making it a great way to quickly share your bank value with friends, or flex on
-them at the GE and let the numbers speak for themselves.
-
 ![!bank command output](screenshots/Bank_Commands.png)
 
 ### Right-click Price Check
