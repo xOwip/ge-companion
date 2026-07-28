@@ -7457,7 +7457,7 @@ whatsNewBox.add(seeMoreLabel);
         content.add(Box.createVerticalStrut(10));
 
 // v1.2
-        JLabel v12Label = new JLabel("v1.2 — July 2026");
+        JLabel v12Label = new JLabel("v1.2 — July 28, 2026");
         v12Label.setForeground(GOLD);
         v12Label.setFont(new Font("Monospaced", Font.BOLD, FONT_STAT_LABEL));
         v12Label.setAlignmentX(Component.LEFT_ALIGNMENT);
