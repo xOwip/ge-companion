@@ -151,7 +151,9 @@ Supports timeframes: `!bank 1h`, `!bank 6h`, `!bank 24h`, `!bank 7d`,
 
 > **Note:** `!bank all` shows your wealth change since GE Companion first
 > started tracking your bank — not your full account history. History begins
-> the first time you open your bank with GE Companion installed.
+> the first time you open your bank with GE Companion installed. Total Wealth
+> updates each time you open your bank, so items picked up since your last
+> bank scan won't be reflected until you open your bank again.
 
 Also works as `!wealth`, `!tw`, and `!b`.
 
