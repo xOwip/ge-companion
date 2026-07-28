@@ -22,7 +22,7 @@ A RuneLite plugin that brings live Grand Exchange prices, interactive price char
 
 ### Live Price Search
 Search any tradeable item by name and get instant results with live prices,
-buy/sell volume per hour, and percentage change across your selected timeframe 
+buy/sell volume per hour, and percentage change across your selected timeframe
 (1H, 6H, or 24H). Click any item to expand its detail panel showing:
 - Buy Price and Sell Price with last-traded timestamps
 - GE buy limit
@@ -36,6 +36,41 @@ Switch between 1H, 6H, and 24H timeframes to track short and medium-term
 price movements. Prices auto-refresh every 60 seconds.
 
 ![Watchlist tab](gifs/watchlist.gif)
+
+### Price Alerts
+Set price alerts directly on any watchlist item — hover to reveal the bell icon,
+click to open the alert dialog, and choose AT OR ABOVE or AT OR BELOW with a
+target price. Shortcuts like `1.5b`, `500m`, and `100k` are supported.
+
+When your target is reached you get a **RuneLite desktop notification** and an
+**in-game chat message** — so you never miss a price movement even while bossing
+or skilling.
+
+- **Gold bell** — alert is active and watching
+- **Blue bell** — alert has triggered, click to dismiss or set a new one
+- Right-click any watchlist item to quickly set, edit, or toggle overlay from the context menu
+
+![Setting a price alert](gifs/Price_Alerts.gif)
+
+![Alert triggering](gifs/Alert_Triggering.gif)
+
+#### Price Alert Overlay
+Active alerts can be shown as an in-game overlay — either as a compact InfoBox
+icon (same size as potion timers) or a full panel showing current and target prices.
+
+**Compact mode (default):** A small item icon appears on screen. Hover it to see
+the current price, target price, and direction. When triggered, the icon gets a
+blue tint so you notice it immediately — even while bossing.
+
+**Full mode:** A panel showing the item name, current price, and target price
+with direction arrows. Switches to triggered colors when the alert fires.
+
+Toggle overlay per-alert via the alert dialog or right-click context menu.
+Master toggle and display mode available in plugin settings.
+
+![Compact overlay active and triggered](screenshots/Compact_Mode_Overlay-Active.png)
+![Compact overlay triggered](screenshots/Compact_Mode_Overlay-Triggered.png)
+![Full mode overlay](screenshots/Full_Mode_Overlay.png)
 
 ### Interactive Price Chart
 Every item has a full buy/sell price history chart with five timeframes:
@@ -79,30 +114,52 @@ Margin, Profit, and ROI update live every 60 seconds alongside prices.
 ### Bank Value Tracker
 Open your bank and GE Companion automatically scans it to show:
 - **Total Bank Value** in gp
-- **Top Gainers** — your banked items with the biggest price increase
-- **Top Losers** — your banked items with the biggest price drop
+- **Top Gainers** — your items with the biggest price increase
+- **Top Losers** — your items with the biggest price drop
 
 **Total Bank Value** matches the same calculation used by RuneLite's official
-Bank plugin — just your bank's contents. **Bank value change**, however, tracks
-your Bank + Inventory + Equipment combined, giving a more accurate picture of
-your overall wealth and reducing volatility from temporarily carrying items
-in your inventory.
+Bank plugin — just your bank's contents. Click the label to toggle to
+**Total Wealth** mode, which tracks your Bank + Inventory + Equipment combined
+for a more accurate picture of your overall wealth.
+
+![Total Wealth toggle](screenshots/Total Wealth Toggle-Before.png)
+![Total Wealth toggled](screenshots/Total Wealth Toggle-After.png)
+
+Top Gainers and Top Losers always include items in your bank, inventory,
+and equipment — so gearing up for a boss run never disrupts your list.
+
+Items that have been remapped to their tradeable base for price lookup are marked
+with a gold `*` on their icon — hover to see all owned variants and their
+tradeable base. Multiple variants mapping to the same base (e.g. Emberlight,
+Purging Staff, and Scorching Bow all mapping to Tormented Synapse) are
+deduplicated into a single entry.
 
 GE Companion automatically logs your bank value each time you open your bank,
 building a history that powers the value change tracking across all timeframes
 — from 1H all the way up to your full recorded history.
 
-Tap the ▼ details arrow below your bank value to expand a breakdown showing
-exactly when and at what value your wealth was recorded for the selected timeframe.
-
-Switch between 1H, 6H, and 24H to see how your bank is performing over
-different timeframes. Expand any item in either the top gainers or top losers 
-section to see its full detail panel and chart.
-
-Items that have been remapped to their tradeable base for price lookup are marked 
-with a gold * on their icon — hover the icon to see the original item name from your bank.
-
 ![Bank tab](gifs/bank.gif)
+
+### `!bank` — In-Game Wealth Command
+Type `!bank` in any chat channel to instantly display your total wealth without
+opening the plugin. The `!bank` command always shows your **Total Wealth** —
+the combined value of your bank, inventory, and equipped items — so you always
+get an accurate picture of your net worth regardless of what you have equipped.
+
+Supports timeframes: `!bank 1h`, `!bank 6h`, `!bank 24h`, `!bank 7d`,
+`!bank 30d`, `!bank 3m`, `!bank 1y`, `!bank all`
+
+> **Note:** `!bank all` shows your wealth change since GE Companion first
+> started tracking your bank — not your full account history. History begins
+> the first time you open your bank with GE Companion installed.
+
+Also works as `!wealth`, `!tw`, and `!b`.
+
+Other players with GE Companion installed will see your formatted wealth output —
+making it a great way to quickly share your bank value with friends, or flex on
+them at the GE and let the numbers speak for themselves.
+
+![!bank command output](screenshots/Bank_Commands.png)
 
 ### Right-click Price Check
 Right-click any item in your bank or inventory and select **Price Check**
@@ -147,24 +204,33 @@ All data stays on your machine.
 
 ## Configuration
 
+![Configuration settings](screenshots/Configure_Settings.png)
+
 | Setting | Default | Description |
 |---|---|---|
 | Default tab | Search | Which tab opens on startup |
-| Chart zoom mode | Drag Select & Pan | Drag Select & Pan or Magnifier |
-| Default chart timeframe | 7D | Starting timeframe for price charts |
-| Game update markers | All | Off / Major Only / All |
 | Right-click item lookup | On | Show Price Check in right-click menus |
+| Chat prefix color | Gold | Color of [GE Companion] prefix in chat notifications |
+| Active alert bell color | Gold | Color of bell icon when alert is active |
+| Triggered alert bell color | Light Blue | Color of bell icon when alert has triggered |
+| Triggered overlay background color | Light Blue | Background tint of InfoBox when triggered |
+| Triggered overlay background opacity | 100 | Opacity of InfoBox background tint (0–255) |
+| Show price alert overlay | Off | Display active alerts as an in-game overlay |
+| Overlay display mode | Compact | Compact (InfoBox icon) or Full panel |
 | Sort mode | GP Change | Sort gainers/losers by % Change or GP Change |
 | Top Gainers count | 5 | How many gainers to display (1–10) |
 | Top Losers count | 5 | How many losers to display (1–10) |
 | Min bank item value | 50,000 gp | Minimum stack value to appear in gainers/losers |
 | Show bank value change | On | Track and display bank value history |
+| Chart zoom mode | Drag Select & Pan | Drag Select & Pan or Magnifier |
+| Default chart timeframe | 7D | Starting timeframe for price charts |
+| Game update markers | All | Off / Major Only / All |
 
 ---
 
 ## Feedback
-Found a bug or have a feature request? Use the **Report Issue** or **Request Feature** 
-buttons anchored at the bottom of the plugin panel to submit directly to GitHub — no 
+Found a bug or have a feature request? Use the **Report Issue** or **Request Feature**
+buttons anchored at the bottom of the plugin panel to submit directly to GitHub — no
 copy-pasting required.
 
 ---
