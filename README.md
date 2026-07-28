@@ -50,6 +50,8 @@ or skilling.
 - **Blue bell** — alert has triggered, click to dismiss or set a new one
 - Right-click any watchlist item to quickly set, edit, or toggle overlay from the context menu
 
+![Price alert dialog](screenshots/Price_Alert_Dialog_Window.png)
+
 ![Setting a price alert](gifs/Price_Alerts.gif)
 
 ![Alert triggering](gifs/Alert_Triggering.gif)
