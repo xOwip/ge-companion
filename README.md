@@ -159,7 +159,7 @@ Supports timeframes: `!bank 1h`, `!bank 6h`, `!bank 24h`, `!bank 7d`,
 
 Also works as `!wealth`, `!tw`, and `!b`.
 
-![!bank command output](screenshots/Bank_Commands.png)
+![!bank command output](screenshots/Bank_Chat_Command_Updated.png)
 
 ### Right-click Price Check
 Right-click any item in your bank or inventory and select **Price Check**
@@ -189,7 +189,9 @@ the same trusted, community-maintained data source used by many popular OSRS
 price tracking tools.
 
 New items appear in search automatically as soon as they begin trading
-on the Grand Exchange — no plugin update required.
+on the Grand Exchange and are indexed by the OSRS Wiki prices API —
+no plugin update required. New items typically appear within a few hours
+of release.
 
 ---
 
