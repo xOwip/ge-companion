@@ -594,6 +594,11 @@ private void fetchMapping()
 	private void handleBankCommand(net.runelite.api.events.ChatMessage chatMessage, String message)
 	{
 		if (client.getGameState() != net.runelite.api.GameState.LOGGED_IN) return;
+		// Only process command if sent by the local player
+		if (client.getLocalPlayer() == null) return;
+		String localName = client.getLocalPlayer().getName();
+		String senderName = net.runelite.client.util.Text.removeTags(chatMessage.getName()).replace('\u00A0', ' ').trim();
+		if (!senderName.isEmpty() && !senderName.equalsIgnoreCase(localName)) return;
 
 		String[] parts = message.trim().split("\\s+");
 		String timeframe = parts.length > 1 ? parts[1].toLowerCase() : null;

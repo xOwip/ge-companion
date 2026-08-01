@@ -1,7 +1,6 @@
 <div align="center">
 
 # GE Companion
-
 ---
 A RuneLite plugin that brings live Grand Exchange prices, price alerts, interactive price charts, a personal watchlist, and bank value tracking directly into your client.
 
