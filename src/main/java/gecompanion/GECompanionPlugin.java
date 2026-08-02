@@ -81,9 +81,6 @@ public class GECompanionPlugin extends Plugin
 	@Inject
 	private net.runelite.client.ui.overlay.OverlayManager overlayManager;
 
-	private javax.swing.Timer bankScanDebounce = null;
-	private static final int BANK_SCAN_DELAY_MS = 500;
-
 	@Inject
 	private net.runelite.client.ui.overlay.infobox.InfoBoxManager infoBoxManager;
 
@@ -500,23 +497,6 @@ private void fetchMapping()
 		ItemContainer bankContainer = event.getItemContainer();
 		if (bankContainer == null) return;
 
-		// Debounce rapid bank interactions to prevent performance issues
-		if (bankScanDebounce != null && bankScanDebounce.isRunning()) {
-			bankScanDebounce.restart();
-			return;
-		}
-		bankScanDebounce = new javax.swing.Timer(BANK_SCAN_DELAY_MS, e -> {
-			bankScanDebounce = null;
-			processBankContainer(bankContainer);
-		});
-		bankScanDebounce.setRepeats(false);
-		bankScanDebounce.start();
-		return;
-	}
-
-	private void processBankContainer(ItemContainer bankContainer)
-	{
-
 		java.util.List<String> newBankItems = new java.util.ArrayList<>();
 		java.util.Map<String, Integer> newBankQuantities = new java.util.HashMap<>();
 
@@ -611,7 +591,7 @@ private void fetchMapping()
 		});
 	}
 
-private void handleBankCommand(net.runelite.api.events.ChatMessage chatMessage, String message)
+	private void handleBankCommand(net.runelite.api.events.ChatMessage chatMessage, String message)
 	{
 		if (client.getGameState() != net.runelite.api.GameState.LOGGED_IN) return;
 		// Only process command if sent by the local player
