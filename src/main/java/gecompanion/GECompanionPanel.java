@@ -290,16 +290,22 @@ private String openBankItemName = null;
         java.util.Set<String> oldItemSet = new java.util.HashSet<>(this.bankItems);
         // track items that were displayed but are now gone from bank
         for (String name : displayedGainersLosers) {
-            if (oldItemSet.contains(name) && !newItemSet.contains(name))
+            boolean inNew = newItemSet.stream().anyMatch(s -> s.equals(name) || s.startsWith(name + "|") || name.startsWith(s.split("\\|")[0]));
+            boolean inOld = oldItemSet.stream().anyMatch(s -> s.equals(name) || s.startsWith(name + "|") || name.startsWith(s.split("\\|")[0]));
+            if (inOld && !inNew)
                 removedFromDisplay.add(name);
         }
         // rebuild if displayed item changed, or if a previously-removed displayed item returned
-        boolean displayedItemChanged = displayedGainersLosers.stream().anyMatch(name ->
-                newItemSet.contains(name) != oldItemSet.contains(name) ||
-                        !quantities.getOrDefault(name, 0).equals(this.bankQuantities.getOrDefault(name, 0)));
-        boolean removedItemReturned = removedFromDisplay.stream().anyMatch(newItemSet::contains);
+        boolean displayedItemChanged = displayedGainersLosers.stream().anyMatch(name -> {
+            boolean inNew = newItemSet.stream().anyMatch(s -> s.equals(name) || s.startsWith(name + "|") || name.startsWith(s.split("\\|")[0]));
+            boolean inOld = oldItemSet.stream().anyMatch(s -> s.equals(name) || s.startsWith(name + "|") || name.startsWith(s.split("\\|")[0]));
+            return inNew != inOld || !quantities.getOrDefault(name, 0).equals(this.bankQuantities.getOrDefault(name, 0));
+        });
+        boolean removedItemReturned = removedFromDisplay.stream().anyMatch(name ->
+                newItemSet.stream().anyMatch(s -> s.equals(name) || s.startsWith(name + "|") || name.startsWith(s.split("\\|")[0])));
         boolean itemListChanged = displayedGainersLosers.isEmpty() || displayedItemChanged || removedItemReturned;
-        if (removedItemReturned) removedFromDisplay.removeIf(newItemSet::contains);
+        if (removedItemReturned) removedFromDisplay.removeIf(name ->
+                newItemSet.stream().anyMatch(s -> s.equals(name) || s.startsWith(name + "|") || name.startsWith(s.split("\\|")[0])));
         this.bankItems.clear();
         this.bankItems.addAll(items);
         this.bankQuantities.clear();
@@ -4024,7 +4030,15 @@ whatsNewBox.add(seeMoreLabel);
             allBankItems.removeIf(bankItem -> {
                 try {
                     long price = Long.parseLong(bankItem[1]);
-                    int qty = bankQuantities.getOrDefault(bankItem[0], 0);
+                    String itemKey = bankItem[0];
+                    int qty = bankQuantities.getOrDefault(itemKey, 0);
+                    if (qty == 0) {
+                        // Try with variant suffix
+                        qty = bankQuantities.entrySet().stream()
+                                .filter(e -> e.getKey().equals(itemKey) || e.getKey().startsWith(itemKey + "|"))
+                                .mapToInt(java.util.Map.Entry::getValue)
+                                .sum();
+                    }
                     long stackValue = price * qty;
                     return price < 10000 || stackValue < minStackValue;
                 } catch (NumberFormatException e) { return true; }

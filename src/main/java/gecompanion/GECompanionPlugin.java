@@ -80,8 +80,6 @@ public class GECompanionPlugin extends Plugin
 
 	@Inject
 	private net.runelite.client.ui.overlay.OverlayManager overlayManager;
-	private long lastBankScanTime = 0;
-	private static final int BANK_SCAN_DELAY_MS = 500;
 
 	@Inject
 	private net.runelite.client.ui.overlay.infobox.InfoBoxManager infoBoxManager;
@@ -499,11 +497,6 @@ private void fetchMapping()
 		ItemContainer bankContainer = event.getItemContainer();
 		if (bankContainer == null) return;
 
-		// Throttle rapid bank scans — only process once per 500ms
-		long now = System.currentTimeMillis();
-		if (now - lastBankScanTime < BANK_SCAN_DELAY_MS) return;
-		lastBankScanTime = now;
-
 		java.util.List<String> newBankItems = new java.util.ArrayList<>();
 		java.util.Map<String, Integer> newBankQuantities = new java.util.HashMap<>();
 
@@ -767,7 +760,11 @@ private void fetchMapping()
 			if (isVariantItem && originalName != null) {
 				displayName = displayName + "|" + originalName;
 			}
-			if (!itemList.contains(displayName)) {
+			final String finalDisplayName = displayName;
+			boolean alreadyInList = itemList.stream().anyMatch(s ->
+					s.equals(finalDisplayName) || s.startsWith(finalDisplayName + "|") ||
+							(s.contains("|") && finalDisplayName.startsWith(s.split("\\|")[0])));
+			if (!alreadyInList) {
 				itemList.add(displayName);
 			}
 			quantities.merge(displayName, item.getQuantity(), Integer::sum);
