@@ -321,7 +321,7 @@ private String openBankItemName = null;
             liveBankValueLabel.setText(heroText);
             liveBankValueLabel.setForeground(bankHidden ? TEXT_DIM : PRICE_GOLD);
         }
-        if (config.showBankValueChange()) saveBankValueLog(bankOnlyValue, totalWealthValue);
+        if (config.showBankValueChange() && totalWealthValue != this.totalWealthValue) saveBankValueLog(bankOnlyValue, totalWealthValue);
         saveBankData();
         if (activeTab == 2)
         {

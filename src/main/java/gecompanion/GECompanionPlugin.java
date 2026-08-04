@@ -80,8 +80,9 @@ public class GECompanionPlugin extends Plugin
 
 	@Inject
 	private net.runelite.client.ui.overlay.OverlayManager overlayManager;
-	private long lastBankScanTime = 0;
-	private static final int BANK_SCAN_DELAY_MS = 500;
+	private volatile boolean containersDirty = false;
+	private java.util.concurrent.ScheduledFuture<?> pendingBankRefresh = null;
+	private final java.util.concurrent.atomic.AtomicLong refreshRevision = new java.util.concurrent.atomic.AtomicLong();
 
 	@Inject
 	private net.runelite.client.ui.overlay.infobox.InfoBoxManager infoBoxManager;
@@ -494,15 +495,33 @@ private void fetchMapping()
 	@Subscribe
 	public void onItemContainerChanged(ItemContainerChanged event)
 	{
-		if (event.getContainerId() != InventoryID.BANK.getId()) return;
+		int containerId = event.getContainerId();
+		if (containerId != InventoryID.BANK.getId() &&
+				containerId != InventoryID.INVENTORY.getId() &&
+				containerId != InventoryID.EQUIPMENT.getId()) return;
 
-		ItemContainer bankContainer = event.getItemContainer();
+		// Mark dirty and schedule a coalesced refresh
+		containersDirty = true;
+		long revision = refreshRevision.incrementAndGet();
+
+		if (pendingBankRefresh != null) {
+			pendingBankRefresh.cancel(false);
+		}
+
+		pendingBankRefresh = scheduler.schedule(() ->
+						clientThread.invokeLater(() -> {
+							if (revision != refreshRevision.get()) return;
+							containersDirty = false;
+							performBankRefresh();
+						}),
+				200, java.util.concurrent.TimeUnit.MILLISECONDS
+		);
+	}
+
+	private void performBankRefresh()
+	{
+		ItemContainer bankContainer = client.getItemContainer(InventoryID.BANK);
 		if (bankContainer == null) return;
-
-		// Throttle rapid bank scans — only process once per 500ms
-		long now = System.currentTimeMillis();
-		if (now - lastBankScanTime < BANK_SCAN_DELAY_MS) return;
-		lastBankScanTime = now;
 
 		java.util.List<String> newBankItems = new java.util.ArrayList<>();
 		java.util.Map<String, Integer> newBankQuantities = new java.util.HashMap<>();
