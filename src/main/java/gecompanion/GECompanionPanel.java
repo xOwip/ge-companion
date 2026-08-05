@@ -321,7 +321,7 @@ private String openBankItemName = null;
             liveBankValueLabel.setText(heroText);
             liveBankValueLabel.setForeground(bankHidden ? TEXT_DIM : PRICE_GOLD);
         }
-        if (config.showBankValueChange() && totalWealthValue != this.totalWealthValue) saveBankValueLog(bankOnlyValue, totalWealthValue);
+        if (config.showBankValueChange()) saveBankValueLog(bankOnlyValue, totalWealthValue);
         saveBankData();
         if (activeTab == 2)
         {
@@ -686,15 +686,21 @@ private String openBankItemName = null;
             showTab(activeTab);
         }
     }
+    public void reloadBankDataForProfile()
+    {
+        loadBankData();
+        loadBankValueLog();
+    }
+
     private void loadBankData()
     {
-        String savedValue = plugin.loadConfig("bankValue");
+        String savedValue = plugin.loadProfileConfig("bankValue");
         if (savedValue != null && !savedValue.trim().isEmpty())
         {
             try { totalBankValue = Long.parseLong(savedValue.trim()); }
             catch (NumberFormatException e) { }
         }
-        String savedWealth = plugin.loadConfig("wealthValue");
+        String savedWealth = plugin.loadProfileConfig("wealthValue");
         if (savedWealth != null && !savedWealth.trim().isEmpty())
         {
             try { totalWealthValue = Long.parseLong(savedWealth.trim()); }
@@ -704,13 +710,13 @@ private String openBankItemName = null;
 
     private void saveBankData()
     {
-        plugin.saveConfig("bankValue", String.valueOf(totalBankValue));
-        plugin.saveConfig("wealthValue", String.valueOf(totalWealthValue));
+        plugin.saveProfileConfig("bankValue", String.valueOf(totalBankValue));
+        plugin.saveProfileConfig("wealthValue", String.valueOf(totalWealthValue));
     }
 
     private void loadBankValueLog()
     {
-        String raw = plugin.loadConfig("bankValueLog");
+        String raw = plugin.loadProfileConfig("bankValueLog");
         if (raw == null || raw.isEmpty()) return;
         bankValueLog.clear();
         for (String entry : raw.split(","))
@@ -775,7 +781,7 @@ private String openBankItemName = null;
             if (sb.length() > 0) sb.append(",");
             sb.append(entry[0]).append("|").append(entry[1]).append("|").append(entry[2]);
         }
-        plugin.saveConfig("bankValueLog", sb.toString());
+        plugin.saveProfileConfig("bankValueLog", sb.toString());
     }
 
     private void loadRecentSearches()

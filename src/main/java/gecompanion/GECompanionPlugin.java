@@ -493,6 +493,18 @@ private void fetchMapping()
 	}
 
 	@Subscribe
+	public void onGameStateChanged(net.runelite.api.events.GameStateChanged event)
+	{
+		if (event.getGameState() == net.runelite.api.GameState.LOGGED_IN)
+		{
+			// Reload bank data for the newly logged in RS profile
+			javax.swing.SwingUtilities.invokeLater(() -> {
+				panel.reloadBankDataForProfile();
+			});
+		}
+	}
+
+	@Subscribe
 	public void onItemContainerChanged(ItemContainerChanged event)
 	{
 		int containerId = event.getContainerId();
@@ -803,9 +815,19 @@ private void fetchMapping()
 		configManager.sendConfig();
 	}
 
+	public void saveProfileConfig(String key, String value)
+	{
+		configManager.setRSProfileConfiguration("gecompanion", key, value);
+	}
+
 	public String loadConfig(String key)
 	{
 		return configManager.getConfiguration("gecompanion", key);
+	}
+
+	public String loadProfileConfig(String key)
+	{
+		return configManager.getRSProfileConfiguration("gecompanion", key, String.class);
 	}
 
 	public boolean isBankValueHidden()
