@@ -321,7 +321,6 @@ private String openBankItemName = null;
             liveBankValueLabel.setText(heroText);
             liveBankValueLabel.setForeground(bankHidden ? TEXT_DIM : PRICE_GOLD);
         }
-        if (config.showBankValueChange()) saveBankValueLog(bankOnlyValue, totalWealthValue);
         saveBankData();
         if (activeTab == 2)
         {
@@ -735,6 +734,11 @@ private String openBankItemName = null;
             }
             // silently drop old format entries (ts:val) — migration
         }
+    }
+
+    public void saveHistoryEntry(long bankOnlyValue, long totalWealthValue)
+    {
+        saveBankValueLog(bankOnlyValue, totalWealthValue);
     }
 
     private void saveBankValueLog(long bankOnlyValue, long totalWealthValue)

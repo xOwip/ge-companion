@@ -80,6 +80,17 @@ public class GECompanionPlugin extends Plugin
 
 	@Inject
 	private net.runelite.client.ui.overlay.OverlayManager overlayManager;
+
+	// Separate history sampling from bank scanning
+	private volatile long latestBankOnlyValue = 0;
+	private volatile long latestTotalWealthValue = 0;
+	private volatile boolean latestValueValid = false;
+	private long lastHistoryWriteMillis = 0;
+	private long lastSavedTotalWealthValue = 0;
+	private static final long HISTORY_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+	private static final long MIN_CHANGE_WRITE_MS = 60 * 1000; // 1 minute
+	private static final long MATERIAL_CHANGE_GP = 1_000_000L;
+	private java.util.concurrent.ScheduledFuture<?> historyTask = null;
 	private volatile boolean containersDirty = false;
 	private java.util.concurrent.ScheduledFuture<?> pendingBankRefresh = null;
 	private final java.util.concurrent.atomic.AtomicLong refreshRevision = new java.util.concurrent.atomic.AtomicLong();
@@ -145,6 +156,7 @@ public class GECompanionPlugin extends Plugin
 		// Start price refresh scheduler
 		scheduler = Executors.newSingleThreadScheduledExecutor();
 		scheduler.scheduleAtFixedRate(this::fetchPrices, 0, 60, TimeUnit.SECONDS);
+		historyTask = scheduler.scheduleWithFixedDelay(this::periodicHistoryWrite, 5, 5, TimeUnit.MINUTES);
 		overlayManager.add(overlay);
 		overlay.setPanel(panel);
 		updateAlertInfoBoxes();
@@ -164,6 +176,15 @@ public class GECompanionPlugin extends Plugin
 	{
 		clientToolbar.removeNavigation(navButton);
 		eventBus.unregister(this);
+		if (historyTask != null)
+		{
+			historyTask.cancel(false);
+			historyTask = null;
+		}
+		// Write final history entry on shutdown
+		if (latestValueValid) {
+			saveHistoryCheckpoint(latestBankOnlyValue, latestTotalWealthValue, System.currentTimeMillis());
+		}
 		if (scheduler != null)
 		{
 			scheduler.shutdown();
@@ -442,7 +463,7 @@ private void fetchMapping()
                 configManager.setConfiguration("gecompanion", "resetBankHistory", false);
                 int result = javax.swing.JOptionPane.showOptionDialog(
                         panel,
-                        "This will permanently delete all saved bank value history.\nThis cannot be undone. Continue?",
+						"This will permanently delete all saved bank value history for this account.\nOther accounts' history will not be affected.\nThis cannot be undone. Continue?",
                         "Reset Bank Value History",
                         javax.swing.JOptionPane.YES_NO_OPTION,
                         javax.swing.JOptionPane.WARNING_MESSAGE,
@@ -452,7 +473,10 @@ private void fetchMapping()
                 );
                 if (result == 0)
                 {
-                    saveConfig("bankValueLog", "");
+					saveProfileConfig("bankValueLog", "");
+					lastHistoryWriteMillis = 0;
+					lastSavedTotalWealthValue = 0;
+					latestValueValid = false;
                     javax.swing.SwingUtilities.invokeLater(() -> panel.onBankHistoryReset());
                 }
             }
@@ -622,11 +646,40 @@ private void fetchMapping()
 			}
 		}
 
+// Store latest values in memory
+		latestBankOnlyValue = bankOnlyValue;
+		latestTotalWealthValue = totalWealthValue;
+		latestValueValid = true;
+
+		// Check for meaningful change write
+		long now = System.currentTimeMillis();
+		long absoluteChange = Math.abs(totalWealthValue - lastSavedTotalWealthValue);
+		if (absoluteChange >= MATERIAL_CHANGE_GP && now - lastHistoryWriteMillis >= MIN_CHANGE_WRITE_MS) {
+			saveHistoryCheckpoint(bankOnlyValue, totalWealthValue, now);
+		}
+
 		final long finalBankOnly = bankOnlyValue;
 		final long finalTotalWealth = totalWealthValue;
 		javax.swing.SwingUtilities.invokeLater(() -> {
 			panel.updateBankItems(newBankItems, newBankQuantities, finalBankOnly, finalTotalWealth);
 		});
+	}
+
+	private void saveHistoryCheckpoint(long bankOnlyValue, long totalWealthValue, long now)
+	{
+		javax.swing.SwingUtilities.invokeLater(() -> {
+			panel.saveHistoryEntry(bankOnlyValue, totalWealthValue);
+		});
+		lastHistoryWriteMillis = now;
+		lastSavedTotalWealthValue = totalWealthValue;
+	}
+
+	private void periodicHistoryWrite()
+	{
+		if (!latestValueValid) return;
+		long now = System.currentTimeMillis();
+		if (now - lastHistoryWriteMillis < HISTORY_INTERVAL_MS) return;
+		saveHistoryCheckpoint(latestBankOnlyValue, latestTotalWealthValue, now);
 	}
 
 	private void handleBankCommand(net.runelite.api.events.ChatMessage chatMessage, String message)

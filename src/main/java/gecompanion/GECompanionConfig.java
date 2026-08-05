@@ -153,7 +153,7 @@ public interface GECompanionConfig extends Config
 	@ConfigItem(
 			keyName = "resetBankHistory",
 			name = "Reset Bank Value History",
-			description = "Permanently deletes all saved bank value history. Cannot be undone. Your data will rebuild automatically on your next bank scan.",
+			description = "Permanently deletes all saved bank value history for the current account. Other accounts are unaffected. History rebuilds automatically every 5 minutes.",
 			section = bankSection,
 			position = 6
 	)
