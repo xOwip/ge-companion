@@ -88,8 +88,6 @@ public class GECompanionPlugin extends Plugin
 	private long lastHistoryWriteMillis = 0;
 	private long lastSavedTotalWealthValue = 0;
 	private static final long HISTORY_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
-	private static final long MIN_CHANGE_WRITE_MS = 60 * 1000; // 1 minute
-	private static final long MATERIAL_CHANGE_GP = 1_000_000L;
 	private java.util.concurrent.ScheduledFuture<?> historyTask = null;
 	private volatile boolean containersDirty = false;
 	private java.util.concurrent.ScheduledFuture<?> pendingBankRefresh = null;
@@ -650,13 +648,6 @@ private void fetchMapping()
 		latestBankOnlyValue = bankOnlyValue;
 		latestTotalWealthValue = totalWealthValue;
 		latestValueValid = true;
-
-		// Check for meaningful change write
-		long now = System.currentTimeMillis();
-		long absoluteChange = Math.abs(totalWealthValue - lastSavedTotalWealthValue);
-		if (absoluteChange >= MATERIAL_CHANGE_GP && now - lastHistoryWriteMillis >= MIN_CHANGE_WRITE_MS) {
-			saveHistoryCheckpoint(bankOnlyValue, totalWealthValue, now);
-		}
 
 		final long finalBankOnly = bankOnlyValue;
 		final long finalTotalWealth = totalWealthValue;
