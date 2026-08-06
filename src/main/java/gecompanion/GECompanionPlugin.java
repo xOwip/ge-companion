@@ -156,7 +156,7 @@ public class GECompanionPlugin extends Plugin
 		// Start price refresh scheduler
 		scheduler = Executors.newSingleThreadScheduledExecutor();
 		scheduler.scheduleAtFixedRate(this::fetchPrices, 0, 60, TimeUnit.SECONDS);
-		historyTask = scheduler.scheduleWithFixedDelay(this::periodicHistoryWrite, 5, 5, TimeUnit.MINUTES);
+		historyTask = scheduler.scheduleAtFixedRate(this::periodicHistoryWrite, 5, 5, TimeUnit.MINUTES);
 		overlayManager.add(overlay);
 		overlay.setPanel(panel);
 		updateAlertInfoBoxes();

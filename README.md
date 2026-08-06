@@ -7,7 +7,7 @@ A RuneLite plugin that brings live Grand Exchange prices, price alerts, interact
 **No account. No API key. No setup. Just install and go.**
 
 [![Plugin Hub installs](https://img.shields.io/endpoint?url=https://api.runelite.net/pluginhub/shields/installs/plugin/ge-companion&label=installs&color=brightgreen)](https://runelite.net/plugin-hub/show/ge-companion)
-![version](https://img.shields.io/badge/version-1.2-blue)
+![version](https://img.shields.io/badge/version-1.2.1-blue)
 [![License](https://img.shields.io/badge/license-BSD--2--Clause-orange)](LICENSE)
 [![Plugin Hub](https://img.shields.io/badge/RuneLite-Plugin%20Hub-red)](https://runelite.net/plugin-hub/show/ge-companion)
 
@@ -135,9 +135,11 @@ tradeable base. Multiple variants mapping to the same base (e.g. Emberlight,
 Purging Staff, and Scorching Bow all mapping to Tormented Synapse) are
 deduplicated into a single entry.
 
-GE Companion automatically logs your bank value each time you open your bank,
-building a history that powers the value change tracking across all timeframes
-— from 1H all the way up to your full recorded history.
+GE Companion automatically records your bank value every 5 minutes while
+you're logged in, building a history that powers the value change tracking
+across all timeframes — from 1H all the way up to your full recorded history.
+Bank history is saved per account — each account tracks its own wealth
+history independently with no crossover between accounts.
 
 ![Bank tab](gifs/bank.gif)
 
