@@ -85,8 +85,8 @@ public class GECompanionPlugin extends Plugin
 	private volatile long latestBankOnlyValue = 0;
 	private volatile long latestTotalWealthValue = 0;
 	private volatile boolean latestValueValid = false;
+	private long lastAccountHash = -1;
 	private long lastHistoryWriteMillis = 0;
-	private long lastSavedTotalWealthValue = 0;
 	private static final long HISTORY_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 	private java.util.concurrent.ScheduledFuture<?> historyTask = null;
 	private volatile boolean containersDirty = false;
@@ -473,7 +473,6 @@ private void fetchMapping()
                 {
 					saveProfileConfig("bankValueLog", "");
 					lastHistoryWriteMillis = 0;
-					lastSavedTotalWealthValue = 0;
 					latestValueValid = false;
                     javax.swing.SwingUtilities.invokeLater(() -> panel.onBankHistoryReset());
                 }
@@ -519,12 +518,15 @@ private void fetchMapping()
 	{
 		if (event.getGameState() == net.runelite.api.GameState.LOGGED_IN)
 		{
-			// Reset history sampling state for new profile
-			resetHistorySamplingState();
-			// Reload bank data for the newly logged in RS profile
-			javax.swing.SwingUtilities.invokeLater(() -> {
-				panel.reloadBankDataForProfile();
-			});
+			long accountHash = client.getAccountHash();
+			if (accountHash != lastAccountHash)
+			{
+				lastAccountHash = accountHash;
+				resetHistorySamplingState();
+				javax.swing.SwingUtilities.invokeLater(() -> {
+					panel.reloadBankDataForProfile();
+				});
+			}
 		}
 	}
 
@@ -534,7 +536,6 @@ private void fetchMapping()
 		latestTotalWealthValue = 0;
 		latestValueValid = false;
 		lastHistoryWriteMillis = 0;
-		lastSavedTotalWealthValue = 0;
 	}
 
 	@Subscribe
@@ -673,7 +674,6 @@ private void fetchMapping()
 			panel.saveHistoryEntry(bankOnlyValue, totalWealthValue);
 		});
 		lastHistoryWriteMillis = now;
-		lastSavedTotalWealthValue = totalWealthValue;
 	}
 
 	private void periodicHistoryWrite()
