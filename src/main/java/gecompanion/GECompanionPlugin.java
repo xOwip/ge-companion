@@ -86,6 +86,7 @@ public class GECompanionPlugin extends Plugin
 	private volatile long latestTotalWealthValue = 0;
 	private volatile boolean latestValueValid = false;
 	private long lastAccountHash = -1;
+	private boolean initialHistoryCheckpointPending = true;
 	private long lastHistoryWriteMillis = 0;
 	private static final long HISTORY_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 	private java.util.concurrent.ScheduledFuture<?> historyTask = null;
@@ -523,6 +524,7 @@ private void fetchMapping()
 			{
 				lastAccountHash = accountHash;
 				resetHistorySamplingState();
+				initialHistoryCheckpointPending = true;
 				javax.swing.SwingUtilities.invokeLater(() -> {
 					panel.reloadBankDataForProfile();
 				});
@@ -660,6 +662,13 @@ private void fetchMapping()
 		latestBankOnlyValue = bankOnlyValue;
 		latestTotalWealthValue = totalWealthValue;
 		latestValueValid = true;
+
+		// Immediate checkpoint on first bank scan after login/startup
+		long now = System.currentTimeMillis();
+		if (initialHistoryCheckpointPending) {
+			initialHistoryCheckpointPending = false;
+			saveHistoryCheckpoint(bankOnlyValue, totalWealthValue, now);
+		}
 
 		final long finalBankOnly = bankOnlyValue;
 		final long finalTotalWealth = totalWealthValue;
