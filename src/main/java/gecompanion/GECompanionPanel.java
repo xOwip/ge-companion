@@ -693,6 +693,8 @@ private String openBankItemName = null;
 
     private void loadBankData()
     {
+        totalBankValue = 0;
+        totalWealthValue = 0;
         String savedValue = plugin.loadProfileConfig("bankValue");
         if (savedValue != null && !savedValue.trim().isEmpty())
         {
@@ -715,9 +717,9 @@ private String openBankItemName = null;
 
     private void loadBankValueLog()
     {
+        bankValueLog.clear();
         String raw = plugin.loadProfileConfig("bankValueLog");
         if (raw == null || raw.isEmpty()) return;
-        bankValueLog.clear();
         for (String entry : raw.split(","))
         {
             String[] parts = entry.split("\\|");

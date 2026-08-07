@@ -519,11 +519,22 @@ private void fetchMapping()
 	{
 		if (event.getGameState() == net.runelite.api.GameState.LOGGED_IN)
 		{
+			// Reset history sampling state for new profile
+			resetHistorySamplingState();
 			// Reload bank data for the newly logged in RS profile
 			javax.swing.SwingUtilities.invokeLater(() -> {
 				panel.reloadBankDataForProfile();
 			});
 		}
+	}
+
+	private void resetHistorySamplingState()
+	{
+		latestBankOnlyValue = 0;
+		latestTotalWealthValue = 0;
+		latestValueValid = false;
+		lastHistoryWriteMillis = 0;
+		lastSavedTotalWealthValue = 0;
 	}
 
 	@Subscribe
