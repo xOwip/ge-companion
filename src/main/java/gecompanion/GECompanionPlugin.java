@@ -663,11 +663,13 @@ private void fetchMapping()
 		latestTotalWealthValue = totalWealthValue;
 		latestValueValid = true;
 
-		// Immediate checkpoint on first bank scan after login/startup
-		long now = System.currentTimeMillis();
+// Immediate checkpoint on first bank scan after login/startup
 		if (initialHistoryCheckpointPending) {
+			saveHistoryCheckpoint(bankOnlyValue, totalWealthValue, System.currentTimeMillis());
 			initialHistoryCheckpointPending = false;
-			saveHistoryCheckpoint(bankOnlyValue, totalWealthValue, now);
+		} else {
+			// Save if 5 minutes have passed since last checkpoint
+			saveHistoryIfDue(bankOnlyValue, totalWealthValue);
 		}
 
 		final long finalBankOnly = bankOnlyValue;
@@ -685,12 +687,19 @@ private void fetchMapping()
 		lastHistoryWriteMillis = now;
 	}
 
+	private void saveHistoryIfDue(long bankOnlyValue, long totalWealthValue)
+	{
+		long now = System.currentTimeMillis();
+		if (now - lastHistoryWriteMillis >= HISTORY_INTERVAL_MS)
+		{
+			saveHistoryCheckpoint(bankOnlyValue, totalWealthValue, now);
+		}
+	}
+
 	private void periodicHistoryWrite()
 	{
 		if (!latestValueValid) return;
-		long now = System.currentTimeMillis();
-		if (now - lastHistoryWriteMillis < HISTORY_INTERVAL_MS) return;
-		saveHistoryCheckpoint(latestBankOnlyValue, latestTotalWealthValue, now);
+		saveHistoryIfDue(latestBankOnlyValue, latestTotalWealthValue);
 	}
 
 	private void handleBankCommand(net.runelite.api.events.ChatMessage chatMessage, String message)
