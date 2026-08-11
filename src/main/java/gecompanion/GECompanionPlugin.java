@@ -693,6 +693,7 @@ private void fetchMapping()
 
 	private void periodicHistoryWrite()
 	{
+		if (client.getGameState() != net.runelite.api.GameState.LOGGED_IN) return;
 		if (!latestValueValid) return;
 		saveHistoryIfDue(latestBankOnlyValue, latestTotalWealthValue);
 	}
