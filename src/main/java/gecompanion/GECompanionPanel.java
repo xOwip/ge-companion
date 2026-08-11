@@ -66,14 +66,8 @@ public class GECompanionPanel extends PluginPanel
     public int getActiveTab() { return activeTab; }
     public void openItemLookup(int itemId)
     {
-        // Reverse-lookup item name from ID
-        String foundName = null;
-        for (java.util.Map.Entry<String, Integer> entry : nameToId.entrySet()) {
-            if (entry.getValue() == itemId) {
-                foundName = entry.getKey();
-                break;
-            }
-        }
+// Reverse-lookup item name from ID
+        String foundName = idToName.get(itemId);
         if (foundName == null) return;
 
         // Capitalize first letter of each word
@@ -101,7 +95,7 @@ public class GECompanionPanel extends PluginPanel
     public boolean isItemPriceable(int itemId)
     {
         if (itemVariantMap.containsKey(itemId)) return true;
-        return nameToId.containsValue(itemId);
+        return idToName.containsKey(itemId);
     }
     private String activeTimeFrame = "24H";
     private boolean bankAllItemsCollapsed = true;
@@ -157,6 +151,7 @@ public class GECompanionPanel extends PluginPanel
     // Live price data
     private java.util.Map<Integer, PriceData> priceCache = new java.util.HashMap<>();
     private java.util.Map<String, Integer> nameToId = new java.util.HashMap<>();
+    private java.util.Map<Integer, String> idToName = new java.util.HashMap<>();
     private java.util.Map<Integer, Long> avgPrice24h = new java.util.HashMap<>();
     private java.util.Map<Integer, Long> avgPrice1h = new java.util.HashMap<>();
     private java.util.Map<Integer, Long> avgPrice6h = new java.util.HashMap<>();
@@ -664,6 +659,10 @@ private String openBankItemName = null;
     {
         this.priceCache = priceCache;
         this.nameToId = nameToId;
+        this.idToName.clear();
+        for (java.util.Map.Entry<String, Integer> entry : nameToId.entrySet()) {
+            this.idToName.put(entry.getValue(), entry.getKey());
+        }
         if (itemVariantMap.isEmpty()) buildItemVariantMap();
         this.avgPrice24h = avgPrice24h;
         this.avgPrice1h = avgPrice1h;
@@ -841,18 +840,14 @@ private String openBankItemName = null;
         return plugin.getItemManager().getImage(itemId);
     }
     public String getItemName(int itemId) {
-        for (java.util.Map.Entry<String, Integer> entry : nameToId.entrySet()) {
-            if (entry.getValue().equals(itemId)) {
-                String name = entry.getKey();
-                String[] words = name.split(" ");
-                StringBuilder sb = new StringBuilder();
-                for (String word : words) {
-                    if (word.length() > 0) sb.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1)).append(" ");
-                }
-                return sb.toString().trim();
-            }
+        String name = idToName.get(itemId);
+        if (name == null) return null;
+        String[] words = name.split(" ");
+        StringBuilder sb = new StringBuilder();
+        for (String word : words) {
+            if (word.length() > 0) sb.append(Character.toUpperCase(word.charAt(0))).append(word.substring(1)).append(" ");
         }
-        return null;
+        return sb.toString().trim();
     }
     public java.util.List<long[]> getBankValueLog() { return bankValueLog; }
 
@@ -873,11 +868,7 @@ private String openBankItemName = null;
             boolean triggered = isAbove ? currentPrice >= targetPrice : currentPrice <= targetPrice;
             if (triggered)
             {
-                String alertItemName = "Unknown";
-                for (java.util.Map.Entry<String, Integer> nameEntry : nameToId.entrySet())
-                {
-                    if (nameEntry.getValue() == alertId) { alertItemName = nameEntry.getKey(); break; }
-                }
+                String alertItemName = idToName.getOrDefault(alertId, "Unknown");
                 final String finalName = alertItemName;
                 final long finalPrice = currentPrice;
                 final boolean finalIsAbove = isAbove;
@@ -5454,18 +5445,16 @@ whatsNewBox.add(seeMoreLabel);
         curLeg.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
 // Item name label — right-aligned, above legend
         String itemName = "";
-        for (java.util.Map.Entry<String, Integer> entry : nameToId.entrySet()) {
-            if (entry.getValue() == itemId) {
-                String[] words = entry.getKey().split(" ");
-                StringBuilder sb = new StringBuilder();
-                for (String word : words) {
-                    if (word.length() > 0)
-                        sb.append(Character.toUpperCase(word.charAt(0)))
-                                .append(word.substring(1)).append(" ");
-                }
-                itemName = sb.toString().trim();
-                break;
+        String rawName = idToName.get(itemId);
+        if (rawName != null) {
+            String[] words = rawName.split(" ");
+            StringBuilder sb = new StringBuilder();
+            for (String word : words) {
+                if (word.length() > 0)
+                    sb.append(Character.toUpperCase(word.charAt(0)))
+                            .append(word.substring(1)).append(" ");
             }
+            itemName = sb.toString().trim();
         }
         JLabel itemNameLabel = new JLabel(itemName, SwingConstants.LEFT);
         itemNameLabel.setForeground(TEXT_DIM);

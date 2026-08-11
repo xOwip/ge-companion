@@ -132,6 +132,7 @@ public class GECompanionPlugin extends Plugin
 	private final Map<Integer, Long> volumeCache = new HashMap<>();
 	// Name -> itemId mapping
 	private final Map<String, Integer> nameToId = new HashMap<>();
+	private final Map<Integer, String> idToName = new HashMap<>();
 	// Item GE limits — itemId -> limit
 	private final Map<Integer, Integer> itemLimits = new HashMap<>();
 
@@ -426,6 +427,7 @@ private void fetchMapping()
 					int id = item.get("id").getAsInt();
 					String name = item.get("name").getAsString();
 					nameToId.put(name.toLowerCase(), id);
+					idToName.put(id, name.toLowerCase());
 					int limit = item.has("limit") ? item.get("limit").getAsInt() : 0;
 					itemLimits.put(id, limit);
 				}
@@ -591,14 +593,7 @@ private void fetchMapping()
 			}
 
 			String foundName = null;
-			for (java.util.Map.Entry<String, Integer> entry : nameToId.entrySet())
-			{
-				if (entry.getValue() == lookupId)
-				{
-					foundName = entry.getKey();
-					break;
-				}
-			}
+			foundName = idToName.get(lookupId);
 			if (foundName != null)
 			{
 				String[] words = foundName.split(" ");
@@ -849,14 +844,7 @@ private void fetchMapping()
 		}
 
 		String foundName = null;
-		for (java.util.Map.Entry<String, Integer> entry : nameToId.entrySet())
-		{
-			if (entry.getValue() == lookupId)
-			{
-				foundName = entry.getKey();
-				break;
-			}
-		}
+		foundName = idToName.get(lookupId);
 		if (foundName != null)
 		{
 			String[] words = foundName.split(" ");
