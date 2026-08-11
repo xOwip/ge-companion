@@ -137,6 +137,7 @@ public class GECompanionPanel extends PluginPanel
     private JLabel liveFloatMarginLabel = null;
     private JLabel liveFloatProfitLabel = null;
     private JLabel liveFloatRoiLabel = null;
+    private JLabel liveFloatMarginVolLabel = null;
     private JLabel liveBuyPriceValueLabel = null;
     private JLabel liveBuyPriceHeaderLabel = null;
     private JLabel liveSellPriceValueLabel = null;
@@ -1393,9 +1394,12 @@ private String openBankItemName = null;
 
 // Update floating stats panel live (Margin, Profit, ROI only — Volume is static)
         if (activeStatsFloatPanel != null && liveOpenItemId != -1) {
-            long liveMargin = pd.high - pd.low;
+            long liveTax = calculateGeTax(pd.high);
+            long liveMargin = pd.high - pd.low - liveTax;
             Integer liveBuyLimit = itemLimits.get(liveOpenItemId);
             long liveProfitAtLimit = liveBuyLimit != null ? liveMargin * liveBuyLimit : 0;
+            Long liveDailyVol = volumeCache.get(liveOpenItemId);
+            long liveMarginVolume = liveDailyVol != null ? liveMargin * liveDailyVol : 0;
             double liveRoi = pd.low > 0 ? ((double) liveMargin / pd.low) * 100.0 : 0;
             if (liveFloatMarginLabel != null) {
                 String mStr = (liveMargin >= 0 ? "+" : "") + formatFullPrice(String.valueOf(liveMargin)) + " gp";
@@ -1406,6 +1410,11 @@ private String openBankItemName = null;
                 String pStr = liveBuyLimit != null ? (liveProfitAtLimit >= 0 ? "+" : "") + formatFullPrice(String.valueOf(liveProfitAtLimit)) + " gp" : "?";
                 liveFloatProfitLabel.setText(pStr);
                 liveFloatProfitLabel.setForeground(liveProfitAtLimit >= 0 ? new Color(109, 184, 109) : new Color(192, 57, 43));
+            }
+            if (liveFloatMarginVolLabel != null) {
+                String mvStr = liveDailyVol != null ? formatFullPrice(String.valueOf(liveMarginVolume)) + " gp" : "?";
+                liveFloatMarginVolLabel.setText(mvStr);
+                liveFloatMarginVolLabel.setForeground(liveMarginVolume >= 0 ? new Color(109, 184, 109) : new Color(192, 57, 43));
             }
             if (liveFloatRoiLabel != null) {
                 liveFloatRoiLabel.setText(String.format("%.2f%%", liveRoi));
@@ -5007,6 +5016,12 @@ whatsNewBox.add(seeMoreLabel);
             }
         }).start();
     }
+    private long calculateGeTax(long sellPrice)
+    {
+        long tax = sellPrice * 2 / 100;
+        return Math.min(tax, 5_000_000L);
+    }
+
     private String[] buildItemDataFromCache(String name)
     {
         // Extract original name if variant (format: "displayName|originalName")
@@ -5117,8 +5132,10 @@ whatsNewBox.add(seeMoreLabel);
             Long dailyVol = volumeCache.get(detailItemId);
             Integer buyLimit = itemLimits.get(detailItemId);
             if (tooltipPd != null) {
-                long margin = tooltipPd.high - tooltipPd.low;
+                long tax = calculateGeTax(tooltipPd.high);
+                long margin = tooltipPd.high - tooltipPd.low - tax;
                 long profitAtLimit = buyLimit != null ? margin * buyLimit : 0;
+                long marginVolume = dailyVol != null ? margin * dailyVol : 0;
                 double roi = tooltipPd.low > 0 ? ((double) margin / tooltipPd.low) * 100.0 : 0;
                 String volStr = dailyVol != null ? String.format("%,d", dailyVol) : "?";
                 String marginColor = margin >= 0 ? "#6db86d" : "#c0392b";
@@ -5129,6 +5146,9 @@ whatsNewBox.add(seeMoreLabel);
                 tooltipHtml += "<tr><td><font color='#8a8680'>Daily Volume</font></td><td>&nbsp;&nbsp;</td><td><font color='#d4af37'>" + volStr + "</font></td></tr>";
                 tooltipHtml += "<tr><td><font color='#8a8680'>Margin</font></td><td>&nbsp;&nbsp;</td><td><font color='" + marginColor + "'>" + marginStr + "</font></td></tr>";
                 tooltipHtml += "<tr><td><font color='#8a8680'>Profit (at limit)</font></td><td>&nbsp;&nbsp;</td><td><font color='" + profitColor + "'>" + profitStr + "</font></td></tr>";
+                String marginVolStr = dailyVol != null ? formatFullPrice(String.valueOf(marginVolume)) + " gp" : "?";
+                String marginVolColor = marginVolume >= 0 ? "#6db86d" : "#c0392b";
+                tooltipHtml += "<tr><td><font color='#8a8680'>Margin × Vol.</font></td><td>&nbsp;&nbsp;</td><td><font color='" + marginVolColor + "'>" + marginVolStr + "</font></td></tr>";
                 tooltipHtml += "<tr><td><font color='#8a8680'>ROI</font></td><td>&nbsp;&nbsp;</td><td><font color='#e8e3d8'>" + roiStr + "</font></td></tr>";
                 tooltipHtml += "<tr><td colspan='3'><hr></td></tr>";
                 tooltipHtml += "<tr><td colspan='3'><font color='#6b6660'><i>Updated when panel opened &middot; reopen for latest</i></font></td></tr>";
@@ -5184,8 +5204,10 @@ whatsNewBox.add(seeMoreLabel);
             Long fdailyVol = volumeCache.get(detailItemId);
             Integer fbuyLimit = itemLimits.get(detailItemId);
             if (fpd != null) {
-                long fmargin = fpd.high - fpd.low;
+                long ftax = calculateGeTax(fpd.high);
+                long fmargin = fpd.high - fpd.low - ftax;
                 long fprofitAtLimit = fbuyLimit != null ? fmargin * fbuyLimit : 0;
+                long fmarginVolume = fdailyVol != null ? fmargin * fdailyVol : 0;
                 double froi = fpd.low > 0 ? ((double) fmargin / fpd.low) * 100.0 : 0;
                 String fvolStr = fdailyVol != null ? String.format("%,d", fdailyVol) : "?";
                 String fmarginColor = fmargin >= 0 ? "#6db86d" : "#c0392b";
@@ -5196,18 +5218,28 @@ whatsNewBox.add(seeMoreLabel);
 
                 JPanel volRow = buildFloatStatRow("Daily Volume", fvolStr, new Color(212, 175, 55));
                 liveFloatVolumeLabel = (JLabel) ((java.awt.BorderLayout) volRow.getLayout() == null ? null : volRow.getComponent(1));
+                ((JLabel) volRow.getComponent(0)).setToolTipText("Number of items traded on the GE per day");
                 statsFloatPanel.add(volRow);
                 statsFloatPanel.add(Box.createVerticalStrut(3));
                 JPanel marginRow = buildFloatStatRow("Margin", fmarginStr, fmargin >= 0 ? new Color(109, 184, 109) : new Color(192, 57, 43));
                 liveFloatMarginLabel = (JLabel) marginRow.getComponent(1);
+                ((JLabel) marginRow.getComponent(0)).setToolTipText("Tax-adjusted profit per item (Instabuy − Instasell − GE tax)");
                 statsFloatPanel.add(marginRow);
                 statsFloatPanel.add(Box.createVerticalStrut(3));
                 JPanel profitRow = buildFloatStatRow("Profit (at limit)", fprofitStr, fprofitAtLimit >= 0 ? new Color(109, 184, 109) : new Color(192, 57, 43));
                 liveFloatProfitLabel = (JLabel) profitRow.getComponent(1);
+                ((JLabel) profitRow.getComponent(0)).setToolTipText("Margin × GE buy limit — maximum profit per flip cycle");
                 statsFloatPanel.add(profitRow);
+                statsFloatPanel.add(Box.createVerticalStrut(3));
+                String fmarginVolStr = fdailyVol != null ? formatFullPrice(String.valueOf(fmarginVolume)) + " gp" : "?";
+                JPanel marginVolRow = buildFloatStatRow("Margin × Vol.", fmarginVolStr, fmarginVolume >= 0 ? new Color(109, 184, 109) : new Color(192, 57, 43));
+                liveFloatMarginVolLabel = (JLabel) marginVolRow.getComponent(1);
+                ((JLabel) marginVolRow.getComponent(0)).setToolTipText("<html>Tax-adjusted margin × daily GE volume.<br>Indicates overall market activity and profit opportunity<br>— not an estimate of personal daily profit.</html>");
+                statsFloatPanel.add(marginVolRow);
                 statsFloatPanel.add(Box.createVerticalStrut(3));
                 JPanel roiRow = buildFloatStatRow("ROI", froiStr, new Color(232, 227, 216));
                 liveFloatRoiLabel = (JLabel) roiRow.getComponent(1);
+                ((JLabel) roiRow.getComponent(0)).setToolTipText("Return on investment: (Margin / Instasell) × 100%");
                 statsFloatPanel.add(roiRow);
                 statsFloatPanel.add(Box.createVerticalStrut(5));
                 JSeparator sep = new JSeparator();
@@ -5215,7 +5247,7 @@ whatsNewBox.add(seeMoreLabel);
                 sep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
                 statsFloatPanel.add(sep);
                 statsFloatPanel.add(Box.createVerticalStrut(4));
-                JLabel footnote = new JLabel("<html><center>Margin, Profit & ROI auto-refresh every 60s<br>Volume updates on startup</center></html>", SwingConstants.CENTER);
+                JLabel footnote = new JLabel("<html><center>Stats auto-refresh every 60s<br>Volume updates on startup</center></html>", SwingConstants.CENTER);
                 footnote.setForeground(new Color(107, 102, 96));
                 footnote.setFont(new Font("Monospaced", Font.PLAIN, 9));
                 footnote.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -7484,7 +7516,10 @@ whatsNewBox.add(seeMoreLabel);
                 "• One-time bank history reset due to account-specific migration",
                 "• Bank tracking optimized — history now records every 5 minutes",
                 "• Fixed rapid bank clicking lag — no more micro-stutters",
-                "• Fixed variant items disappearing from Top Gainers/Losers"
+                "• Fixed variant items disappearing from Top Gainers/Losers",
+                "• Fixed GE tax not applied to flipping stats (Margin, Profit, ROI)",
+                "• Added Margin × Volume stat to flipping stats panel",
+                "• Added tooltips to all flipping stats"
         }) {
             JLabel l = new JLabel(line);
             l.setForeground(TEXT_DIM);
