@@ -1988,7 +1988,7 @@ private String openBankItemName = null;
 
             whatsNewBox.add(whatsNewHeader);
 
-            JLabel whatsNewText = new JLabel("<html><body style='width:150px;color:#888888;font-family:monospaced;font-size:9px;'><span style='color:#D4AF37;'>v" + CURRENT_VERSION + "</span> is here! — Aug 5, 2026<br>• Bank tracking back online!<br>• Bank history is now saved per account — each account tracks its own wealth history independently<br>• One-time bank history reset due to this change<br>• Bank tracking optimized — fixed rapid bank clicking lag<br>• Fixed variant items disappearing from Top Gainers/Losers</body></html>");
+            JLabel whatsNewText = new JLabel("<html><body style='width:150px;color:#888888;font-family:monospaced;font-size:9px;'><span style='color:#888888;'>Aug 5, 2026</span><br><span style='color:#D4AF37;'>v" + CURRENT_VERSION + "</span> is here!<br>• Bank tracking back online!<br>• Bank history is now saved per account — each account tracks its own wealth history independently<br>• One-time bank history reset due to this change<br>• Bank tracking optimized — fixed rapid bank clicking lag<br>• Fixed variant items disappearing from Top Gainers/Losers</body></html>");
             whatsNewText.setBorder(new EmptyBorder(4, 0, 0, 0));
             whatsNewBox.add(whatsNewText);
             whatsNewBox.add(Box.createVerticalStrut(4));
