@@ -137,6 +137,8 @@ public class GECompanionPanel extends PluginPanel
     private JLabel liveFloatMarginLabel = null;
     private JLabel liveFloatProfitLabel = null;
     private JLabel liveFloatRoiLabel = null;
+    private JLabel liveLastUpdatedLabel = null;
+    private javax.swing.Timer lastUpdatedTimer = null;
     private JLabel liveFloatMarginVolLabel = null;
     private JLabel liveBuyPriceValueLabel = null;
     private JLabel liveBuyPriceHeaderLabel = null;
@@ -250,6 +252,8 @@ private String openBankItemName = null;
         loadPriceAlerts();
         showTotalWealth = config.showTotalWealth();
         loadRecentSearches();
+        lastUpdatedTimer = new javax.swing.Timer(60_000, e -> updateLastUpdatedLabel());
+        lastUpdatedTimer.start();
         searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener()
         {
             public void insertUpdate(javax.swing.event.DocumentEvent e)
@@ -689,6 +693,29 @@ private String openBankItemName = null;
             showTab(activeTab);
         }
     }
+    public void updateLastUpdatedLabel()
+    {
+        if (liveLastUpdatedLabel == null) return;
+        long lastScanTime = 0;
+        for (long[] entry : bankValueLog) {
+            if (entry[0] > lastScanTime) lastScanTime = entry[0];
+        }
+        long secondsAgo = (System.currentTimeMillis() / 1000L) - lastScanTime;
+        String shortUpdatedStr;
+        if (lastScanTime == 0)
+            shortUpdatedStr = "Not yet scanned";
+        else if (secondsAgo < 60)
+            shortUpdatedStr = "just now";
+        else if (secondsAgo < 3600)
+            shortUpdatedStr = (secondsAgo / 60) + "min ago";
+        else
+            shortUpdatedStr = (secondsAgo / 3600) + "h ago";
+        String contextStr = config.showBankValueChange() && !plugin.isBankValueHidden()
+                ? "· " + bankWealthTimeFrame + " · Last updated " + shortUpdatedStr
+                : "Last updated " + shortUpdatedStr;
+        liveLastUpdatedLabel.setText(contextStr);
+    }
+
     public void reloadBankDataForProfile()
     {
         loadBankData();
@@ -761,6 +788,7 @@ private String openBankItemName = null;
     public void saveHistoryEntry(long bankOnlyValue, long totalWealthValue)
     {
         saveBankValueLog(bankOnlyValue, totalWealthValue);
+        updateLastUpdatedLabel();
     }
 
     private void saveBankValueLog(long bankOnlyValue, long totalWealthValue)
@@ -3749,11 +3777,13 @@ whatsNewBox.add(seeMoreLabel);
         String contextStr = config.showBankValueChange() && !bankHidden ?
                 "· " + bankWealthTimeFrame + " · Last updated " + shortUpdatedStr : "Last updated " + shortUpdatedStr;
         JLabel contextLabel = new JLabel(contextStr, SwingConstants.CENTER);
+        liveLastUpdatedLabel = contextLabel;
         contextLabel.setForeground(TEXT_DIM);
         contextLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
         gbc.gridy = 6;
         gbc.insets = new java.awt.Insets(0, 6, 4, 6);
         borderedSection.add(contextLabel, gbc);
+        updateLastUpdatedLabel();
 
 // Row 8: Clickable toggle separator
         JPanel toggleSepRow = new JPanel(new BorderLayout());
