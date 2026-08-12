@@ -133,6 +133,7 @@ public class GECompanionPlugin extends Plugin
 	// Name -> itemId mapping
 	private final Map<String, Integer> nameToId = new HashMap<>();
 	private final Map<Integer, String> idToName = new HashMap<>();
+	private final Map<Integer, String> variantNameCache = new HashMap<>();
 	// Item GE limits — itemId -> limit
 	private final Map<Integer, Integer> itemLimits = new HashMap<>();
 
@@ -586,11 +587,7 @@ private void fetchMapping()
 			boolean isVariantItem = (originalId != lookupId);
 
 			// Get original item name for variant indicator
-			String originalName = null;
-			if (isVariantItem) {
-				ItemComposition originalComp = itemManager.getItemComposition(originalId);
-				if (originalComp != null) originalName = originalComp.getName();
-			}
+			String originalName = isVariantItem ? getVariantDisplayName(originalId) : null;
 
 			String foundName = null;
 			foundName = idToName.get(lookupId);
@@ -671,6 +668,14 @@ private void fetchMapping()
 		final long finalTotalWealth = totalWealthValue;
 		javax.swing.SwingUtilities.invokeLater(() -> {
 			panel.updateBankItems(newBankItems, newBankQuantities, finalBankOnly, finalTotalWealth);
+		});
+	}
+
+	private String getVariantDisplayName(int originalId)
+	{
+		return variantNameCache.computeIfAbsent(originalId, id -> {
+			ItemComposition comp = itemManager.getItemComposition(id);
+			return comp != null ? comp.getName() : null;
 		});
 	}
 
@@ -838,11 +843,7 @@ private void fetchMapping()
 		int lookupId = panel.getItemVariantMap().getOrDefault(originalId, originalId);
 		boolean isVariantItem = (originalId != lookupId);
 
-		String originalName = null;
-		if (isVariantItem) {
-			ItemComposition originalComp = itemManager.getItemComposition(originalId);
-			if (originalComp != null) originalName = originalComp.getName();
-		}
+		String originalName = isVariantItem ? getVariantDisplayName(originalId) : null;
 
 		String foundName = null;
 		foundName = idToName.get(lookupId);
