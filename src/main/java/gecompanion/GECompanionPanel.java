@@ -701,18 +701,22 @@ private String openBankItemName = null;
             if (entry[0] > lastScanTime) lastScanTime = entry[0];
         }
         long secondsAgo = (System.currentTimeMillis() / 1000L) - lastScanTime;
-        String shortUpdatedStr;
-        if (lastScanTime == 0)
-            shortUpdatedStr = "Not yet scanned";
-        else if (secondsAgo < 60)
-            shortUpdatedStr = "just now";
-        else if (secondsAgo < 3600)
-            shortUpdatedStr = (secondsAgo / 60) + "min ago";
-        else
-            shortUpdatedStr = (secondsAgo / 3600) + "h ago";
-        String contextStr = config.showBankValueChange() && !plugin.isBankValueHidden()
-                ? "· " + bankWealthTimeFrame + " · Last updated " + shortUpdatedStr
-                : "Last updated " + shortUpdatedStr;
+        String contextStr;
+        if (lastScanTime == 0) {
+            contextStr = "Not yet scanned";
+        } else {
+            long secondsAgo2 = (System.currentTimeMillis() / 1000L) - lastScanTime;
+            String shortUpdatedStr;
+            if (secondsAgo2 < 60)
+                shortUpdatedStr = "just now";
+            else if (secondsAgo2 < 3600)
+                shortUpdatedStr = (secondsAgo2 / 60) + "min ago";
+            else
+                shortUpdatedStr = (secondsAgo2 / 3600) + "h ago";
+            contextStr = config.showBankValueChange() && !plugin.isBankValueHidden()
+                    ? "· " + bankWealthTimeFrame + " · Last updated " + shortUpdatedStr
+                    : "Last updated " + shortUpdatedStr;
+        }
         liveLastUpdatedLabel.setText(contextStr);
     }
 
@@ -3765,17 +3769,20 @@ whatsNewBox.add(seeMoreLabel);
 
         // Row 7: Context label (always present)
 // Shorten lastUpdatedStr for context label
-        String shortUpdatedStr;
-        if (lastScanTime == 0)
-            shortUpdatedStr = "not yet scanned";
-        else if (secondsAgo < 60)
-            shortUpdatedStr = "just now";
-        else if (secondsAgo < 3600)
-            shortUpdatedStr = (secondsAgo / 60) + "min ago";
-        else
-            shortUpdatedStr = (secondsAgo / 3600) + "h ago";
-        String contextStr = config.showBankValueChange() && !bankHidden ?
-                "· " + bankWealthTimeFrame + " · Last updated " + shortUpdatedStr : "Last updated " + shortUpdatedStr;
+        String contextStr;
+        if (lastScanTime == 0) {
+            contextStr = "Not yet scanned";
+        } else {
+            String shortUpdatedStr;
+            if (secondsAgo < 60)
+                shortUpdatedStr = "just now";
+            else if (secondsAgo < 3600)
+                shortUpdatedStr = (secondsAgo / 60) + "min ago";
+            else
+                shortUpdatedStr = (secondsAgo / 3600) + "h ago";
+            contextStr = config.showBankValueChange() && !bankHidden ?
+                    "· " + bankWealthTimeFrame + " · Last updated " + shortUpdatedStr : "Last updated " + shortUpdatedStr;
+        }
         JLabel contextLabel = new JLabel(contextStr, SwingConstants.CENTER);
         liveLastUpdatedLabel = contextLabel;
         contextLabel.setForeground(TEXT_DIM);
