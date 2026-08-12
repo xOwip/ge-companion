@@ -295,7 +295,9 @@ private String openBankItemName = null;
         boolean displayedItemChanged = displayedGainersLosers.stream().anyMatch(name -> {
             boolean inNew = newItemSet.stream().anyMatch(s -> s.equals(name) || s.startsWith(name + "|") || name.startsWith(s.split("\\|")[0]));
             boolean inOld = oldItemSet.stream().anyMatch(s -> s.equals(name) || s.startsWith(name + "|") || name.startsWith(s.split("\\|")[0]));
-            return inNew != inOld || !quantities.getOrDefault(name, 0).equals(this.bankQuantities.getOrDefault(name, 0));
+            int newQty = quantities.getOrDefault(name, quantities.entrySet().stream().filter(e -> e.getKey().startsWith(name + "|")).mapToInt(java.util.Map.Entry::getValue).sum());
+            int oldQty = this.bankQuantities.getOrDefault(name, this.bankQuantities.entrySet().stream().filter(e -> e.getKey().startsWith(name + "|")).mapToInt(java.util.Map.Entry::getValue).sum());
+            return inNew != inOld || newQty != oldQty;
         });
         boolean removedItemReturned = removedFromDisplay.stream().anyMatch(name ->
                 newItemSet.stream().anyMatch(s -> s.equals(name) || s.startsWith(name + "|") || name.startsWith(s.split("\\|")[0])));
