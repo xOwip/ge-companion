@@ -46,7 +46,7 @@ public class GECompanionPanel extends PluginPanel
     private static final Color BG_ROW_HOVER = new Color(45, 40, 38);
     private static final Color BG_ROW_SELECTED = new Color(26, 24, 20);
     private static final Color STAT_BLUE = new Color(74, 122, 191);
-    private static final String CURRENT_VERSION = "1.2.1";
+    private static final String CURRENT_VERSION = "1.2.2";
 
     private final GECompanionConfig config;
     private final GECompanionPlugin plugin;
@@ -2041,7 +2041,7 @@ private String openBankItemName = null;
 
             whatsNewBox.add(whatsNewHeader);
 
-            JLabel whatsNewText = new JLabel("<html><body style='width:150px;color:#888888;font-family:monospaced;font-size:9px;'><span style='color:#888888;'>Aug 5, 2026</span><br><span style='color:#D4AF37;'>v" + CURRENT_VERSION + "</span> is here!<br>• Bank tracking back online!<br>• Bank history is now saved per account — each account tracks its own wealth history independently<br>• One-time bank history reset due to this change<br>• Bank tracking optimized — fixed rapid bank clicking lag<br>• Fixed variant items disappearing from Top Gainers/Losers</body></html>");
+            JLabel whatsNewText = new JLabel("<html><body style='width:150px;color:#888888;font-family:monospaced;font-size:9px;'><span style='color:#888888;'>Aug 11, 2026</span><br><span style='color:#D4AF37;'>v" + CURRENT_VERSION + "</span> is here!<br>• Fixed GE tax in flipping stats<br>• Added Margin × Volume stat<br>• Added flipping stat tooltips<br>• Improved bank tracking performance<br>• Added live Last Updated timer<br>• Fixed variant item panel refreshing<br>• Improved variant item processing<br>• Bank history pauses while logged out</body></html>");
             whatsNewText.setBorder(new EmptyBorder(4, 0, 0, 0));
             whatsNewBox.add(whatsNewText);
             whatsNewBox.add(Box.createVerticalStrut(4));
@@ -7560,6 +7560,32 @@ whatsNewBox.add(seeMoreLabel);
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         content.add(titleLabel);
         content.add(Box.createVerticalStrut(10));
+
+// v1.2.2
+        JLabel v122Label = new JLabel("v1.2.2 — August 11, 2026");
+        v122Label.setForeground(GOLD);
+        v122Label.setFont(new Font("Monospaced", Font.BOLD, FONT_STAT_LABEL));
+        v122Label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(v122Label);
+        content.add(Box.createVerticalStrut(3));
+        for (String line : new String[]{
+                "• Fixed GE tax in flipping stats (Margin, Profit, ROI)",
+                "• Added Margin × Volume stat to flipping stats panel",
+                "• Added tooltips to all flipping stats",
+                "• Fixed variant item detail panel zero-disruption",
+                "• Improved variant item processing performance",
+                "• Added live Last Updated timer in Bank tab",
+                "• Conditional bankValue/wealthValue config writes",
+                "• Bank history pauses while logged out",
+                "• Fixed 'Not yet scanned' truncation"
+        }) {
+            JLabel l = new JLabel(line);
+            l.setForeground(TEXT_DIM);
+            l.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+            l.setAlignmentX(Component.LEFT_ALIGNMENT);
+            content.add(l);
+        }
+        content.add(Box.createVerticalStrut(8));
 
 // v1.2.1
         JLabel v121Label = new JLabel("v1.2.1 — August 5, 2026");
