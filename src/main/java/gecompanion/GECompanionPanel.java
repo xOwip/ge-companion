@@ -278,6 +278,8 @@ private String openBankItemName = null;
 
     private long totalBankValue = 0;
     private long totalWealthValue = 0;
+    private long lastPersistedBankValue = Long.MIN_VALUE;
+    private long lastPersistedWealthValue = Long.MIN_VALUE;
     private java.util.List<long[]> bankValueLog = new java.util.ArrayList<>();
 
     public void updateBankItems(java.util.List<String> items, java.util.Map<String, Integer> quantities, long bankOnlyValue, long totalWealthValue)
@@ -697,24 +699,40 @@ private String openBankItemName = null;
     {
         totalBankValue = 0;
         totalWealthValue = 0;
+        lastPersistedBankValue = Long.MIN_VALUE;
+        lastPersistedWealthValue = Long.MIN_VALUE;
         String savedValue = plugin.loadProfileConfig("bankValue");
         if (savedValue != null && !savedValue.trim().isEmpty())
         {
-            try { totalBankValue = Long.parseLong(savedValue.trim()); }
+            try {
+                totalBankValue = Long.parseLong(savedValue.trim());
+                lastPersistedBankValue = totalBankValue;
+            }
             catch (NumberFormatException e) { }
         }
         String savedWealth = plugin.loadProfileConfig("wealthValue");
         if (savedWealth != null && !savedWealth.trim().isEmpty())
         {
-            try { totalWealthValue = Long.parseLong(savedWealth.trim()); }
+            try {
+                totalWealthValue = Long.parseLong(savedWealth.trim());
+                lastPersistedWealthValue = totalWealthValue;
+            }
             catch (NumberFormatException e) { }
         }
     }
 
     private void saveBankData()
     {
-        plugin.saveProfileConfig("bankValue", String.valueOf(totalBankValue));
-        plugin.saveProfileConfig("wealthValue", String.valueOf(totalWealthValue));
+        if (totalBankValue != lastPersistedBankValue)
+        {
+            plugin.saveProfileConfig("bankValue", String.valueOf(totalBankValue));
+            lastPersistedBankValue = totalBankValue;
+        }
+        if (totalWealthValue != lastPersistedWealthValue)
+        {
+            plugin.saveProfileConfig("wealthValue", String.valueOf(totalWealthValue));
+            lastPersistedWealthValue = totalWealthValue;
+        }
     }
 
     private void loadBankValueLog()
