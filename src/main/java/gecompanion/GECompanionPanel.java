@@ -252,7 +252,8 @@ private String openBankItemName = null;
         loadPriceAlerts();
         showTotalWealth = config.showTotalWealth();
         loadRecentSearches();
-        lastUpdatedTimer = new javax.swing.Timer(60_000, e -> updateLastUpdatedLabel());
+        lastUpdatedTimer = new javax.swing.Timer(10_000, e -> updateLastUpdatedLabel());
+        lastUpdatedTimer.setRepeats(true);
         lastUpdatedTimer.start();
         searchField.getDocument().addDocumentListener(new javax.swing.event.DocumentListener()
         {
