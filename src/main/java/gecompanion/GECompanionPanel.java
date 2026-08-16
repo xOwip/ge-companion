@@ -2041,7 +2041,7 @@ private String openBankItemName = null;
 
             whatsNewBox.add(whatsNewHeader);
 
-            JLabel whatsNewText = new JLabel("<html><body style='width:150px;color:#888888;font-family:monospaced;font-size:9px;'><span style='color:#888888;'>Aug 11, 2026</span><br><span style='color:#D4AF37;'>v" + CURRENT_VERSION + "</span> is here!<br>• Fixed GE tax in flipping stats<br>• Added Margin × Volume stat<br>• Added flipping stat tooltips<br>• Improved bank tracking performance<br>• Added live Last Updated timer<br>• Fixed variant item panel refreshing<br>• Improved variant item processing<br>• Bank history pauses while logged out</body></html>");
+            JLabel whatsNewText = new JLabel("<html><body style='width:150px;color:#888888;font-family:monospaced;font-size:9px;'><span style='color:#888888;'>Aug 16, 2026</span><br><span style='color:#D4AF37;'>v" + CURRENT_VERSION + "</span> is here!<br>• Fixed GE tax in flipping stats<br>• Added Margin × Volume stat<br>• Added flipping stat tooltips<br>• Improved bank tracking performance<br>• Added live Last Updated timer<br>• Fixed variant item panel refreshing<br>• Improved variant item processing<br>• Bank history pauses while logged out</body></html>");
             whatsNewText.setBorder(new EmptyBorder(4, 0, 0, 0));
             whatsNewBox.add(whatsNewText);
             whatsNewBox.add(Box.createVerticalStrut(4));
