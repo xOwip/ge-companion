@@ -104,13 +104,14 @@ price chart the next time you open it.
 ### Flipping Stats
 Click the item icon in any detail panel to reveal a flipping stats panel with:
 - **Daily Volume** — how many times this item trades per day
-- **Margin** — current buy/sell spread
-- **Profit at limit** — margin × GE buy limit
+- **Margin** — buy/sell spread minus GE tax (2%, capped at 5m)
+- **Profit at limit** — tax-adjusted margin × GE buy limit
+- **Margin × Volume** — tax-adjusted margin × daily volume, useful for comparing overall market opportunity
 - **ROI** — return on investment as a percentage
 
-Margin, Profit, and ROI update live every 60 seconds alongside prices.
+Hover any stat label for a tooltip explaining what it measures. All stats use GE tax-adjusted values to match prices.runescape.wiki. Margin, Profit, Margin × Volume, and ROI update live every 60 seconds alongside prices.
 
-![Flipping stats panel](screenshots/flipping_stats.PNG)
+![Flipping stats panel](screenshots/Flipping_Stats_Panel_Updated.png)
 
 ### Bank Value Tracker
 Open your bank and GE Companion automatically scans it to show:
