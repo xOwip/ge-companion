@@ -211,6 +211,12 @@ public class GECompanionPanel extends PluginPanel
     private final java.util.List<String> pinnedItems = new java.util.ArrayList<>();
     // Item variant map: ornamented/charged item ID → base tradeable item ID
     private final java.util.Map<Integer, Integer> itemVariantMap = new java.util.HashMap<>();
+    // Derived reverse grouping: tradeable base ID -> list of variant IDs mapped to it. Built lazily on first popup use.
+    private java.util.Map<Integer, java.util.List<Integer>> baseToVariantIdsCache = null;
+    // Resolved representative variant ID for a given (baseId + display name), for icon/popup display only. Key format: "baseId|normalizedName"
+    private final java.util.Map<String, Integer> variantDisplayIdCache = new java.util.HashMap<>();
+    // Caches RuneLite item composition names by ID, for popup name resolution (separate from the tradeable-only name maps)
+    private final java.util.Map<Integer, String> variantPopupNameCache = new java.util.HashMap<>();
     private final java.util.List<String> bankItems = new java.util.ArrayList<>();
     private final java.util.Set<String> displayedGainersLosers = new java.util.HashSet<>();
     private final java.util.Set<String> removedFromDisplay = new java.util.HashSet<>();
@@ -657,6 +663,102 @@ private String openBankItemName = null;
         itemVariantMap.put(29589, 29580); // Emberlight → Tormented synapse
         itemVariantMap.put(29594, 29580); // Purging staff → Tormented synapse
         itemVariantMap.put(29591, 29580); // Scorching bow → Tormented synapse
+    }
+
+    // Lazily builds (once) and returns the reverse grouping: tradeable base ID -> raw list of variant IDs mapped to it.
+// Derived entirely from itemVariantMap. Not deduplicated by name - that happens at render time.
+    private java.util.Map<Integer, java.util.List<Integer>> getBaseToVariantIds()
+    {
+        if (baseToVariantIdsCache == null)
+        {
+            baseToVariantIdsCache = new java.util.HashMap<>();
+            for (java.util.Map.Entry<Integer, Integer> entry : itemVariantMap.entrySet())
+            {
+                int variantId = entry.getKey();
+                int baseId = entry.getValue();
+                baseToVariantIdsCache
+                        .computeIfAbsent(baseId, k -> new java.util.ArrayList<>())
+                        .add(variantId);
+            }
+        }
+        return baseToVariantIdsCache;
+    }
+
+    // Resolves an item ID to its RuneLite display name, cached by ID.
+// Used for popup name resolution only - separate from the tradeable-only name maps (nameToId/idToName).
+    private String getVariantPopupName(int itemId)
+    {
+        return variantPopupNameCache.computeIfAbsent(itemId, id -> {
+            net.runelite.api.ItemComposition comp = plugin.getItemManager().getItemComposition(id);
+            return comp != null ? comp.getName() : null;
+        });
+    }
+
+    // Resolves a representative variant ID for a given tradeable base + hovered display name, for icon/popup display only.
+// Multiple variant IDs may share the same display name (e.g. charged/uncharged states) - any matching ID is treated
+// as equivalent for display purposes. Never use the returned ID for pricing, limits, or identity-sensitive logic.
+    private Integer resolveVariantDisplayId(int baseId, String displayName)
+    {
+        if (displayName == null || displayName.trim().isEmpty())
+        {
+            return null;
+        }
+        String normalizedName = displayName.trim().toLowerCase(java.util.Locale.ROOT);
+        String cacheKey = baseId + "|" + normalizedName;
+        Integer cached = variantDisplayIdCache.get(cacheKey);
+        if (cached != null)
+        {
+            return cached;
+        }
+        java.util.List<Integer> variants = getBaseToVariantIds().get(baseId);
+        if (variants == null)
+        {
+            return null;
+        }
+        for (Integer variantId : variants)
+        {
+            String candidateName = getVariantPopupName(variantId);
+            if (candidateName != null && candidateName.equalsIgnoreCase(displayName))
+            {
+                variantDisplayIdCache.put(cacheKey, variantId);
+                return variantId;
+            }
+        }
+        return null;
+    }
+
+    // Builds a deduplicated list of "other variant" display names sharing the same tradeable base,
+// excluding the hovered variant's own display name. Presentation only - names come from getVariantPopupName().
+    private java.util.List<String> getOtherVariantNames(int baseId, String hoveredDisplayName)
+    {
+        java.util.List<String> result = new java.util.ArrayList<>();
+        java.util.List<Integer> variants = getBaseToVariantIds().get(baseId);
+        if (variants == null)
+        {
+            return result;
+        }
+        String normalizedHovered = hoveredDisplayName != null
+                ? hoveredDisplayName.trim().toLowerCase(java.util.Locale.ROOT)
+                : null;
+        java.util.LinkedHashSet<String> seen = new java.util.LinkedHashSet<>();
+        for (Integer variantId : variants)
+        {
+            String name = getVariantPopupName(variantId);
+            if (name == null)
+            {
+                continue;
+            }
+            String normalizedName = name.trim().toLowerCase(java.util.Locale.ROOT);
+            if (normalizedName.equals(normalizedHovered))
+            {
+                continue;
+            }
+            if (seen.add(normalizedName))
+            {
+                result.add(name);
+            }
+        }
+        return result;
     }
 
     public void onBankHistoryReset()
