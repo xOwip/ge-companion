@@ -1748,7 +1748,7 @@ private String openBankItemName = null;
         trackerBtn.addActionListener(e -> {
             try {
                 int trackerItemId = item.length > 12 ? Integer.parseInt(item[12]) : -1;
-                java.awt.Desktop.getDesktop().browse(new java.net.URI("https://prices.runescape.wiki/osrs/item/" + trackerItemId));
+                net.runelite.client.util.LinkBrowser.browse("https://prices.runescape.wiki/osrs/item/" + trackerItemId);
             } catch (Exception ex) { }
         });
         footer.add(trackerBtn);
@@ -1757,7 +1757,7 @@ private String openBankItemName = null;
         wikiBtn.addActionListener(e -> {
             try {
                 String wikiName = name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase().replace(" ", "_");
-                java.awt.Desktop.getDesktop().browse(new java.net.URI("https://oldschool.runescape.wiki/w/" + wikiName));
+                net.runelite.client.util.LinkBrowser.browse("https://oldschool.runescape.wiki/w/" + wikiName);
             } catch (Exception ex) { }
         });
         footer.add(wikiBtn);
@@ -2143,7 +2143,7 @@ private String openBankItemName = null;
 
             whatsNewBox.add(whatsNewHeader);
 
-            JLabel whatsNewText = new JLabel("<html><body style='width:150px;color:#888888;font-family:monospaced;font-size:9px;'><span style='color:#888888;'>Aug 16, 2026</span><br><span style='color:#D4AF37;'>v" + CURRENT_VERSION + "</span> is here!<br>• Fixed GE tax in flipping stats<br>• Added Margin × Volume stat<br>• Added flipping stat tooltips<br>• Improved bank tracking performance<br>• Added live Last Updated timer<br>• Fixed variant item panel refreshing<br>• Improved variant item processing<br>• Bank history pauses while logged out</body></html>");
+            JLabel whatsNewText = new JLabel("<html><body style='width:150px;color:#888888;font-family:monospaced;font-size:9px;'><span style='color:#888888;'>Aug 19, 2026</span><br><span style='color:#D4AF37;'>v" + CURRENT_VERSION + "</span> is here!<br>• Fixed GE tax in flipping stats<br>• Added Margin × Volume stat<br>• Added flipping stat tooltips<br>• Improved bank tracking performance<br>• Added live Last Updated timer<br>• Fixed variant item panel refreshing<br>• Improved variant item processing<br>• Bank history pauses while logged out</body></html>");
             whatsNewText.setBorder(new EmptyBorder(4, 0, 0, 0));
             whatsNewBox.add(whatsNewText);
             whatsNewBox.add(Box.createVerticalStrut(4));
@@ -2600,7 +2600,7 @@ whatsNewBox.add(seeMoreLabel);
                     pricesItem.addActionListener(ev -> {
                         try {
                             int trackerItemId = item.length > 12 ? Integer.parseInt(item[12]) : -1;
-                            java.awt.Desktop.getDesktop().browse(new java.net.URI("https://prices.runescape.wiki/osrs/item/" + trackerItemId));
+                            net.runelite.client.util.LinkBrowser.browse("https://prices.runescape.wiki/osrs/item/" + trackerItemId);
                         } catch (Exception ex) { }
                     });
                     popup.add(pricesItem);
@@ -2608,7 +2608,7 @@ whatsNewBox.add(seeMoreLabel);
                     wikiItem.addActionListener(ev -> {
                         try {
                             String wikiName = name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase().replace(" ", "_");
-                            java.awt.Desktop.getDesktop().browse(new java.net.URI("https://oldschool.runescape.wiki/w/" + wikiName));
+                            net.runelite.client.util.LinkBrowser.browse("https://oldschool.runescape.wiki/w/" + wikiName);
                         } catch (Exception ex) { }
                     });
                     popup.add(wikiItem);
@@ -3259,7 +3259,7 @@ whatsNewBox.add(seeMoreLabel);
                     pricesItem.addActionListener(ev -> {
                         try {
                             int trackerItemId = item.length > 12 ? Integer.parseInt(item[12]) : -1;
-                            java.awt.Desktop.getDesktop().browse(new java.net.URI("https://prices.runescape.wiki/osrs/item/" + trackerItemId));
+                            net.runelite.client.util.LinkBrowser.browse("https://prices.runescape.wiki/osrs/item/" + trackerItemId);
                         } catch (Exception ex) { }
                     });
                     popup.add(pricesItem);
@@ -3267,7 +3267,7 @@ whatsNewBox.add(seeMoreLabel);
                     wikiItem.addActionListener(ev -> {
                         try {
                             String wikiName = name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase().replace(" ", "_");
-                            java.awt.Desktop.getDesktop().browse(new java.net.URI("https://oldschool.runescape.wiki/w/" + wikiName));
+                            net.runelite.client.util.LinkBrowser.browse("https://oldschool.runescape.wiki/w/" + wikiName);
                         } catch (Exception ex) { }
                     });
                     popup.add(wikiItem);
@@ -4629,7 +4629,7 @@ whatsNewBox.add(seeMoreLabel);
                     pricesItem.addActionListener(ev -> {
                         try {
                             int trackerItemId = item.length > 12 ? Integer.parseInt(item[12]) : -1;
-                            java.awt.Desktop.getDesktop().browse(new java.net.URI("https://prices.runescape.wiki/osrs/item/" + trackerItemId));
+                            net.runelite.client.util.LinkBrowser.browse("https://prices.runescape.wiki/osrs/item/" + trackerItemId);
                         } catch (Exception ex) { }
                     });
                     popup.add(pricesItem);
@@ -4637,7 +4637,7 @@ whatsNewBox.add(seeMoreLabel);
                     wikiItem.addActionListener(ev -> {
                         try {
                             String wikiName = name.substring(0, 1).toUpperCase() + name.substring(1).toLowerCase().replace(" ", "_");
-                            java.awt.Desktop.getDesktop().browse(new java.net.URI("https://oldschool.runescape.wiki/w/" + wikiName));
+                            net.runelite.client.util.LinkBrowser.browse("https://oldschool.runescape.wiki/w/" + wikiName);
                         } catch (Exception ex) { }
                     });
                     popup.add(wikiItem);
@@ -6414,7 +6414,7 @@ whatsNewBox.add(seeMoreLabel);
                 if (idx == null) return;
                 UpdateMarker u = gameUpdates.get(idx);
                 try {
-                    java.awt.Desktop.getDesktop().browse(new java.net.URI(u.wikiUrl));
+                    net.runelite.client.util.LinkBrowser.browse(u.wikiUrl);
                 } catch (Exception ex) {}
             }
         });
@@ -7618,7 +7618,7 @@ whatsNewBox.add(seeMoreLabel);
                 String encodedTitle = java.net.URLEncoder.encode(titleField.getText(), "UTF-8");
                 String encodedBody = java.net.URLEncoder.encode(descArea.getText(), "UTF-8");
                 String url = urlTemplate + encodedTitle + "&body=" + encodedBody;
-                java.awt.Desktop.getDesktop().browse(new java.net.URI(url));
+                net.runelite.client.util.LinkBrowser.browse(url);
                 dialog.dispose();
             } catch (Exception ex) {
             }
