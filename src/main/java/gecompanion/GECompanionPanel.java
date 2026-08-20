@@ -46,6 +46,15 @@ public class GECompanionPanel extends PluginPanel
     private static final Color BG_ROW_HOVER = new Color(45, 40, 38);
     private static final Color BG_ROW_SELECTED = new Color(26, 24, 20);
     private static final Color STAT_BLUE = new Color(74, 122, 191);
+    // Improved variant popup colors — new visual roles only; reuse GOLD/TEXT_PRIMARY/TEXT_DIM/GREEN_UP elsewhere
+    private static final Color VARIANT_POPUP_BG = new Color(0x0F, 0x0F, 0x0F);
+    private static final Color VARIANT_POPUP_PANEL_BG = new Color(0x17, 0x17, 0x17);
+    private static final Color VARIANT_POPUP_BORDER = new Color(0x5C, 0x48, 0x00);
+    private static final Color VARIANT_POPUP_TEXT_SECONDARY = new Color(0xA3, 0xA3, 0xA3);
+    private static final Color VARIANT_POPUP_TEXT_MUTED = new Color(0x7A, 0x7A, 0x7A);
+    private static final Color VARIANT_POPUP_UNTRADEABLE_RED = new Color(0xFF, 0x40, 0x40);
+    private static final Color VARIANT_POPUP_YOUR_ITEM_BLUE = new Color(0x4A, 0xA8, 0xFF);
+    private static final Color VARIANT_POPUP_MULTI_PURPLE = new Color(0xB8, 0x8B, 0xFF);
     private static final String CURRENT_VERSION = "1.2.2";
 
     private final GECompanionConfig config;
@@ -217,6 +226,8 @@ public class GECompanionPanel extends PluginPanel
     private final java.util.Map<String, Integer> variantDisplayIdCache = new java.util.HashMap<>();
     // Caches RuneLite item composition names by ID, for popup name resolution (separate from the tradeable-only name maps)
     private final java.util.Map<Integer, String> variantPopupNameCache = new java.util.HashMap<>();
+    // Single reusable popup window for the improved variant info popup. Lazily created once, content rebuilt per hover.
+    private javax.swing.JWindow variantPopupWindow = null;
     private final java.util.List<String> bankItems = new java.util.ArrayList<>();
     private final java.util.Set<String> displayedGainersLosers = new java.util.HashSet<>();
     private final java.util.Set<String> removedFromDisplay = new java.util.HashSet<>();
@@ -663,6 +674,18 @@ private String openBankItemName = null;
         itemVariantMap.put(29589, 29580); // Emberlight → Tormented synapse
         itemVariantMap.put(29594, 29580); // Purging staff → Tormented synapse
         itemVariantMap.put(29591, 29580); // Scorching bow → Tormented synapse
+
+        warmVariantPopupNameCache();
+    }
+
+    // Warms variantPopupNameCache with display names for every known variant ID, resolved on the client thread.
+    // Called once after itemVariantMap is populated, so popup hover never needs a live getItemComposition() call.
+    private void warmVariantPopupNameCache()
+    {
+        java.util.Set<Integer> variantIds = new java.util.HashSet<>(itemVariantMap.keySet());
+        plugin.resolveItemNamesOnClientThread(variantIds, results -> {
+            variantPopupNameCache.putAll(results);
+        });
     }
 
     // Lazily builds (once) and returns the reverse grouping: tradeable base ID -> raw list of variant IDs mapped to it.
@@ -688,10 +711,9 @@ private String openBankItemName = null;
 // Used for popup name resolution only - separate from the tradeable-only name maps (nameToId/idToName).
     private String getVariantPopupName(int itemId)
     {
-        return variantPopupNameCache.computeIfAbsent(itemId, id -> {
-            net.runelite.api.ItemComposition comp = plugin.getItemManager().getItemComposition(id);
-            return comp != null ? comp.getName() : null;
-        });
+        // Cache-only: never calls getItemComposition() directly, since that must run on RuneLite's client
+        // thread and this may be called from Swing event handlers. Cache is warmed by warmVariantPopupNameCache().
+        return variantPopupNameCache.get(itemId);
     }
 
     // Resolves a representative variant ID for a given tradeable base + hovered display name, for icon/popup display only.
@@ -759,6 +781,243 @@ private String openBankItemName = null;
             }
         }
         return result;
+    }
+
+    // Creates a fixed-size icon label for the variant popup, loading synchronously from iconCache if available,
+// otherwise showing blank and loading asynchronously. The completion callback only updates this specific label
+// (checked for displayability) so a late-arriving load for a since-replaced popup row cannot corrupt the popup.
+    private JLabel createPopupIconLabel(int itemId)
+    {
+        JLabel label = new JLabel();
+        label.setPreferredSize(new Dimension(32, 32));
+        label.setHorizontalAlignment(SwingConstants.CENTER);
+        ImageIcon cached = iconCache.get(itemId);
+        if (cached != null)
+        {
+            label.setIcon(cached);
+            return label;
+        }
+        new Thread(() -> {
+            java.awt.image.BufferedImage img = plugin.getItemManager().getImage(itemId);
+            if (img != null)
+            {
+                ImageIcon icon = new ImageIcon(img);
+                iconCache.put(itemId, icon);
+                javax.swing.SwingUtilities.invokeLater(() -> {
+                    if (label.isDisplayable())
+                    {
+                        label.setIcon(icon);
+                        label.revalidate();
+                        label.repaint();
+                    }
+                });
+            }
+        }).start();
+        return label;
+    }
+
+    // Builds and shows the improved variant info popup for a hovered untradeable variant item.
+// baseId = tradeable base item ID (source for price/limit/icon). hoveredDisplayName = the actual owned
+// untradeable item's display name (source for the "Your Item" section). Scoped to variant rows only.
+    private void showVariantPopup(JComponent anchor, int baseId, String hoveredDisplayName)
+    {
+        if (variantPopupWindow == null)
+        {
+            variantPopupWindow = new javax.swing.JWindow();
+            variantPopupWindow.setType(java.awt.Window.Type.POPUP);
+            variantPopupWindow.setFocusableWindowState(false);
+        }
+
+        String baseName = getItemName(baseId);
+        if (baseName == null)
+        {
+            baseName = "Unknown item";
+        }
+        PriceData basePriceData = priceCache.get(baseId);
+        long basePrice = basePriceData != null ? basePriceData.getMid() : 0;
+        Integer baseLimit = itemLimits.get(baseId);
+
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        content.setBackground(VARIANT_POPUP_BG);
+        content.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(VARIANT_POPUP_BORDER),
+                new EmptyBorder(10, 12, 10, 12)));
+
+        // Header: hovered item name + UNTRADEABLE VARIANT badge
+        JPanel headerRow = new JPanel(new BorderLayout());
+        headerRow.setBackground(VARIANT_POPUP_BG);
+        JLabel headerName = new JLabel(hoveredDisplayName != null ? hoveredDisplayName : "Unknown item");
+        headerName.setForeground(TEXT_PRIMARY);
+        headerName.setFont(new Font("Monospaced", Font.BOLD, 13));
+        JLabel headerBadge = new JLabel("UNTRADEABLE VARIANT");
+        headerBadge.setForeground(VARIANT_POPUP_UNTRADEABLE_RED);
+        headerBadge.setFont(new Font("Monospaced", Font.BOLD, 9));
+        headerRow.add(headerName, BorderLayout.WEST);
+        headerRow.add(headerBadge, BorderLayout.EAST);
+        headerRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+        headerRow.setMaximumSize(new Dimension(280, 20));
+        content.add(headerRow);
+        content.add(Box.createVerticalStrut(8));
+
+        // Your Item section
+        JLabel yourItemLabel = new JLabel("Your Item");
+        yourItemLabel.setForeground(VARIANT_POPUP_YOUR_ITEM_BLUE);
+        yourItemLabel.setFont(new Font("Monospaced", Font.BOLD, 10));
+        yourItemLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(yourItemLabel);
+        content.add(Box.createVerticalStrut(4));
+
+        JPanel yourItemRow = new JPanel(new BorderLayout(8, 0));
+        yourItemRow.setBackground(VARIANT_POPUP_PANEL_BG);
+        yourItemRow.setBorder(new EmptyBorder(6, 6, 6, 6));
+        yourItemRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+        yourItemRow.setMaximumSize(new Dimension(280, 46));
+        Integer hoveredVariantId = resolveVariantDisplayId(baseId, hoveredDisplayName);
+        JLabel yourItemIcon = hoveredVariantId != null ? createPopupIconLabel(hoveredVariantId) : new JLabel();
+        JPanel yourItemInfo = new JPanel();
+        yourItemInfo.setLayout(new BoxLayout(yourItemInfo, BoxLayout.Y_AXIS));
+        yourItemInfo.setBackground(VARIANT_POPUP_PANEL_BG);
+        JLabel yourItemName = new JLabel(hoveredDisplayName != null ? hoveredDisplayName : "Unknown item");
+        yourItemName.setForeground(VARIANT_POPUP_TEXT_SECONDARY);
+        yourItemName.setFont(new Font("Monospaced", Font.PLAIN, 11));
+        JLabel yourItemStatus = new JLabel("Untradeable");
+        yourItemStatus.setForeground(VARIANT_POPUP_UNTRADEABLE_RED);
+        yourItemStatus.setFont(new Font("Monospaced", Font.PLAIN, 10));
+        yourItemInfo.add(yourItemName);
+        yourItemInfo.add(yourItemStatus);
+        yourItemRow.add(yourItemIcon, BorderLayout.WEST);
+        yourItemRow.add(yourItemInfo, BorderLayout.CENTER);
+        content.add(yourItemRow);
+        content.add(Box.createVerticalStrut(10));
+
+        // Tradeable Base section
+        JLabel baseSectionLabel = new JLabel("Tradeable Base");
+        baseSectionLabel.setForeground(GREEN_UP);
+        baseSectionLabel.setFont(new Font("Monospaced", Font.BOLD, 10));
+        baseSectionLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(baseSectionLabel);
+        content.add(Box.createVerticalStrut(4));
+
+        JPanel baseRow = new JPanel(new BorderLayout(8, 0));
+        baseRow.setBackground(VARIANT_POPUP_PANEL_BG);
+        baseRow.setBorder(new EmptyBorder(6, 6, 6, 6));
+        baseRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+        baseRow.setMaximumSize(new Dimension(280, 46));
+        JLabel baseIcon = createPopupIconLabel(baseId);
+        JPanel baseInfo = new JPanel();
+        baseInfo.setLayout(new BoxLayout(baseInfo, BoxLayout.Y_AXIS));
+        baseInfo.setBackground(VARIANT_POPUP_PANEL_BG);
+        JLabel baseNameLabel = new JLabel(baseName);
+        baseNameLabel.setForeground(VARIANT_POPUP_TEXT_SECONDARY);
+        baseNameLabel.setFont(new Font("Monospaced", Font.PLAIN, 11));
+        JLabel baseStatus = new JLabel("Tradeable");
+        baseStatus.setForeground(GREEN_UP);
+        baseStatus.setFont(new Font("Monospaced", Font.PLAIN, 10));
+        baseInfo.add(baseNameLabel);
+        baseInfo.add(baseStatus);
+        JPanel basePriceLimitPanel = new JPanel();
+        basePriceLimitPanel.setLayout(new BoxLayout(basePriceLimitPanel, BoxLayout.Y_AXIS));
+        basePriceLimitPanel.setBackground(VARIANT_POPUP_PANEL_BG);
+        JLabel basePriceLabel = new JLabel(basePriceData != null && basePrice > 0 ? formatPrice(String.valueOf(basePrice)) + " gp" : "No price data");
+        basePriceLabel.setForeground(GOLD);
+        basePriceLabel.setFont(new Font("Monospaced", Font.PLAIN, 11));
+        basePriceLabel.setAlignmentX(Component.RIGHT_ALIGNMENT);
+        JLabel baseLimitLabel = new JLabel("Limit: " + (baseLimit != null ? baseLimit : "?"));
+        baseLimitLabel.setForeground(VARIANT_POPUP_TEXT_MUTED);
+        baseLimitLabel.setFont(new Font("Monospaced", Font.PLAIN, 10));
+        baseLimitLabel.setAlignmentX(Component.RIGHT_ALIGNMENT);
+        basePriceLimitPanel.add(basePriceLabel);
+        basePriceLimitPanel.add(baseLimitLabel);
+        baseRow.add(baseIcon, BorderLayout.WEST);
+        baseRow.add(baseInfo, BorderLayout.CENTER);
+        baseRow.add(basePriceLimitPanel, BorderLayout.EAST);
+        content.add(baseRow);
+
+        // Other variants section (only if any exist)
+        java.util.List<String> otherVariants = getOtherVariantNames(baseId, hoveredDisplayName);
+        if (!otherVariants.isEmpty())
+        {
+            content.add(Box.createVerticalStrut(10));
+            JLabel otherLabel = new JLabel("Other untradeable variants (" + otherVariants.size() + ")");
+            otherLabel.setForeground(VARIANT_POPUP_MULTI_PURPLE);
+            otherLabel.setFont(new Font("Monospaced", Font.BOLD, 10));
+            otherLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            content.add(otherLabel);
+            content.add(Box.createVerticalStrut(4));
+            for (String variantName : otherVariants)
+            {
+                JPanel variantRow = new JPanel(new BorderLayout(8, 0));
+                variantRow.setBackground(VARIANT_POPUP_BG);
+                variantRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+                variantRow.setMaximumSize(new Dimension(280, 40));
+                variantRow.setBorder(new EmptyBorder(3, 0, 3, 0));
+                Integer variantId = resolveVariantDisplayId(baseId, variantName);
+                JLabel variantIcon = variantId != null ? createPopupIconLabel(variantId) : new JLabel();
+                JLabel variantNameLabel = new JLabel(variantName);
+                variantNameLabel.setForeground(VARIANT_POPUP_TEXT_SECONDARY);
+                variantNameLabel.setFont(new Font("Monospaced", Font.PLAIN, 10));
+                variantRow.add(variantIcon, BorderLayout.WEST);
+                variantRow.add(variantNameLabel, BorderLayout.CENTER);
+                content.add(variantRow);
+            }
+        }
+
+        // Footnote
+        content.add(Box.createVerticalStrut(10));
+        JLabel footnote = new JLabel("Prices shown are for the tradeable base item.");
+        footnote.setForeground(VARIANT_POPUP_TEXT_MUTED);
+        footnote.setFont(new Font("Monospaced", Font.PLAIN, 9));
+        footnote.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(footnote);
+
+        variantPopupWindow.getContentPane().removeAll();
+        variantPopupWindow.getContentPane().add(content);
+        variantPopupWindow.pack();
+
+        java.awt.Point anchorLoc = anchor.getLocationOnScreen();
+        java.awt.GraphicsConfiguration gc = anchor.getGraphicsConfiguration();
+        java.awt.Rectangle screenBounds = gc != null
+                ? gc.getBounds()
+                : java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment()
+                  .getDefaultScreenDevice()
+                  .getDefaultConfiguration()
+                  .getBounds();
+        int popupWidth = variantPopupWindow.getWidth();
+        int popupHeight = variantPopupWindow.getHeight();
+        int x = anchorLoc.x + anchor.getWidth() + 6;
+        int y = anchorLoc.y;
+        // If it would overflow the right edge of this monitor, flip it to the left side of the icon.
+        if (x + popupWidth > screenBounds.x + screenBounds.width)
+        {
+            x = anchorLoc.x - popupWidth - 6;
+        }
+        // Keep it from going off the left edge.
+        if (x < screenBounds.x)
+        {
+            x = screenBounds.x;
+        }
+        // Keep it from spilling below the bottom edge.
+        if (y + popupHeight > screenBounds.y + screenBounds.height)
+        {
+            y = screenBounds.y + screenBounds.height - popupHeight;
+        }
+        // Keep it from going above the top edge.
+        if (y < screenBounds.y)
+        {
+            y = screenBounds.y;
+        }
+        variantPopupWindow.setLocation(x, y);
+        variantPopupWindow.setVisible(true);
+    }
+
+    // Hides the shared variant popup window, if currently showing.
+    private void hideVariantPopup()
+    {
+        if (variantPopupWindow != null)
+        {
+            variantPopupWindow.setVisible(false);
+        }
     }
 
     public void onBankHistoryReset()
@@ -4527,17 +4786,21 @@ whatsNewBox.add(seeMoreLabel);
         iconWrapper.add(iconPanel);
         if (isVariant) {
             Integer origId = item.length > 12 ? Integer.parseInt(item[12]) : null;
-            if (ownedVariants != null && ownedVariants.size() > 1) {
-                // Multiple variants — list all owned
-                StringBuilder variantTip = new StringBuilder("<html>Tradeable base of:<br>");
-                for (String v : ownedVariants) {
-                    variantTip.append("<span style='color:#D4AF37'>• ").append(v).append("</span><br>");
-                }
-                variantTip.append("→ ").append(name).append(" [tradeable base]</html>");
-                iconWrapper.setToolTipText(variantTip.toString());
-            } else {
-                String displayOriginal = (originalBankName != null && !originalBankName.isEmpty()) ? originalBankName : name;
-                iconWrapper.setToolTipText("<html>" + displayOriginal + "<br><span style='color:#D4AF37'>→ " + name + " [tradeable base]</span></html>");
+            if (origId != null && originalBankName != null && !originalBankName.isEmpty()) {
+                final int popupBaseId = origId;
+                final String popupHoveredName = originalBankName;
+                iconWrapper.addMouseListener(new java.awt.event.MouseAdapter() {
+                    @Override
+                    public void mouseEntered(java.awt.event.MouseEvent e) {
+                        System.out.println("VARIANT POPUP ENTER: " + popupHoveredName);
+                        showVariantPopup(iconWrapper, popupBaseId, popupHoveredName);
+                    }
+                    @Override
+                    public void mouseExited(java.awt.event.MouseEvent e) {
+                        System.out.println("VARIANT POPUP EXIT: " + popupHoveredName);
+                        hideVariantPopup();
+                    }
+                });
             }
         } else {
             iconWrapper.setToolTipText(name);

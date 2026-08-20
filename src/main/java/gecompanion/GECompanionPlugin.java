@@ -114,6 +114,25 @@ public class GECompanionPlugin extends Plugin
 
 	public net.runelite.client.game.ItemManager getItemManager() { return itemManager; }
 
+	// Resolves a batch of item IDs to their display names on RuneLite's client thread, then delivers the
+// results back on the Swing EDT. Used to warm popup name caches without calling getItemComposition()
+// directly from Swing event handlers (which throws - client-thread-only API).
+	public void resolveItemNamesOnClientThread(java.util.Set<Integer> itemIds, java.util.function.Consumer<java.util.Map<Integer, String>> callback)
+	{
+		clientThread.invokeLater(() -> {
+			java.util.Map<Integer, String> results = new java.util.HashMap<>();
+			for (Integer id : itemIds)
+			{
+				net.runelite.api.ItemComposition comp = itemManager.getItemComposition(id);
+				if (comp != null)
+				{
+					results.put(id, comp.getName());
+				}
+			}
+			javax.swing.SwingUtilities.invokeLater(() -> callback.accept(results));
+		});
+	}
+
 	private GECompanionPanel panel;
 	private NavigationButton navButton;
 	private ScheduledExecutorService scheduler;
