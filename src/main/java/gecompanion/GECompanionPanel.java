@@ -348,6 +348,10 @@ private String openBankItemName = null;
         {
             if (itemListChanged)
             {
+                // Hide the variant popup before rebuilding - its anchor row may be about to be
+                // removed/replaced, and mouseExited never fires when a component is destroyed out
+                // from under the cursor rather than the mouse actually leaving it.
+                hideVariantPopup();
                 // close any open floating stats panel before rebuilding
                 if (activeStatsFloatPanel != null && activeStatsLayeredPane != null) {
                     activeStatsLayeredPane.remove(activeStatsFloatPanel);
@@ -816,10 +820,11 @@ private String openBankItemName = null;
         return label;
     }
 
-    // Builds and shows the improved variant info popup for a hovered untradeable variant item.
-// baseId = tradeable base item ID (source for price/limit/icon). hoveredDisplayName = the actual owned
-// untradeable item's display name (source for the "Your Item" section). Scoped to variant rows only.
-    private void showVariantPopup(JComponent anchor, int baseId, String hoveredDisplayName)
+    // Builds and shows the improved variant info popup, ownership-first: shows only the variants the
+// player actually owns for this tradeable base. baseId = tradeable base item ID (source for price/
+// limit/icon). ownedVariantNames = all owned untradeable variant names for this base (from
+// variantOwned in buildBankItemBlock). Scoped to variant rows only.
+    private void showVariantPopup(JComponent anchor, int baseId, java.util.List<String> ownedVariantNames)
     {
         if (variantPopupWindow == null)
         {
@@ -837,59 +842,88 @@ private String openBankItemName = null;
         long basePrice = basePriceData != null ? basePriceData.getMid() : 0;
         Integer baseLimit = itemLimits.get(baseId);
 
-        JPanel content = new JPanel();
+        // Header rule: single owned variant -> show its literal name. Multiple owned -> show the base name,
+        // since there's no single correct "hovered" item to feature when several variants are owned at once.
+        String headerText = (ownedVariantNames != null && ownedVariantNames.size() == 1)
+                ? ownedVariantNames.get(0)
+                : baseName;
+
+        final int popupCornerRadius = 10;
+        JPanel content = new JPanel() {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), popupCornerRadius, popupCornerRadius);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+            @Override
+            protected void paintBorder(java.awt.Graphics g) {
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(VARIANT_POPUP_BORDER);
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, popupCornerRadius, popupCornerRadius);
+                g2.dispose();
+            }
+        };
+        content.setOpaque(false);
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
         content.setBackground(VARIANT_POPUP_BG);
-        content.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(VARIANT_POPUP_BORDER),
-                new EmptyBorder(10, 12, 10, 12)));
+        content.setBorder(new EmptyBorder(10, 12, 10, 12));
 
-        // Header: hovered item name + UNTRADEABLE VARIANT badge
-        JPanel headerRow = new JPanel(new BorderLayout());
-        headerRow.setBackground(VARIANT_POPUP_BG);
-        JLabel headerName = new JLabel(hoveredDisplayName != null ? hoveredDisplayName : "Unknown item");
+        // Header: item/base name, then badge stacked underneath (avoids truncating long names)
+        JLabel headerName = new JLabel(headerText);
         headerName.setForeground(TEXT_PRIMARY);
         headerName.setFont(new Font("Monospaced", Font.BOLD, 13));
+        headerName.setAlignmentX(Component.LEFT_ALIGNMENT);
         JLabel headerBadge = new JLabel("UNTRADEABLE VARIANT");
         headerBadge.setForeground(VARIANT_POPUP_UNTRADEABLE_RED);
         headerBadge.setFont(new Font("Monospaced", Font.BOLD, 9));
-        headerRow.add(headerName, BorderLayout.WEST);
-        headerRow.add(headerBadge, BorderLayout.EAST);
-        headerRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-        headerRow.setMaximumSize(new Dimension(280, 20));
-        content.add(headerRow);
+        headerBadge.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(headerName);
+        content.add(headerBadge);
         content.add(Box.createVerticalStrut(8));
 
-        // Your Item section
-        JLabel yourItemLabel = new JLabel("Your Item");
+        // Your Item(s) section - ownership-first: only variants the player actually owns for this base
+        boolean multipleOwned = ownedVariantNames != null && ownedVariantNames.size() > 1;
+        JLabel yourItemLabel = new JLabel(multipleOwned ? "Your Items" : "Your Item");
         yourItemLabel.setForeground(VARIANT_POPUP_YOUR_ITEM_BLUE);
         yourItemLabel.setFont(new Font("Monospaced", Font.BOLD, 10));
         yourItemLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         content.add(yourItemLabel);
         content.add(Box.createVerticalStrut(4));
 
-        JPanel yourItemRow = new JPanel(new BorderLayout(8, 0));
-        yourItemRow.setBackground(VARIANT_POPUP_PANEL_BG);
-        yourItemRow.setBorder(new EmptyBorder(6, 6, 6, 6));
-        yourItemRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-        yourItemRow.setMaximumSize(new Dimension(280, 46));
-        Integer hoveredVariantId = resolveVariantDisplayId(baseId, hoveredDisplayName);
-        JLabel yourItemIcon = hoveredVariantId != null ? createPopupIconLabel(hoveredVariantId) : new JLabel();
-        JPanel yourItemInfo = new JPanel();
-        yourItemInfo.setLayout(new BoxLayout(yourItemInfo, BoxLayout.Y_AXIS));
-        yourItemInfo.setBackground(VARIANT_POPUP_PANEL_BG);
-        JLabel yourItemName = new JLabel(hoveredDisplayName != null ? hoveredDisplayName : "Unknown item");
-        yourItemName.setForeground(VARIANT_POPUP_TEXT_SECONDARY);
-        yourItemName.setFont(new Font("Monospaced", Font.PLAIN, 11));
-        JLabel yourItemStatus = new JLabel("Untradeable");
-        yourItemStatus.setForeground(VARIANT_POPUP_UNTRADEABLE_RED);
-        yourItemStatus.setFont(new Font("Monospaced", Font.PLAIN, 10));
-        yourItemInfo.add(yourItemName);
-        yourItemInfo.add(yourItemStatus);
-        yourItemRow.add(yourItemIcon, BorderLayout.WEST);
-        yourItemRow.add(yourItemInfo, BorderLayout.CENTER);
-        content.add(yourItemRow);
-        content.add(Box.createVerticalStrut(10));
+        if (ownedVariantNames != null)
+        {
+            for (String ownedName : ownedVariantNames)
+            {
+                JPanel yourItemRow = new JPanel(new BorderLayout(8, 0));
+                yourItemRow.setBackground(VARIANT_POPUP_PANEL_BG);
+                yourItemRow.setBorder(new EmptyBorder(6, 6, 6, 6));
+                yourItemRow.setAlignmentX(Component.LEFT_ALIGNMENT);
+                yourItemRow.setMaximumSize(new Dimension(230, 46));
+                Integer ownedVariantId = resolveVariantDisplayId(baseId, ownedName);
+                JLabel yourItemIcon = ownedVariantId != null ? createPopupIconLabel(ownedVariantId) : new JLabel();
+                JPanel yourItemInfo = new JPanel();
+                yourItemInfo.setLayout(new BoxLayout(yourItemInfo, BoxLayout.Y_AXIS));
+                yourItemInfo.setBackground(VARIANT_POPUP_PANEL_BG);
+                JLabel yourItemName = new JLabel(ownedName);
+                yourItemName.setForeground(VARIANT_POPUP_TEXT_SECONDARY);
+                yourItemName.setFont(new Font("Monospaced", Font.PLAIN, 11));
+                JLabel yourItemStatus = new JLabel("Untradeable");
+                yourItemStatus.setForeground(VARIANT_POPUP_UNTRADEABLE_RED);
+                yourItemStatus.setFont(new Font("Monospaced", Font.PLAIN, 10));
+                yourItemInfo.add(yourItemName);
+                yourItemInfo.add(yourItemStatus);
+                yourItemRow.add(yourItemIcon, BorderLayout.WEST);
+                yourItemRow.add(yourItemInfo, BorderLayout.CENTER);
+                content.add(yourItemRow);
+                content.add(Box.createVerticalStrut(6));
+            }
+        }
+        content.add(Box.createVerticalStrut(4));
 
         // Tradeable Base section
         JLabel baseSectionLabel = new JLabel("Tradeable Base");
@@ -903,7 +937,7 @@ private String openBankItemName = null;
         baseRow.setBackground(VARIANT_POPUP_PANEL_BG);
         baseRow.setBorder(new EmptyBorder(6, 6, 6, 6));
         baseRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-        baseRow.setMaximumSize(new Dimension(280, 46));
+        baseRow.setMaximumSize(new Dimension(230, 62));
         JLabel baseIcon = createPopupIconLabel(baseId);
         JPanel baseInfo = new JPanel();
         baseInfo.setLayout(new BoxLayout(baseInfo, BoxLayout.Y_AXIS));
@@ -911,57 +945,20 @@ private String openBankItemName = null;
         JLabel baseNameLabel = new JLabel(baseName);
         baseNameLabel.setForeground(VARIANT_POPUP_TEXT_SECONDARY);
         baseNameLabel.setFont(new Font("Monospaced", Font.PLAIN, 11));
+        String priceLimitText = (basePriceData != null && basePrice > 0 ? formatPrice(String.valueOf(basePrice)) + " gp" : "No price data")
+                + "  \u2022  Limit: " + (baseLimit != null ? baseLimit : "?");
+        JLabel basePriceLimitLabel = new JLabel(priceLimitText);
+        basePriceLimitLabel.setForeground(GOLD);
+        basePriceLimitLabel.setFont(new Font("Monospaced", Font.PLAIN, 10));
         JLabel baseStatus = new JLabel("Tradeable");
         baseStatus.setForeground(GREEN_UP);
         baseStatus.setFont(new Font("Monospaced", Font.PLAIN, 10));
         baseInfo.add(baseNameLabel);
+        baseInfo.add(basePriceLimitLabel);
         baseInfo.add(baseStatus);
-        JPanel basePriceLimitPanel = new JPanel();
-        basePriceLimitPanel.setLayout(new BoxLayout(basePriceLimitPanel, BoxLayout.Y_AXIS));
-        basePriceLimitPanel.setBackground(VARIANT_POPUP_PANEL_BG);
-        JLabel basePriceLabel = new JLabel(basePriceData != null && basePrice > 0 ? formatPrice(String.valueOf(basePrice)) + " gp" : "No price data");
-        basePriceLabel.setForeground(GOLD);
-        basePriceLabel.setFont(new Font("Monospaced", Font.PLAIN, 11));
-        basePriceLabel.setAlignmentX(Component.RIGHT_ALIGNMENT);
-        JLabel baseLimitLabel = new JLabel("Limit: " + (baseLimit != null ? baseLimit : "?"));
-        baseLimitLabel.setForeground(VARIANT_POPUP_TEXT_MUTED);
-        baseLimitLabel.setFont(new Font("Monospaced", Font.PLAIN, 10));
-        baseLimitLabel.setAlignmentX(Component.RIGHT_ALIGNMENT);
-        basePriceLimitPanel.add(basePriceLabel);
-        basePriceLimitPanel.add(baseLimitLabel);
         baseRow.add(baseIcon, BorderLayout.WEST);
         baseRow.add(baseInfo, BorderLayout.CENTER);
-        baseRow.add(basePriceLimitPanel, BorderLayout.EAST);
         content.add(baseRow);
-
-        // Other variants section (only if any exist)
-        java.util.List<String> otherVariants = getOtherVariantNames(baseId, hoveredDisplayName);
-        if (!otherVariants.isEmpty())
-        {
-            content.add(Box.createVerticalStrut(10));
-            JLabel otherLabel = new JLabel("Other untradeable variants (" + otherVariants.size() + ")");
-            otherLabel.setForeground(VARIANT_POPUP_MULTI_PURPLE);
-            otherLabel.setFont(new Font("Monospaced", Font.BOLD, 10));
-            otherLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-            content.add(otherLabel);
-            content.add(Box.createVerticalStrut(4));
-            for (String variantName : otherVariants)
-            {
-                JPanel variantRow = new JPanel(new BorderLayout(8, 0));
-                variantRow.setBackground(VARIANT_POPUP_BG);
-                variantRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-                variantRow.setMaximumSize(new Dimension(280, 40));
-                variantRow.setBorder(new EmptyBorder(3, 0, 3, 0));
-                Integer variantId = resolveVariantDisplayId(baseId, variantName);
-                JLabel variantIcon = variantId != null ? createPopupIconLabel(variantId) : new JLabel();
-                JLabel variantNameLabel = new JLabel(variantName);
-                variantNameLabel.setForeground(VARIANT_POPUP_TEXT_SECONDARY);
-                variantNameLabel.setFont(new Font("Monospaced", Font.PLAIN, 10));
-                variantRow.add(variantIcon, BorderLayout.WEST);
-                variantRow.add(variantNameLabel, BorderLayout.CENTER);
-                content.add(variantRow);
-            }
-        }
 
         // Footnote
         content.add(Box.createVerticalStrut(10));
@@ -974,38 +971,58 @@ private String openBankItemName = null;
         variantPopupWindow.getContentPane().removeAll();
         variantPopupWindow.getContentPane().add(content);
         variantPopupWindow.pack();
+        variantPopupWindow.setShape(new java.awt.geom.RoundRectangle2D.Double(
+                0, 0, variantPopupWindow.getWidth(), variantPopupWindow.getHeight(), popupCornerRadius, popupCornerRadius));
 
+        // Position bounded to the RuneLite client window itself (not the monitor) - the popup may overlap
+        // the plugin icon bar on the right edge, but must never clip past the actual client window bounds.
         java.awt.Point anchorLoc = anchor.getLocationOnScreen();
-        java.awt.GraphicsConfiguration gc = anchor.getGraphicsConfiguration();
-        java.awt.Rectangle screenBounds = gc != null
-                ? gc.getBounds()
-                : java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment()
-                  .getDefaultScreenDevice()
-                  .getDefaultConfiguration()
-                  .getBounds();
+        java.awt.Window clientWindow = javax.swing.SwingUtilities.getWindowAncestor(anchor);
+        java.awt.Rectangle clientBounds;
+        if (clientWindow != null)
+        {
+            java.awt.Point clientLoc = clientWindow.getLocationOnScreen();
+            clientBounds = new java.awt.Rectangle(clientLoc.x, clientLoc.y, clientWindow.getWidth(), clientWindow.getHeight());
+        }
+        else
+        {
+            java.awt.GraphicsConfiguration gc = anchor.getGraphicsConfiguration();
+            clientBounds = gc != null
+                    ? gc.getBounds()
+                    : java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment()
+                      .getDefaultScreenDevice()
+                      .getDefaultConfiguration()
+                      .getBounds();
+        }
         int popupWidth = variantPopupWindow.getWidth();
         int popupHeight = variantPopupWindow.getHeight();
-        int x = anchorLoc.x + anchor.getWidth() + 6;
-        int y = anchorLoc.y;
-        // If it would overflow the right edge of this monitor, flip it to the left side of the icon.
-        if (x + popupWidth > screenBounds.x + screenBounds.width)
+        // Position below/above the icon rather than beside it - the sidebar is nearly as narrow as the
+        // popup itself, so horizontal placement next to the icon causes the popup to land on top of the
+        // cursor, triggering rapid mouseEntered/mouseExited flicker. Vertical placement avoids that entirely.
+        int x = anchorLoc.x;
+        int y = anchorLoc.y + anchor.getHeight() + 8;
+// If there isn't enough room below within the client window, flip above the icon instead.
+        if (y + popupHeight > clientBounds.y + clientBounds.height)
         {
-            x = anchorLoc.x - popupWidth - 6;
+            y = anchorLoc.y - popupHeight - 8;
         }
-        // Keep it from going off the left edge.
-        if (x < screenBounds.x)
+        // Clamp horizontally inside the client window.
+        if (x + popupWidth > clientBounds.x + clientBounds.width)
         {
-            x = screenBounds.x;
+            x = clientBounds.x + clientBounds.width - popupWidth;
         }
-        // Keep it from spilling below the bottom edge.
-        if (y + popupHeight > screenBounds.y + screenBounds.height)
+        if (x < clientBounds.x)
         {
-            y = screenBounds.y + screenBounds.height - popupHeight;
+            x = clientBounds.x;
         }
-        // Keep it from going above the top edge.
-        if (y < screenBounds.y)
+        // Final vertical clamp.
+        if (y < clientBounds.y)
         {
-            y = screenBounds.y;
+            y = clientBounds.y;
+        }
+        if (y + popupHeight > clientBounds.y + clientBounds.height)
+        {
+            y = clientBounds.y + clientBounds.height - popupHeight;
         }
         variantPopupWindow.setLocation(x, y);
         variantPopupWindow.setVisible(true);
@@ -1017,6 +1034,18 @@ private String openBankItemName = null;
         if (variantPopupWindow != null)
         {
             variantPopupWindow.setVisible(false);
+        }
+    }
+
+    // Disposes the shared variant popup window entirely. Call on plugin/panel shutdown so the native
+// window resource doesn't linger across plugin disable/re-enable cycles.
+    private void disposeVariantPopup()
+    {
+        if (variantPopupWindow != null)
+        {
+            variantPopupWindow.setVisible(false);
+            variantPopupWindow.dispose();
+            variantPopupWindow = null;
         }
     }
 
@@ -4788,16 +4817,16 @@ whatsNewBox.add(seeMoreLabel);
             Integer origId = item.length > 12 ? Integer.parseInt(item[12]) : null;
             if (origId != null && originalBankName != null && !originalBankName.isEmpty()) {
                 final int popupBaseId = origId;
-                final String popupHoveredName = originalBankName;
+                final java.util.List<String> popupOwnedVariants = (ownedVariants != null && !ownedVariants.isEmpty())
+                        ? new java.util.ArrayList<>(ownedVariants)
+                        : java.util.Collections.singletonList(originalBankName);
                 iconWrapper.addMouseListener(new java.awt.event.MouseAdapter() {
                     @Override
                     public void mouseEntered(java.awt.event.MouseEvent e) {
-                        System.out.println("VARIANT POPUP ENTER: " + popupHoveredName);
-                        showVariantPopup(iconWrapper, popupBaseId, popupHoveredName);
+                        showVariantPopup(iconWrapper, popupBaseId, popupOwnedVariants);
                     }
                     @Override
                     public void mouseExited(java.awt.event.MouseEvent e) {
-                        System.out.println("VARIANT POPUP EXIT: " + popupHoveredName);
                         hideVariantPopup();
                     }
                 });
