@@ -787,6 +787,24 @@ private String openBankItemName = null;
         return result;
     }
 
+    // Quietly warms iconCache for an item ID in the background, with no UI creation. Used to prewarm
+    // icons for owned variants/bases during the bank scan, so the popup's first hover can normally
+    // read from the cache immediately instead of falling back to createPopupIconLabel()'s async path.
+    private void prewarmPopupIcon(int itemId)
+    {
+        if (iconCache.containsKey(itemId))
+        {
+            return;
+        }
+        new Thread(() -> {
+            java.awt.image.BufferedImage img = plugin.getItemManager().getImage(itemId);
+            if (img != null)
+            {
+                iconCache.put(itemId, new ImageIcon(img));
+            }
+        }).start();
+    }
+
     // Creates a fixed-size icon label for the variant popup, loading synchronously from iconCache if available,
 // otherwise showing blank and loading asynchronously. The completion callback only updates this specific label
 // (checked for displayability) so a late-arriving load for a since-replaced popup row cannot corrupt the popup.
@@ -813,6 +831,21 @@ private String openBankItemName = null;
                         label.setIcon(icon);
                         label.revalidate();
                         label.repaint();
+                        // Propagate the refresh up through parents, then force the heavyweight popup
+                        // window itself to repack/repaint - a label-level repaint alone doesn't always
+                        // reach the JWindow's actual rendered pixels on the first async load.
+                        java.awt.Container parent = label.getParent();
+                        while (parent != null)
+                        {
+                            parent.revalidate();
+                            parent.repaint();
+                            parent = parent.getParent();
+                        }
+                        if (variantPopupWindow != null && variantPopupWindow.isVisible())
+                        {
+                            variantPopupWindow.pack();
+                            variantPopupWindow.repaint();
+                        }
                     }
                 });
             }
@@ -4482,6 +4515,16 @@ whatsNewBox.add(seeMoreLabel);
                 // Track owned variants for tooltip
                 if (originalVariant != null) {
                     variantOwned.computeIfAbsent(baseName, k -> new java.util.ArrayList<>()).add(originalVariant);
+                    // Prewarm icons for this owned variant + its tradeable base, so the popup's first hover
+                    // can normally use the icon cache immediately instead of falling back to async loading.
+                    Integer prewarmBaseId = item.length > 12 ? Integer.parseInt(item[12]) : null;
+                    if (prewarmBaseId != null) {
+                        prewarmPopupIcon(prewarmBaseId);
+                        Integer prewarmVariantId = resolveVariantDisplayId(prewarmBaseId, originalVariant);
+                        if (prewarmVariantId != null) {
+                            prewarmPopupIcon(prewarmVariantId);
+                        }
+                    }
                 }
             }
 
