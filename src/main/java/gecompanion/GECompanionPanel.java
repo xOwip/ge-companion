@@ -47,12 +47,25 @@ public class GECompanionPanel extends PluginPanel
     private static final Color BG_ROW_SELECTED = new Color(26, 24, 20);
     private static final Color STAT_BLUE = new Color(74, 122, 191);
     // Improved variant popup colors — new visual roles only; reuse GOLD/TEXT_PRIMARY/TEXT_DIM/GREEN_UP elsewhere
-    private static final Color VARIANT_POPUP_BG = new Color(0x0F, 0x0F, 0x0F);
-    private static final Color VARIANT_POPUP_PANEL_BG = new Color(0x17, 0x17, 0x17);
-    private static final Color VARIANT_POPUP_BORDER = new Color(0x5C, 0x48, 0x00);
+    private static final Color VARIANT_POPUP_BG =
+            javax.swing.UIManager.getColor("ToolTip.background") != null
+                    ? javax.swing.UIManager.getColor("ToolTip.background")
+                    : new Color(45, 42, 38);
+
+    private static final Color VARIANT_POPUP_PANEL_BG =
+            javax.swing.UIManager.getColor("ToolTip.background") != null
+                    ? javax.swing.UIManager.getColor("ToolTip.background").darker()
+                    : new Color(38, 35, 32);
+
+    private static final Color VARIANT_POPUP_BORDER =
+            javax.swing.UIManager.getColor("ToolTip.foreground") != null
+                    ? javax.swing.UIManager.getColor("ToolTip.foreground").darker()
+                    : new Color(90, 85, 78);
+
     private static final Color VARIANT_POPUP_TEXT_SECONDARY = new Color(0xA3, 0xA3, 0xA3);
     private static final Color VARIANT_POPUP_TEXT_MUTED = new Color(0x7A, 0x7A, 0x7A);
     private static final Color VARIANT_POPUP_UNTRADEABLE_RED = new Color(0xFF, 0x40, 0x40);
+    private static final Color VARIANT_POPUP_BADGE_RED = new Color(0xFF, 0x72, 0x72);
     private static final Color VARIANT_POPUP_YOUR_ITEM_BLUE = new Color(0x4A, 0xA8, 0xFF);
     private static final Color VARIANT_POPUP_MULTI_PURPLE = new Color(0xB8, 0x8B, 0xFF);
     private static final String CURRENT_VERSION = "1.2.2";
@@ -922,9 +935,9 @@ private String openBankItemName = null;
         headerName.setForeground(TEXT_PRIMARY);
         headerName.setFont(new Font("Monospaced", Font.BOLD, 13));
         headerName.setAlignmentX(Component.LEFT_ALIGNMENT);
-        JLabel headerBadge = new JLabel("UNTRADEABLE VARIANT");
-        headerBadge.setForeground(VARIANT_POPUP_UNTRADEABLE_RED);
-        headerBadge.setFont(new Font("Monospaced", Font.BOLD, 9));
+        JLabel headerBadge = new JLabel("Untradeable Variant");
+        headerBadge.setForeground(VARIANT_POPUP_BADGE_RED);
+        headerBadge.setFont(new Font("Monospaced", Font.BOLD, 10));
         headerBadge.setAlignmentX(Component.LEFT_ALIGNMENT);
         content.add(headerName);
         content.add(headerBadge);
