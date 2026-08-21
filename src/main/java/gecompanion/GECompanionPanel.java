@@ -228,6 +228,11 @@ public class GECompanionPanel extends PluginPanel
     private final java.util.Map<Integer, String> variantPopupNameCache = new java.util.HashMap<>();
     // Single reusable popup window for the improved variant info popup. Lazily created once, content rebuilt per hover.
     private javax.swing.JWindow variantPopupWindow = null;
+    // Suppresses new variant popup activation for a brief window after a structural Top Gainers/Losers
+// rebuild, so a stray mouseEntered fired by Swing reflowing a new component under a stationary
+// cursor doesn't immediately reopen/change the popup. Cleared via a short delayed Timer, not just
+// invokeLater, since a synthetic reflow-related mouse event could still arrive after invokeLater fires.
+    private boolean suppressVariantPopupActivation = false;
     private final java.util.List<String> bankItems = new java.util.ArrayList<>();
     private final java.util.Set<String> displayedGainersLosers = new java.util.HashSet<>();
     private final java.util.Set<String> removedFromDisplay = new java.util.HashSet<>();
@@ -350,8 +355,11 @@ private String openBankItemName = null;
             {
                 // Hide the variant popup before rebuilding - its anchor row may be about to be
                 // removed/replaced, and mouseExited never fires when a component is destroyed out
-                // from under the cursor rather than the mouse actually leaving it.
+                // from under the cursor rather than the mouse actually leaving it. Also suppress new
+                // popup activation briefly afterward, since Swing may fire a stray mouseEntered on
+                // whatever new row reflows under a stationary cursor during/right after the rebuild.
                 hideVariantPopup();
+                suppressVariantPopupActivation = true;
                 // close any open floating stats panel before rebuilding
                 if (activeStatsFloatPanel != null && activeStatsLayeredPane != null) {
                     activeStatsLayeredPane.remove(activeStatsFloatPanel);
@@ -362,6 +370,9 @@ private String openBankItemName = null;
                 isRefreshing = true;
                 showTab(2);
                 isRefreshing = false;
+                javax.swing.Timer suppressReleaseTimer = new javax.swing.Timer(200, e3 -> suppressVariantPopupActivation = false);
+                suppressReleaseTimer.setRepeats(false);
+                suppressReleaseTimer.start();
                 if (bankReopenAction != null)
                 {
                     javax.swing.Timer t = new javax.swing.Timer(150, e2 -> bankReopenAction.run());
@@ -4866,6 +4877,11 @@ whatsNewBox.add(seeMoreLabel);
                 iconWrapper.addMouseListener(new java.awt.event.MouseAdapter() {
                     @Override
                     public void mouseEntered(java.awt.event.MouseEvent e) {
+                        // Ignore stray mouseEntered events fired by Swing reflowing this row into place
+                        // under a stationary cursor during/right after a rebuild - require a genuine hover.
+                        if (suppressVariantPopupActivation) {
+                            return;
+                        }
                         showVariantPopup(iconWrapper, popupBaseId, popupOwnedVariants);
                     }
                     @Override
@@ -4875,6 +4891,14 @@ whatsNewBox.add(seeMoreLabel);
                 });
             }
         } else {
+            iconWrapper.addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseEntered(java.awt.event.MouseEvent e) {
+                    // Fallback: if a non-variant row reflows under a stationary cursor after a rebuild,
+                    // make sure any lingering variant popup from the previous row is cleared.
+                    hideVariantPopup();
+                }
+            });
             iconWrapper.setToolTipText(name);
         }
         row.add(iconWrapper, BorderLayout.WEST);
