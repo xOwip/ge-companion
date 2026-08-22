@@ -37,16 +37,16 @@ price movements. Prices auto-refresh every 60 seconds.
 ![Watchlist tab](gifs/watchlist.gif)
 
 ### Price Alerts
-Set price alerts directly on any watchlist item — hover to reveal the bell icon,
+Set price alerts directly on any watchlist item - hover to reveal the bell icon,
 click to open the alert dialog, and choose AT OR ABOVE or AT OR BELOW with a
 target price. Shortcuts like `1.5b`, `500m`, and `100k` are supported.
 
 When your target is reached you get a **RuneLite desktop notification** and an
-**in-game chat message** — so you never miss a price movement even while bossing
+**in-game chat message** - so you never miss a price movement even while bossing
 or skilling.
 
-- **Gold bell** — alert is active and watching
-- **Blue bell** — alert has triggered, click to dismiss or set a new one
+- **Gold bell** - alert is active and watching
+- **Blue bell** - alert has triggered, click to dismiss or set a new one
 - Right-click any watchlist item to quickly set, edit, or toggle overlay from the context menu
 
 ![Price alert dialog](screenshots/Price_Alert_Dialog_Window.png)
@@ -56,12 +56,12 @@ or skilling.
 ![Alert triggering](gifs/Alert_Triggering.gif)
 
 #### Price Alert Overlay
-Active alerts can be shown as an in-game overlay — either as a compact InfoBox
+Active alerts can be shown as an in-game overlay - either as a compact InfoBox
 icon (same size as potion timers) or a full panel showing current and target prices.
 
 **Compact mode (default):** A small item icon appears on screen. Hover it to see
 the current price, target price, and direction. When triggered, the icon gets a
-blue tint so you notice it immediately — even while bossing.
+blue tint so you notice it immediately - even while bossing.
 
 **Full mode:** A panel showing the item name, current price, and target price
 with direction arrows. Switches to triggered colors when the alert fires.
@@ -84,18 +84,18 @@ Every item has a full buy/sell price history chart with five timeframes:
 - **Double-click or ↺** → reset zoom
 
 **Game update markers** appear as colored dots on the timeline showing when
-Jagex updates happened — hover to see the update title, right-click to open
+Jagex updates happened - hover to see the update title, right-click to open
 the full update on the OSRS Wiki.
 
 Markers are color-coded by category:
-- 🟡 **Gold** — General game updates
-- 🔵 **Blue** — Patch notes
-- 🟢 **Green** — Events
-- 🟣 **Purple** — Polls
+- 🟡 **Gold** - General game updates
+- 🔵 **Blue** - Patch notes
+- 🟢 **Green** - Events
+- 🟣 **Purple** - Polls
 
-Choose how many markers to show in plugin settings — All, Major Only, or Off.
+Choose how many markers to show in plugin settings - All, Major Only, or Off.
 
-Update markers are sourced live from the OSRS Wiki and require no maintenance —
+Update markers are sourced live from the OSRS Wiki and require no maintenance -
 whenever the Wiki documents a new game update, it automatically appears on your
 price chart the next time you open it.
 
@@ -103,11 +103,11 @@ price chart the next time you open it.
 
 ### Flipping Stats
 Click the item icon in any detail panel to reveal a flipping stats panel with:
-- **Daily Volume** — how many times this item trades per day
-- **Margin** — buy/sell spread minus GE tax (2%, capped at 5m)
-- **Profit at limit** — tax-adjusted margin × GE buy limit
-- **Margin × Volume** — tax-adjusted margin × daily volume, useful for comparing overall market opportunity
-- **ROI** — return on investment as a percentage
+- **Daily Volume** - how many times this item trades per day
+- **Margin** - buy/sell spread minus GE tax (2%, capped at 5m)
+- **Profit at limit** - tax-adjusted margin × GE buy limit
+- **Margin × Volume** - tax-adjusted margin × daily volume, useful for comparing overall market opportunity
+- **ROI** - return on investment as a percentage
 
 Hover any stat label for a tooltip explaining what it measures. All stats use GE tax-adjusted values to match prices.runescape.wiki. Margin, Profit, Margin × Volume, and ROI update live every 60 seconds alongside prices.
 
@@ -116,11 +116,11 @@ Hover any stat label for a tooltip explaining what it measures. All stats use GE
 ### Bank Value Tracker
 Open your bank and GE Companion automatically scans it to show:
 - **Total Bank Value** in gp
-- **Top Gainers** — your items with the biggest price increase
-- **Top Losers** — your items with the biggest price drop
+- **Top Gainers** - your items with the biggest price increase
+- **Top Losers** - your items with the biggest price drop
 
 **Total Bank Value** matches the same calculation used by RuneLite's official
-Bank plugin — just your bank's contents. Click the label to toggle to
+Bank plugin - just your bank's contents. Click the label to toggle to
 **Total Wealth** mode, which tracks your Bank + Inventory + Equipment combined
 for a more accurate picture of your overall wealth.
 
@@ -128,33 +128,33 @@ for a more accurate picture of your overall wealth.
 ![Total Wealth toggled](screenshots/Total Wealth Toggle-After.png)
 
 Top Gainers and Top Losers always include items in your bank, inventory,
-and equipment — so gearing up for a boss run never disrupts your list.
+and equipment - so gearing up for a boss run never disrupts your list.
 
 Items that have been remapped to their tradeable base for price lookup are marked
-with a gold `*` on their icon — hover to see all owned variants and their
+with a gold `*` on their icon - hover to see all owned variants and their
 tradeable base. Multiple variants mapping to the same base (e.g. Emberlight,
 Purging Staff, and Scorching Bow all mapping to Tormented Synapse) are
 deduplicated into a single entry.
 
 GE Companion automatically records your bank value every 5 minutes while
 you're logged in, building a history that powers the value change tracking
-across all timeframes — from 1H all the way up to your full recorded history.
-Bank history is saved per account — each account tracks its own wealth
+across all timeframes - from 1H all the way up to your full recorded history.
+Bank history is saved per account - each account tracks its own wealth
 history independently with no crossover between accounts.
 
 ![Bank tab](gifs/bank.gif)
 
-### `!bank` — In-Game Wealth Command
+### `!bank` - In-Game Wealth Command
 Type `!bank` in any chat channel to instantly display your total wealth without
-opening the plugin. The `!bank` command always shows your **Total Wealth** —
-the combined value of your bank, inventory, and equipped items — so you always
+opening the plugin. The `!bank` command always shows your **Total Wealth** -
+the combined value of your bank, inventory, and equipped items - so you always
 get an accurate picture of your net worth regardless of what you have equipped.
 
 Supports timeframes: `!bank 1h`, `!bank 6h`, `!bank 24h`, `!bank 7d`,
 `!bank 30d`, `!bank 3m`, `!bank 1y`, `!bank all`
 
 > **Note:** `!bank all` shows your wealth change since GE Companion first
-> started tracking your bank — not your full account history. History begins
+> started tracking your bank - not your full account history. History begins
 > the first time you open your bank with GE Companion installed. Total Wealth
 > updates each time you open your bank, so items picked up since your last
 > bank scan won't be reflected until you open your bank again.
@@ -181,17 +181,17 @@ register, or provide any credentials. Install it and it works.
 ---
 
 ## Always Up to Date
-Every panel refreshes automatically every 60 seconds with zero disruption —
+Every panel refreshes automatically every 60 seconds with zero disruption -
 open detail panels, expanded charts, and floating stats stay exactly where
 you left them. Want to check right now instead of waiting? Click the ↻ refresh
 button in the top-right corner to pull the latest data immediately.
 
-60 seconds is the fastest refresh rate supported by the OSRS Wiki prices API —
+60 seconds is the fastest refresh rate supported by the OSRS Wiki prices API -
 the same trusted, community-maintained data source used by many popular OSRS
 price tracking tools.
 
 New items appear in search automatically as soon as they begin trading
-on the Grand Exchange and are indexed by the OSRS Wiki prices API —
+on the Grand Exchange and are indexed by the OSRS Wiki prices API -
 no plugin update required. New items typically appear within a few hours
 of release.
 
@@ -201,7 +201,7 @@ of release.
 GE Companion only reads publicly available price data from `prices.runescape.wiki`.
 It never interacts with the game server on your behalf, never moves items,
 and never sends your bank data anywhere. Bank scanning uses RuneLite's standard
-item container events — the same approach used by the official RuneLite Bank plugin.
+item container events - the same approach used by the official RuneLite Bank plugin.
 All data stays on your machine.
 
 ---
@@ -234,7 +234,7 @@ All data stays on your machine.
 
 ## Feedback
 Found a bug or have a feature request? Use the **Report Issue** or **Request Feature**
-buttons anchored at the bottom of the plugin panel to submit directly to GitHub — no
+buttons anchored at the bottom of the plugin panel to submit directly to GitHub - no
 copy-pasting required.
 
 ---

@@ -81,6 +81,10 @@ public class GECompanionPanel extends PluginPanel
     private final java.util.Set<Integer> firedAlerts = new java.util.HashSet<>();
     private final java.util.Map<Integer, Long> alertFiredTimes = new java.util.HashMap<>();
     private final java.util.Map<Integer, Long> firedAlertTargets = new java.util.HashMap<>();
+    // Price at the moment each active alert was created/reset - used as the progress bar's starting
+// point (creation price -> current price -> target price), not persisted target/current alone.
+// Legacy alerts created before this field existed will have no entry; treat missing as "no progress data".
+    private final java.util.Map<Integer, Long> alertCreationPrices = new java.util.HashMap<>();
     private final java.util.Map<Integer, Boolean> firedAlertDirections = new java.util.HashMap<>();
     private JLabel updatesIconRef = null;
 
@@ -285,6 +289,7 @@ private String openBankItemName = null;
         loadBankValueLog();
         loadPinnedItems();
         loadPriceAlerts();
+        loadAlertCreationPrices();
         showTotalWealth = config.showTotalWealth();
         loadRecentSearches();
         lastUpdatedTimer = new javax.swing.Timer(10_000, e -> updateLastUpdatedLabel());
@@ -1336,6 +1341,8 @@ private String openBankItemName = null;
     public Long getFiredAlertTarget(int itemId) { return firedAlertTargets.get(itemId); }
     public Boolean getFiredAlertDirection(int itemId) { return firedAlertDirections.get(itemId); }
     public long getCurrentPrice(int itemId) { PriceData pd = priceCache.get(itemId); return pd != null ? pd.getMid() : 0; }
+    // Returns the price at the moment this alert was created/reset, or null for legacy alerts with no recorded creation price.
+    public Long getAlertCreationPrice(int itemId) { return alertCreationPrices.get(itemId); }
     public String formatPricePublic(String price) { return formatPrice(price); }
     public java.awt.image.BufferedImage getItemIconForOverlay(int itemId) {
         return plugin.getItemManager().getImage(itemId);
@@ -1414,6 +1421,36 @@ private String openBankItemName = null;
                 try {
                     int id = Integer.parseInt(parts[0]);
                     priceAlerts.put(id, parts[1]);
+                } catch (NumberFormatException e) { }
+            }
+        }
+    }
+
+    private void saveAlertCreationPrices()
+    {
+        StringBuilder sb = new StringBuilder();
+        for (java.util.Map.Entry<Integer, Long> entry : alertCreationPrices.entrySet())
+        {
+            if (sb.length() > 0) sb.append(",");
+            sb.append(entry.getKey()).append(":").append(entry.getValue());
+        }
+        plugin.saveConfig("alertCreationPrices", sb.toString());
+    }
+
+    private void loadAlertCreationPrices()
+    {
+        alertCreationPrices.clear();
+        String saved = plugin.loadConfig("alertCreationPrices");
+        if (saved == null || saved.isEmpty()) return;
+        for (String entry : saved.split(","))
+        {
+            String[] parts = entry.split(":", 2);
+            if (parts.length == 2)
+            {
+                try {
+                    int id = Integer.parseInt(parts[0]);
+                    long price = Long.parseLong(parts[1]);
+                    alertCreationPrices.put(id, price);
                 } catch (NumberFormatException e) { }
             }
         }
@@ -7844,7 +7881,9 @@ whatsNewBox.add(seeMoreLabel);
         clearBtn.addActionListener(e -> {
             if (itemId != null) {
                 priceAlerts.remove(itemId);
+                alertCreationPrices.remove(itemId);
                 savePriceAlerts();
+                saveAlertCreationPrices();
             }
             bellIcon.setForeground(TEXT_DIM);
             bellIcon.setVisible(false);
@@ -7872,7 +7911,18 @@ whatsNewBox.add(seeMoreLabel);
                     boolean showInOverlay = overlayCheckbox.isSelected();
                     String alertValue = (isAbove ? "above:" : "below:") + targetPrice + (showInOverlay ? ":overlay" : ":nooverlay");
                     priceAlerts.put(itemId, alertValue);
+                    // Capture the current price as the progress bar's starting point. This runs on both
+                    // new alert creation and Set New Alert (replacing an existing one), so replacing an
+                    // alert correctly resets progress to start from the current market price. Guard against
+                    // saving 0 if pricing data hasn't loaded yet, since that would make progress math meaningless.
+                    long creationPrice = getCurrentPrice(itemId);
+                    if (creationPrice > 0) {
+                        alertCreationPrices.put(itemId, creationPrice);
+                    } else {
+                        alertCreationPrices.remove(itemId);
+                    }
                     savePriceAlerts();
+                    saveAlertCreationPrices();
                     bellIcon.setToolTipText("Alert: " + (isAbove ? "AT OR ABOVE " : "AT OR BELOW ") + formatFullPrice(String.valueOf(targetPrice)) + " gp");
                 }
                 bellIcon.setForeground(config.alertBellColor());
