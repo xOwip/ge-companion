@@ -39,6 +39,11 @@ public class GECompanionPanel extends PluginPanel
     private static final Color STAT_GOLD = new Color(255, 210, 50);
     private static final Color TEXT_PRIMARY = new Color(239, 241, 243);
     private static final Color TEXT_DIM = new Color(110, 100, 90);
+
+    // Higher-contrast text colors for dark dialog windows
+    private static final Color DIALOG_TEXT_PRIMARY = new Color(0xCF, 0xC8, 0xBC);
+    private static final Color DIALOG_TEXT_MUTED = new Color(0xA9, 0xA2, 0x97);
+
     private static final Color TAB_INACTIVE = new Color(74, 69, 64);
     private static final Color LIVE_GREEN = new Color(74, 154, 48);
     private static final Color GREEN_UP = new Color(74, 154, 48);
@@ -7713,7 +7718,7 @@ whatsNewBox.add(seeMoreLabel);
         content.add(Box.createVerticalStrut(4));
 
         JLabel itemLabel = new JLabel(itemName);
-        itemLabel.setForeground(TEXT_DIM);
+        itemLabel.setForeground(DIALOG_TEXT_PRIMARY);
         itemLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
         itemLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         content.add(itemLabel);
@@ -7721,7 +7726,7 @@ whatsNewBox.add(seeMoreLabel);
 
 // Toggle — AT OR ABOVE / AT OR BELOW
         JLabel toggleLabel = new JLabel("Notify me when price is:");
-        toggleLabel.setForeground(TEXT_DIM);
+        toggleLabel.setForeground(DIALOG_TEXT_PRIMARY);
         toggleLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
         toggleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         content.add(toggleLabel);
@@ -7747,11 +7752,11 @@ whatsNewBox.add(seeMoreLabel);
             aboveToggle.setForeground(new Color(14, 12, 13));
             aboveToggle.setBorder(BorderFactory.createLineBorder(GOLD));
             belowToggle.setBackground(new Color(30, 28, 26));
-            belowToggle.setForeground(TEXT_DIM);
+            belowToggle.setForeground(DIALOG_TEXT_MUTED);
             belowToggle.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
         } else {
             aboveToggle.setBackground(new Color(30, 28, 26));
-            aboveToggle.setForeground(TEXT_DIM);
+            aboveToggle.setForeground(DIALOG_TEXT_MUTED);
             aboveToggle.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
             belowToggle.setBackground(GOLD);
             belowToggle.setForeground(new Color(14, 12, 13));
@@ -7765,7 +7770,7 @@ whatsNewBox.add(seeMoreLabel);
                 aboveToggle.setForeground(new Color(14, 12, 13));
                 aboveToggle.setBorder(BorderFactory.createLineBorder(GOLD));
                 belowToggle.setBackground(new Color(30, 28, 26));
-                belowToggle.setForeground(TEXT_DIM);
+                belowToggle.setForeground(DIALOG_TEXT_MUTED);
                 belowToggle.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
             }
         });
@@ -7777,7 +7782,7 @@ whatsNewBox.add(seeMoreLabel);
                 belowToggle.setForeground(new Color(14, 12, 13));
                 belowToggle.setBorder(BorderFactory.createLineBorder(GOLD));
                 aboveToggle.setBackground(new Color(30, 28, 26));
-                aboveToggle.setForeground(TEXT_DIM);
+                aboveToggle.setForeground(DIALOG_TEXT_MUTED);
                 aboveToggle.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
             }
         });
@@ -7790,7 +7795,7 @@ whatsNewBox.add(seeMoreLabel);
 
         // Price input
         JLabel priceLabel = new JLabel("Target Price (gp):");
-        priceLabel.setForeground(TEXT_DIM);
+        priceLabel.setForeground(DIALOG_TEXT_PRIMARY);
         priceLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
         priceLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         content.add(priceLabel);
@@ -7811,7 +7816,7 @@ whatsNewBox.add(seeMoreLabel);
         content.add(priceField);
         content.add(Box.createVerticalStrut(3));
         JLabel hintLabel = new JLabel("Shortcuts: 1k, 500m, 1.5b");
-        hintLabel.setForeground(TEXT_DIM);
+        hintLabel.setForeground(DIALOG_TEXT_MUTED);
         hintLabel.setFont(new Font("Monospaced", Font.PLAIN, 9));
         hintLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         content.add(hintLabel);
@@ -7822,7 +7827,7 @@ whatsNewBox.add(seeMoreLabel);
                 || (!hasExisting && config.showPriceAlertOverlay());
         javax.swing.JCheckBox overlayCheckbox = new javax.swing.JCheckBox("Show price alert in overlay");
         overlayCheckbox.setSelected(existingOverlay);
-        overlayCheckbox.setForeground(TEXT_DIM);
+        overlayCheckbox.setForeground(DIALOG_TEXT_PRIMARY);
         overlayCheckbox.setBackground(new Color(30, 28, 26));
         overlayCheckbox.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
         overlayCheckbox.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -7836,7 +7841,7 @@ whatsNewBox.add(seeMoreLabel);
         btnRow.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JButton clearBtn = new JButton(" Clear Alert ");
-        clearBtn.setForeground(TEXT_DIM);
+        clearBtn.setForeground(DIALOG_TEXT_PRIMARY);
         clearBtn.setBackground(new Color(30, 28, 26));
         clearBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
         clearBtn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
@@ -8054,7 +8059,7 @@ whatsNewBox.add(seeMoreLabel);
                 "• Fixed 'Not yet scanned' truncation"
         }) {
             JLabel l = new JLabel(line);
-            l.setForeground(TEXT_DIM);
+            l.setForeground(DIALOG_TEXT_PRIMARY);
             l.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
             l.setAlignmentX(Component.LEFT_ALIGNMENT);
             content.add(l);
@@ -8080,7 +8085,7 @@ whatsNewBox.add(seeMoreLabel);
                 "• Added tooltips to all flipping stats"
         }) {
             JLabel l = new JLabel(line);
-            l.setForeground(TEXT_DIM);
+            l.setForeground(DIALOG_TEXT_PRIMARY);
             l.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
             l.setAlignmentX(Component.LEFT_ALIGNMENT);
             content.add(l);
@@ -8110,7 +8115,7 @@ whatsNewBox.add(seeMoreLabel);
                 "• Hover item icon to see original bank item name"
         }) {
             JLabel l = new JLabel(line);
-            l.setForeground(TEXT_DIM);
+            l.setForeground(DIALOG_TEXT_PRIMARY);
             l.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
             l.setAlignmentX(Component.LEFT_ALIGNMENT);
             content.add(l);
@@ -8132,7 +8137,7 @@ whatsNewBox.add(seeMoreLabel);
                 "• Report Issue / Request Feature / Updates"
         }) {
             JLabel l = new JLabel(line);
-            l.setForeground(TEXT_DIM);
+            l.setForeground(DIALOG_TEXT_PRIMARY);
             l.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
             l.setAlignmentX(Component.LEFT_ALIGNMENT);
             content.add(l);
@@ -8156,7 +8161,7 @@ whatsNewBox.add(seeMoreLabel);
                 "• Flipping stats panel"
         }) {
             JLabel l = new JLabel(line);
-            l.setForeground(TEXT_DIM);
+            l.setForeground(DIALOG_TEXT_PRIMARY);
             l.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
             l.setAlignmentX(Component.LEFT_ALIGNMENT);
             content.add(l);
@@ -8164,7 +8169,7 @@ whatsNewBox.add(seeMoreLabel);
         content.add(Box.createVerticalStrut(8));
 
         JButton closeBtn = new JButton(" Close ");
-        closeBtn.setForeground(TEXT_DIM);
+        closeBtn.setForeground(DIALOG_TEXT_PRIMARY);
         closeBtn.setBackground(new Color(30, 28, 26));
         closeBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
         closeBtn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
