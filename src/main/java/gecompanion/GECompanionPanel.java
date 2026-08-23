@@ -40,6 +40,9 @@ public class GECompanionPanel extends PluginPanel
     private static final Color TEXT_PRIMARY = new Color(239, 241, 243);
     private static final Color TEXT_DIM = new Color(110, 100, 90);
 
+    // Readable secondary text for labels, metadata, and supporting information.
+    private static final Color TEXT_SECONDARY = new Color(0xA9, 0xA2, 0x97);
+
     // Higher-contrast text colors for dark dialog windows
     private static final Color DIALOG_TEXT_PRIMARY = new Color(0xCF, 0xC8, 0xBC);
     private static final Color DIALOG_TEXT_MUTED = new Color(0xA9, 0xA2, 0x97);
@@ -972,7 +975,7 @@ private String openBankItemName = null;
                 yourItemInfo.setLayout(new BoxLayout(yourItemInfo, BoxLayout.Y_AXIS));
                 yourItemInfo.setBackground(VARIANT_POPUP_PANEL_BG);
                 JLabel yourItemName = new JLabel(ownedName);
-                yourItemName.setForeground(VARIANT_POPUP_TEXT_SECONDARY);
+                yourItemName.setForeground(TEXT_SECONDARY);
                 yourItemName.setFont(new Font("Monospaced", Font.PLAIN, 11));
                 JLabel yourItemStatus = new JLabel("Untradeable");
                 yourItemStatus.setForeground(VARIANT_POPUP_UNTRADEABLE_RED);
@@ -1005,7 +1008,7 @@ private String openBankItemName = null;
         baseInfo.setLayout(new BoxLayout(baseInfo, BoxLayout.Y_AXIS));
         baseInfo.setBackground(VARIANT_POPUP_PANEL_BG);
         JLabel baseNameLabel = new JLabel(baseName);
-        baseNameLabel.setForeground(VARIANT_POPUP_TEXT_SECONDARY);
+        baseNameLabel.setForeground(TEXT_SECONDARY);
         baseNameLabel.setFont(new Font("Monospaced", Font.PLAIN, 11));
         String priceLimitText = (basePriceData != null && basePrice > 0 ? formatPrice(String.valueOf(basePrice)) + " gp" : "No price data")
                 + "  \u2022  Limit: " + (baseLimit != null ? baseLimit : "?");
@@ -1025,7 +1028,7 @@ private String openBankItemName = null;
         // Footnote
         content.add(Box.createVerticalStrut(10));
         JLabel footnote = new JLabel("Prices shown are for the tradeable base item.");
-        footnote.setForeground(VARIANT_POPUP_TEXT_MUTED);
+        footnote.setForeground(TEXT_SECONDARY);
         footnote.setFont(new Font("Monospaced", Font.PLAIN, 9));
         footnote.setAlignmentX(Component.LEFT_ALIGNMENT);
         content.add(footnote);
@@ -1542,7 +1545,7 @@ private String openBankItemName = null;
         iconsPanel.add(updatesIcon);
 
         JLabel attribution = new JLabel("Data from prices.runescape.wiki    ");
-        attribution.setForeground(TEXT_DIM);
+        attribution.setForeground(TEXT_SECONDARY);
         attribution.setFont(new Font("Monospaced", Font.PLAIN, 10));
         attribution.setBorder(new EmptyBorder(0, 0, 0, 4));
         attribution.setFont(new Font("Monospaced", Font.PLAIN, 9));
@@ -1993,7 +1996,7 @@ private String openBankItemName = null;
         buyPriceBox.setPreferredSize(new Dimension(225, 52));
 
         JLabel buyPriceLabelComp = new JLabel(buyPriceLabel, SwingConstants.CENTER);
-        buyPriceLabelComp.setForeground(TEXT_DIM);
+        buyPriceLabelComp.setForeground(TEXT_SECONDARY);
         buyPriceLabelComp.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
         buyPriceLabelComp.setAlignmentX(Component.CENTER_ALIGNMENT);
         buyPriceLabelComp.setMaximumSize(new Dimension(Integer.MAX_VALUE, 16));
@@ -2027,7 +2030,7 @@ private String openBankItemName = null;
         sellPriceBox.setPreferredSize(new Dimension(225, 52));
 
         JLabel sellPriceLabelComp = new JLabel(sellPriceLabel, SwingConstants.CENTER);
-        sellPriceLabelComp.setForeground(TEXT_DIM);
+        sellPriceLabelComp.setForeground(TEXT_SECONDARY);
         sellPriceLabelComp.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
         sellPriceLabelComp.setAlignmentX(Component.CENTER_ALIGNMENT);
         sellPriceLabelComp.setMaximumSize(new Dimension(Integer.MAX_VALUE, 16));
@@ -2137,6 +2140,28 @@ private String openBankItemName = null;
         chartBtn.setFocusPainted(false);
         chartBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         chartBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 28));
+        chartBtn.addMouseListener(new MouseAdapter()
+        {
+            @Override
+            public void mouseEntered(MouseEvent e)
+            {
+                if (!graphOpen[0])
+                {
+                    chartBtn.setForeground(TEXT_SECONDARY);
+                    chartBtn.setBorder(BorderFactory.createLineBorder(TEXT_SECONDARY));
+                }
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e)
+            {
+                if (!graphOpen[0])
+                {
+                    chartBtn.setForeground(TAB_INACTIVE);
+                    chartBtn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+                }
+            }
+        });
         chartBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
         inner.add(Box.createVerticalStrut(4));
         inner.add(chartBtn);
@@ -2240,12 +2265,12 @@ private String openBankItemName = null;
         statsHeader.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         JLabel statsLbl = new JLabel("STATISTICS");
-        statsLbl.setForeground(new Color(110, 100, 90));
+        statsLbl.setForeground(TEXT_SECONDARY);
         statsLbl.setFont(new Font("Monospaced", Font.PLAIN, 10));
         statsLbl.setBorder(new EmptyBorder(0, 8, 0, 0));
 
         JLabel statsArrow = new JLabel("▼");
-        statsArrow.setForeground(new Color(110, 100, 90));
+        statsArrow.setForeground(TEXT_SECONDARY);
         statsArrow.setFont(new Font("Monospaced", Font.PLAIN, 10));
         statsArrow.setBorder(new EmptyBorder(0, 0, 0, 8));
 
@@ -2266,7 +2291,7 @@ private String openBankItemName = null;
             box.setBackground(new Color(14, 12, 13));
             box.setBorder(new EmptyBorder(8, 5, 0, 5));
             JLabel nameLabel = new JLabel(statNames[i].toUpperCase(), SwingConstants.CENTER);
-            nameLabel.setForeground(TEXT_DIM);
+            nameLabel.setForeground(TEXT_SECONDARY);
             nameLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
             JLabel valLabel = new JLabel("—");
             valLabel.setForeground(statColors[i]);
@@ -2338,8 +2363,8 @@ private String openBankItemName = null;
                     t.start();
                     statsOpen2[0] = false;
                     statsArrow.setText("▼");
-                    statsLbl.setForeground(new Color(110, 100, 90));
-                    statsArrow.setForeground(new Color(110, 100, 90));
+                    statsLbl.setForeground(TEXT_SECONDARY);
+                    statsArrow.setForeground(TEXT_SECONDARY);
                     statsHeader.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 32)));
                 }
             }
@@ -3249,7 +3274,7 @@ whatsNewBox.add(seeMoreLabel);
         pinnedHeader.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
 
         JLabel pinnedLabel = new JLabel("Pinned Items");
-        pinnedLabel.setForeground(TEXT_DIM);
+        pinnedLabel.setForeground(TEXT_SECONDARY);
         pinnedLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_SECTION));
         pinnedLabel.setBorder(new EmptyBorder(4, 7, 2, 7));
 
@@ -3980,6 +4005,28 @@ whatsNewBox.add(seeMoreLabel);
             btn.setBackground(frame.equals(bankWealthTimeFrame) ? new Color(26, 21, 0) : new Color(20, 16, 10));
             btn.setForeground(frame.equals(bankWealthTimeFrame) ? GOLD : TAB_INACTIVE);
             btn.setBorder(BorderFactory.createLineBorder(frame.equals(bankWealthTimeFrame) ? GOLD : new Color(58, 53, 48)));
+            btn.addMouseListener(new MouseAdapter()
+            {
+                @Override
+                public void mouseEntered(MouseEvent e)
+                {
+                    if (!frame.equals(bankWealthTimeFrame))
+                    {
+                        btn.setForeground(new Color(0x8F, 0x87, 0x7D));
+                        btn.setBorder(BorderFactory.createLineBorder(new Color(0x66, 0x5E, 0x55)));
+                    }
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e)
+                {
+                    if (!frame.equals(bankWealthTimeFrame))
+                    {
+                        btn.setForeground(TAB_INACTIVE);
+                        btn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+                    }
+                }
+            });
             btn.addActionListener(e -> {
                 bankWealthTimeFrame = frame;
                 if (activeStatsFloatPanel != null && activeStatsLayeredPane != null) {
@@ -4011,6 +4058,28 @@ whatsNewBox.add(seeMoreLabel);
             btn.setBackground(frame.equals(bankWealthTimeFrame) ? new Color(26, 21, 0) : new Color(20, 16, 10));
             btn.setForeground(frame.equals(bankWealthTimeFrame) ? GOLD : TAB_INACTIVE);
             btn.setBorder(BorderFactory.createLineBorder(frame.equals(bankWealthTimeFrame) ? GOLD : new Color(58, 53, 48)));
+            btn.addMouseListener(new MouseAdapter()
+            {
+                @Override
+                public void mouseEntered(MouseEvent e)
+                {
+                    if (!frame.equals(bankWealthTimeFrame))
+                    {
+                        btn.setForeground(new Color(0x8F, 0x87, 0x7D));
+                        btn.setBorder(BorderFactory.createLineBorder(new Color(0x66, 0x5E, 0x55)));
+                    }
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e)
+                {
+                    if (!frame.equals(bankWealthTimeFrame))
+                    {
+                        btn.setForeground(TAB_INACTIVE);
+                        btn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+                    }
+                }
+            });
             btn.addActionListener(e -> {
                 bankWealthTimeFrame = frame;
                 if (activeStatsFloatPanel != null && activeStatsLayeredPane != null) {
@@ -4047,7 +4116,7 @@ whatsNewBox.add(seeMoreLabel);
                    ? "New! Click to switch to Total Wealth — tracks Bank + Inventory + Equipment combined"
                    : "Bank contents only (matches RuneLite Bank plugin) — click to switch to Total Wealth");
         JLabel heroLabel = new JLabel(heroLabelText, SwingConstants.CENTER);
-        heroLabel.setForeground(TEXT_DIM);
+        heroLabel.setForeground(TEXT_SECONDARY);
         heroLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
         heroLabel.setToolTipText(heroLabelTooltip);
         heroLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -4062,7 +4131,7 @@ whatsNewBox.add(seeMoreLabel);
                 showTab(activeTab);
             }
             public void mouseEntered(MouseEvent e) { heroLabel.setForeground(GOLD); }
-            public void mouseExited(MouseEvent e) { heroLabel.setForeground(TEXT_DIM); }
+            public void mouseExited(MouseEvent e) { heroLabel.setForeground(TEXT_SECONDARY); }
         });
 
         liveBankValueHeaderLabel = heroLabel;
@@ -4238,7 +4307,7 @@ whatsNewBox.add(seeMoreLabel);
         }
         JLabel contextLabel = new JLabel(contextStr, SwingConstants.CENTER);
         liveLastUpdatedLabel = contextLabel;
-        contextLabel.setForeground(TEXT_DIM);
+        contextLabel.setForeground(TEXT_SECONDARY);
         contextLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
         gbc.gridy = 6;
         gbc.insets = new java.awt.Insets(0, 6, 4, 6);
@@ -4354,7 +4423,7 @@ whatsNewBox.add(seeMoreLabel);
             String wealthStr = formatFullPrice(String.valueOf(entryWealth)) + " gp";
 
             JLabel compLine1 = new JLabel("Compared:  " + timeAgoStr, SwingConstants.LEFT);
-            compLine1.setForeground(TEXT_DIM);
+            compLine1.setForeground(TEXT_SECONDARY);
             compLine1.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
             compLine1.setToolTipText("How long ago the reference bank scan was taken for this timeframe");
             cgbc.gridy = 0;
@@ -4362,14 +4431,14 @@ whatsNewBox.add(seeMoreLabel);
             compPanel.add(compLine1, cgbc);
 
             JLabel compLine2 = new JLabel("Date:      " + dateStr, SwingConstants.LEFT);
-            compLine2.setForeground(TEXT_DIM);
+            compLine2.setForeground(TEXT_SECONDARY);
             compLine2.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
             compLine2.setToolTipText("The exact date and time of the reference bank scan");
             cgbc.gridy = 1;
             compPanel.add(compLine2, cgbc);
 
             JLabel compLine3 = new JLabel("Wealth:    " + wealthStr, SwingConstants.LEFT);
-            compLine3.setForeground(TEXT_DIM);
+            compLine3.setForeground(TEXT_SECONDARY);
             compLine3.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
             compLine3.setToolTipText("Total wealth recorded at that time — includes Bank + Inventory + Equipment");
             cgbc.gridy = 2;
@@ -4438,7 +4507,7 @@ whatsNewBox.add(seeMoreLabel);
             gainersLabel.setToolTipText("<html>Based on items in your bank, inventory, and equipment at last scan.<br>Items must be priced above 10,000 gp each,<br>with a total stack value above the threshold set in plugin settings.<br><span style='color:#D4AF37'>*</span> = Item remapped to its tradeable base for price lookup.</html>");
             gainersHeader.add(gainersLabel, BorderLayout.WEST);
             JLabel gCountLabel = new JLabel(String.valueOf(config.gainersCount()));
-            gCountLabel.setForeground(TEXT_DIM);
+            gCountLabel.setForeground(TEXT_SECONDARY);
             gCountLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
             JLabel gMinusBtn = new JLabel("[-]");
             gMinusBtn.setForeground(TEXT_DIM);
@@ -4617,7 +4686,7 @@ whatsNewBox.add(seeMoreLabel);
             losersLabel.setToolTipText("<html>Based on items in your bank, inventory, and equipment at last scan.<br>Items must be priced above 10,000 gp each,<br>with a total stack value above the threshold set in plugin settings.<br><span style='color:#D4AF37'>*</span> = Item remapped to its tradeable base for price lookup.</html>");
             losersHeader.add(losersLabel, BorderLayout.WEST);
             JLabel lCountLabel = new JLabel(String.valueOf(config.losersCount()));
-            lCountLabel.setForeground(TEXT_DIM);
+            lCountLabel.setForeground(TEXT_SECONDARY);
             lCountLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
             JLabel lMinusBtn = new JLabel("[-]");
             lMinusBtn.setForeground(TEXT_DIM);
@@ -5624,6 +5693,28 @@ whatsNewBox.add(seeMoreLabel);
             btn.setBackground(frame.equals(activeTimeFrame) ? new Color(26, 21, 0) : new Color(14, 12, 13));
             btn.setForeground(frame.equals(activeTimeFrame) ? GOLD : TAB_INACTIVE);
             btn.setBorder(BorderFactory.createLineBorder(frame.equals(activeTimeFrame) ? GOLD : new Color(58, 53, 48)));
+            btn.addMouseListener(new MouseAdapter()
+            {
+                @Override
+                public void mouseEntered(MouseEvent e)
+                {
+                    if (!frame.equals(activeTimeFrame))
+                    {
+                        btn.setForeground(new Color(0x8F, 0x87, 0x7D));
+                        btn.setBorder(BorderFactory.createLineBorder(new Color(0x66, 0x5E, 0x55)));
+                    }
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e)
+                {
+                    if (!frame.equals(activeTimeFrame))
+                    {
+                        btn.setForeground(TAB_INACTIVE);
+                        btn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+                    }
+                }
+            });
             btn.addActionListener(e -> {
                 activeTimeFrame = frame;
                 // Close floating stats panel if open
@@ -5785,7 +5876,7 @@ whatsNewBox.add(seeMoreLabel);
                 statsFloatPanel.add(sep);
                 statsFloatPanel.add(Box.createVerticalStrut(4));
                 JLabel footnote = new JLabel("<html><center>Stats auto-refresh every 60s<br>Volume updates on startup</center></html>", SwingConstants.CENTER);
-                footnote.setForeground(new Color(107, 102, 96));
+                footnote.setForeground(TEXT_SECONDARY);
                 footnote.setFont(new Font("Monospaced", Font.PLAIN, 9));
                 footnote.setAlignmentX(Component.CENTER_ALIGNMENT);
                 footnote.setHorizontalAlignment(SwingConstants.CENTER);
@@ -5992,6 +6083,30 @@ whatsNewBox.add(seeMoreLabel);
             b.setBorder(active
                     ? BorderFactory.createLineBorder(GOLD)
                     : BorderFactory.createLineBorder(new Color(58, 53, 48)));
+            final String frame = frames[i];
+
+            b.addMouseListener(new MouseAdapter()
+            {
+                @Override
+                public void mouseEntered(MouseEvent e)
+                {
+                    if (!frame.equals(activeFrame[0]))
+                    {
+                        b.setForeground(new Color(0x8F, 0x87, 0x7D));
+                        b.setBorder(BorderFactory.createLineBorder(new Color(0x66, 0x5E, 0x55)));
+                    }
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e)
+                {
+                    if (!frame.equals(activeFrame[0]))
+                    {
+                        b.setForeground(TAB_INACTIVE);
+                        b.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+                    }
+                }
+            });
             tfBtns[i] = b;
             tfBar.add(b);
         }
@@ -6026,7 +6141,7 @@ whatsNewBox.add(seeMoreLabel);
             itemName = sb.toString().trim();
         }
         JLabel itemNameLabel = new JLabel(itemName, SwingConstants.LEFT);
-        itemNameLabel.setForeground(TEXT_DIM);
+        itemNameLabel.setForeground(TEXT_SECONDARY);
         itemNameLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
         itemNameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         itemNameLabel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 16));
@@ -6440,7 +6555,7 @@ whatsNewBox.add(seeMoreLabel);
         volLabelRow.setMaximumSize(new Dimension(225, 14));
         volLabelRow.setAlignmentX(Component.LEFT_ALIGNMENT);
         JLabel volLbl  = new JLabel("Volume");
-        volLbl.setForeground(new Color(110, 100, 90));
+        volLbl.setForeground(TEXT_SECONDARY);
         volLbl.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
         JLabel volBuyL = new JLabel("■ Buy");
         volBuyL.setForeground(GOLD);
@@ -6875,14 +6990,14 @@ whatsNewBox.add(seeMoreLabel);
                         ? "Drag to zoom · dbl-click resets"
                         : "Click & hold to zoom",
                 SwingConstants.CENTER);
-        zoomHint.setForeground(TEXT_DIM);
+        zoomHint.setForeground(TEXT_SECONDARY);
         zoomHint.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
         zoomHint.setMaximumSize(new Dimension(Integer.MAX_VALUE, 14));
         zoomHint.setAlignmentX(Component.LEFT_ALIGNMENT);
         wrapper.add(zoomHint);
         if (config.gameUpdateMode() != GameUpdateMode.OFF) {
             JLabel updateHint = new JLabel("Right-click update dot → Wiki ↗", SwingConstants.CENTER);
-            updateHint.setForeground(TEXT_DIM);
+            updateHint.setForeground(TEXT_SECONDARY);
             updateHint.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
             updateHint.setMaximumSize(new Dimension(Integer.MAX_VALUE, 14));
             updateHint.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -7454,7 +7569,7 @@ whatsNewBox.add(seeMoreLabel);
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 18));
 
         JLabel labelText = new JLabel(label);
-        labelText.setForeground(new Color(138, 134, 128));
+        labelText.setForeground(TEXT_SECONDARY);
         labelText.setFont(new Font("Monospaced", Font.PLAIN, 11));
 
         JLabel valueText = new JLabel(value);
@@ -7475,7 +7590,7 @@ whatsNewBox.add(seeMoreLabel);
         box.setBorder(new EmptyBorder(5, 5, 5, 5));
 
         JLabel labelText = new JLabel(label.toUpperCase(), SwingConstants.CENTER);
-        labelText.setForeground(TEXT_DIM);
+        labelText.setForeground(TEXT_SECONDARY);
         labelText.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
         labelText.setAlignmentX(Component.LEFT_ALIGNMENT);
         labelText.setMaximumSize(new Dimension(Integer.MAX_VALUE, 16));
@@ -7529,6 +7644,30 @@ whatsNewBox.add(seeMoreLabel);
         btn.setFont(new Font("Monospaced", Font.PLAIN, FONT_BUTTON));
         btn.setFocusPainted(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        btn.addMouseListener(new MouseAdapter()
+        {
+            @Override
+            public void mouseEntered(MouseEvent e)
+            {
+                if (!isGold)
+                {
+                    btn.setForeground(TEXT_SECONDARY);
+                    btn.setBorder(BorderFactory.createLineBorder(TEXT_SECONDARY));
+                }
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e)
+            {
+                if (!isGold)
+                {
+                    btn.setForeground(TAB_INACTIVE);
+                    btn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+                }
+            }
+        });
+
         return btn;
     }
 
