@@ -76,7 +76,7 @@ public class GECompanionPanel extends PluginPanel
     private static final Color VARIANT_POPUP_BADGE_RED = new Color(0xFF, 0x72, 0x72);
     private static final Color VARIANT_POPUP_YOUR_ITEM_BLUE = new Color(0x4A, 0xA8, 0xFF);
     private static final Color VARIANT_POPUP_MULTI_PURPLE = new Color(0xB8, 0x8B, 0xFF);
-    private static final String CURRENT_VERSION = "1.2.2";
+    private static final String CURRENT_VERSION = "1.2.3";
 
     private final GECompanionConfig config;
     private final GECompanionPlugin plugin;
@@ -2518,7 +2518,7 @@ private String openBankItemName = null;
 
             whatsNewBox.add(whatsNewHeader);
 
-            JLabel whatsNewText = new JLabel("<html><body style='width:150px;color:#888888;font-family:monospaced;font-size:9px;'><span style='color:#888888;'>Aug 19, 2026</span><br><span style='color:#D4AF37;'>v" + CURRENT_VERSION + "</span> is here!<br>• Fixed GE tax in flipping stats<br>• Added Margin × Volume stat<br>• Added flipping stat tooltips<br>• Improved bank tracking performance<br>• Added live Last Updated timer<br>• Fixed variant item panel refreshing<br>• Improved variant item processing<br>• Bank history pauses while logged out</body></html>");
+            JLabel whatsNewText = new JLabel("<html><body style='width:150px;color:#888888;font-family:monospaced;font-size:9px;'><span style='color:#888888;'>Aug 23, 2026</span><br><span style='color:#D4AF37;'>v" + CURRENT_VERSION + "</span> is here!<br>• Improved variant item tooltip (icons, owned variants, base pricing)<br>• Improved text readability across Bank, Search, Watchlist & charts<br>• Better hover feedback on buttons & controls</body></html>");
             whatsNewText.setBorder(new EmptyBorder(4, 0, 0, 0));
             whatsNewBox.add(whatsNewText);
             whatsNewBox.add(Box.createVerticalStrut(4));
@@ -4307,7 +4307,7 @@ whatsNewBox.add(seeMoreLabel);
         }
         JLabel contextLabel = new JLabel(contextStr, SwingConstants.CENTER);
         liveLastUpdatedLabel = contextLabel;
-        contextLabel.setForeground(TEXT_SECONDARY);
+        contextLabel.setForeground(new Color(138, 134, 128));
         contextLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
         gbc.gridy = 6;
         gbc.insets = new java.awt.Insets(0, 6, 4, 6);
@@ -4423,7 +4423,7 @@ whatsNewBox.add(seeMoreLabel);
             String wealthStr = formatFullPrice(String.valueOf(entryWealth)) + " gp";
 
             JLabel compLine1 = new JLabel("Compared:  " + timeAgoStr, SwingConstants.LEFT);
-            compLine1.setForeground(TEXT_SECONDARY);
+            compLine1.setForeground(new Color(138, 134, 128));
             compLine1.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
             compLine1.setToolTipText("How long ago the reference bank scan was taken for this timeframe");
             cgbc.gridy = 0;
@@ -4431,14 +4431,14 @@ whatsNewBox.add(seeMoreLabel);
             compPanel.add(compLine1, cgbc);
 
             JLabel compLine2 = new JLabel("Date:      " + dateStr, SwingConstants.LEFT);
-            compLine2.setForeground(TEXT_SECONDARY);
+            compLine2.setForeground(new Color(138, 134, 128));
             compLine2.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
             compLine2.setToolTipText("The exact date and time of the reference bank scan");
             cgbc.gridy = 1;
             compPanel.add(compLine2, cgbc);
 
             JLabel compLine3 = new JLabel("Wealth:    " + wealthStr, SwingConstants.LEFT);
-            compLine3.setForeground(TEXT_SECONDARY);
+            compLine3.setForeground(new Color(138, 134, 128));
             compLine3.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
             compLine3.setToolTipText("Total wealth recorded at that time — includes Bank + Inventory + Equipment");
             cgbc.gridy = 2;
@@ -8178,6 +8178,29 @@ whatsNewBox.add(seeMoreLabel);
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         content.add(titleLabel);
         content.add(Box.createVerticalStrut(10));
+
+// v1.2.3
+        JLabel v123Label = new JLabel("v1.2.3 — August 23, 2026");
+        v123Label.setForeground(GOLD);
+        v123Label.setFont(new Font("Monospaced", Font.BOLD, FONT_STAT_LABEL));
+        v123Label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(v123Label);
+        content.add(Box.createVerticalStrut(3));
+        for (String line : new String[]{
+                "• Improved variant item tooltip with icons and owned-item display",
+                "• Variant tooltip now shows only variants you actually own",
+                "• Variant tooltip styling aligned with standard RuneLite tooltips",
+                "• Improved text readability across Bank, Search, Watchlist & charts",
+                "• Better hover feedback on buttons and timeframe controls",
+                "• Fixed variant tooltip icon loading and positioning issues"
+        }) {
+            JLabel l = new JLabel(line);
+            l.setForeground(DIALOG_TEXT_PRIMARY);
+            l.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+            l.setAlignmentX(Component.LEFT_ALIGNMENT);
+            content.add(l);
+        }
+        content.add(Box.createVerticalStrut(8));
 
 // v1.2.2
         JLabel v122Label = new JLabel("v1.2.2 — August 11, 2026");
