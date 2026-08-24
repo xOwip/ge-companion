@@ -54,6 +54,14 @@ public class GECompanionPanel extends PluginPanel
     private static final Color BG_ROW_HOVER = new Color(45, 40, 38);
     private static final Color BG_ROW_SELECTED = new Color(26, 24, 20);
     private static final Color STAT_BLUE = new Color(74, 122, 191);
+
+    // Stage 1 UI geometry pass: subtle corner radii by component role. Keep these consistent - don't
+// introduce ad-hoc radius values elsewhere. Chart internals, gridlines, and tiny separators stay square.
+    private static final int RADIUS_PANEL = 5;   // main panels/containers (Total Wealth, Statistics, etc.)
+    private static final int RADIUS_CARD = 4;    // item cards/rows (Bank/Watchlist/Search items)
+    private static final int RADIUS_ICON = 6;    // item icon frames
+    private static final int RADIUS_BUTTON = 3;  // footer buttons, Show Price Chart button
+    private static final int RADIUS_TIMEFRAME = 3; // timeframe buttons (1H/6H/24H/etc)
     // Improved variant popup colors — new visual roles only; reuse GOLD/TEXT_PRIMARY/TEXT_DIM/GREEN_UP elsewhere
     private static final Color VARIANT_POPUP_BG =
             javax.swing.UIManager.getColor("ToolTip.background") != null
@@ -77,6 +85,40 @@ public class GECompanionPanel extends PluginPanel
     private static final Color VARIANT_POPUP_YOUR_ITEM_BLUE = new Color(0x4A, 0xA8, 0xFF);
     private static final Color VARIANT_POPUP_MULTI_PURPLE = new Color(0xB8, 0x8B, 0xFF);
     private static final String CURRENT_VERSION = "1.2.3";
+
+    // Reusable rounded-corner line border for Stage 1's geometry pass. Mirrors BorderFactory.createLineBorder's
+// role but draws rounded corners. Use createRoundedLineBorder(color, thickness, radius) as a drop-in
+// replacement where a component's role calls for subtle rounding (see RADIUS_* constants above).
+    private static javax.swing.border.Border createRoundedLineBorder(Color color, int thickness, int radius)
+    {
+        return new javax.swing.border.AbstractBorder()
+        {
+            @Override
+            public void paintBorder(Component c, java.awt.Graphics g, int x, int y, int width, int height)
+            {
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(color);
+                g2.setStroke(new java.awt.BasicStroke(thickness));
+                int inset = thickness / 2;
+                g2.drawRoundRect(x + inset, y + inset, width - thickness, height - thickness, radius * 2, radius * 2);
+                g2.dispose();
+            }
+
+            @Override
+            public java.awt.Insets getBorderInsets(Component c)
+            {
+                return new java.awt.Insets(thickness, thickness, thickness, thickness);
+            }
+
+            @Override
+            public java.awt.Insets getBorderInsets(Component c, java.awt.Insets insets)
+            {
+                insets.left = insets.top = insets.right = insets.bottom = thickness;
+                return insets;
+            }
+        };
+    }
 
     private final GECompanionConfig config;
     private final GECompanionPlugin plugin;
@@ -2406,7 +2448,7 @@ private String openBankItemName = null;
         searchField.setForeground(TEXT_PRIMARY);
         searchField.setCaretColor(TEXT_PRIMARY);
         searchField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(58, 53, 48)),
+                createRoundedLineBorder(new Color(58, 53, 48), 1, RADIUS_BUTTON),
                 new EmptyBorder(3, 5, 3, 5)
         ));
         searchField.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
@@ -2494,13 +2536,29 @@ private String openBankItemName = null;
         final JPanel[] whatsNewWrapperRef = {null};
         boolean hasNewUpdate = !CURRENT_VERSION.equals(config.lastSeenVersion()) && !config.lastSeenVersion().isEmpty();
         if (hasNewUpdate) {
-            JPanel whatsNewBox = new JPanel();
+            JPanel whatsNewBox = new JPanel() {
+                @Override
+                protected void paintComponent(java.awt.Graphics g) {
+                    java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                    g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setColor(getBackground());
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_PANEL * 2, RADIUS_PANEL * 2);
+                    g2.dispose();
+                }
+                @Override
+                protected void paintBorder(java.awt.Graphics g) {
+                    java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                    g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setColor(GOLD);
+                    g2.setStroke(new java.awt.BasicStroke(1));
+                    g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, RADIUS_PANEL * 2, RADIUS_PANEL * 2);
+                    g2.dispose();
+                }
+            };
+            whatsNewBox.setOpaque(false);
             whatsNewBox.setLayout(new BoxLayout(whatsNewBox, BoxLayout.Y_AXIS));
             whatsNewBox.setBackground(new Color(10, 8, 9));
-            whatsNewBox.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(GOLD, 1),
-                    BorderFactory.createEmptyBorder(6, 10, 6, 10)
-            ));
+            whatsNewBox.setBorder(BorderFactory.createEmptyBorder(6, 10, 6, 10));
             whatsNewBox.setAlignmentX(Component.LEFT_ALIGNMENT);
             whatsNewBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 999));
 
@@ -2655,14 +2713,14 @@ whatsNewBox.add(seeMoreLabel);
             public void focusGained(FocusEvent e)
             {
                 searchField.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(GOLD),
+                        createRoundedLineBorder(GOLD, 1, RADIUS_BUTTON),
                         new EmptyBorder(3, 5, 3, 5)
                 ));
             }
             public void focusLost(FocusEvent e)
             {
                 searchField.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(new Color(58, 53, 48)),
+                        createRoundedLineBorder(new Color(58, 53, 48), 1, RADIUS_BUTTON),
                         new EmptyBorder(3, 5, 3, 5)
                 ));
             }
@@ -3981,8 +4039,8 @@ whatsNewBox.add(seeMoreLabel);
         JPanel borderedSection = new JPanel(new GridBagLayout());
         borderedSection.setBackground(BG_DARK);
         borderedSection.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(58, 53, 48), 1),
-                BorderFactory.createLineBorder(new Color(15, 13, 12), 3)
+                createRoundedLineBorder(new Color(58, 53, 48), 1, RADIUS_PANEL),
+                createRoundedLineBorder(new Color(15, 13, 12), 3, RADIUS_PANEL)
         ));
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -3998,13 +4056,25 @@ whatsNewBox.add(seeMoreLabel);
         String[] wealthFrames1 = {"1H", "6H", "24H", "7D", "30D"};
         for (String frame : wealthFrames1)
         {
-            JButton btn = new JButton(frame);
+            JButton btn = new JButton(frame) {
+                @Override
+                protected void paintComponent(java.awt.Graphics g) {
+                    java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                    g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setColor(getBackground());
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_TIMEFRAME * 2, RADIUS_TIMEFRAME * 2);
+                    g2.dispose();
+                    super.paintComponent(g);
+                }
+            };
             btn.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
             btn.setFocusPainted(false);
+            btn.setContentAreaFilled(false);
+            btn.setOpaque(false);
             btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             btn.setBackground(frame.equals(bankWealthTimeFrame) ? new Color(26, 21, 0) : new Color(20, 16, 10));
             btn.setForeground(frame.equals(bankWealthTimeFrame) ? GOLD : TAB_INACTIVE);
-            btn.setBorder(BorderFactory.createLineBorder(frame.equals(bankWealthTimeFrame) ? GOLD : new Color(58, 53, 48)));
+            btn.setBorder(createRoundedLineBorder(frame.equals(bankWealthTimeFrame) ? GOLD : new Color(58, 53, 48), 1, RADIUS_TIMEFRAME));
             btn.addMouseListener(new MouseAdapter()
             {
                 @Override
@@ -4013,7 +4083,7 @@ whatsNewBox.add(seeMoreLabel);
                     if (!frame.equals(bankWealthTimeFrame))
                     {
                         btn.setForeground(new Color(0x8F, 0x87, 0x7D));
-                        btn.setBorder(BorderFactory.createLineBorder(new Color(0x66, 0x5E, 0x55)));
+                        btn.setBorder(createRoundedLineBorder(new Color(0x66, 0x5E, 0x55), 1, RADIUS_TIMEFRAME));
                     }
                 }
 
@@ -4023,7 +4093,7 @@ whatsNewBox.add(seeMoreLabel);
                     if (!frame.equals(bankWealthTimeFrame))
                     {
                         btn.setForeground(TAB_INACTIVE);
-                        btn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+                        btn.setBorder(createRoundedLineBorder(new Color(58, 53, 48), 1, RADIUS_TIMEFRAME));
                     }
                 }
             });
@@ -4051,13 +4121,25 @@ whatsNewBox.add(seeMoreLabel);
         String[] wealthFrames2 = {"3M", "1Y", "All"};
         for (String frame : wealthFrames2)
         {
-            JButton btn = new JButton(frame);
+            JButton btn = new JButton(frame) {
+                @Override
+                protected void paintComponent(java.awt.Graphics g) {
+                    java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                    g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setColor(getBackground());
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_TIMEFRAME * 2, RADIUS_TIMEFRAME * 2);
+                    g2.dispose();
+                    super.paintComponent(g);
+                }
+            };
             btn.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
             btn.setFocusPainted(false);
+            btn.setContentAreaFilled(false);
+            btn.setOpaque(false);
             btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             btn.setBackground(frame.equals(bankWealthTimeFrame) ? new Color(26, 21, 0) : new Color(20, 16, 10));
             btn.setForeground(frame.equals(bankWealthTimeFrame) ? GOLD : TAB_INACTIVE);
-            btn.setBorder(BorderFactory.createLineBorder(frame.equals(bankWealthTimeFrame) ? GOLD : new Color(58, 53, 48)));
+            btn.setBorder(createRoundedLineBorder(frame.equals(bankWealthTimeFrame) ? GOLD : new Color(58, 53, 48), 1, RADIUS_TIMEFRAME));
             btn.addMouseListener(new MouseAdapter()
             {
                 @Override
@@ -4066,7 +4148,7 @@ whatsNewBox.add(seeMoreLabel);
                     if (!frame.equals(bankWealthTimeFrame))
                     {
                         btn.setForeground(new Color(0x8F, 0x87, 0x7D));
-                        btn.setBorder(BorderFactory.createLineBorder(new Color(0x66, 0x5E, 0x55)));
+                        btn.setBorder(createRoundedLineBorder(new Color(0x66, 0x5E, 0x55), 1, RADIUS_TIMEFRAME));
                     }
                 }
 
@@ -4076,7 +4158,7 @@ whatsNewBox.add(seeMoreLabel);
                     if (!frame.equals(bankWealthTimeFrame))
                     {
                         btn.setForeground(TAB_INACTIVE);
-                        btn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+                        btn.setBorder(createRoundedLineBorder(new Color(58, 53, 48), 1, RADIUS_TIMEFRAME));
                     }
                 }
             });
@@ -4792,7 +4874,7 @@ whatsNewBox.add(seeMoreLabel);
             bankSearchField.setForeground(TEXT_PRIMARY);
             bankSearchField.setCaretColor(TEXT_PRIMARY);
             bankSearchField.setBorder(BorderFactory.createCompoundBorder(
-                    BorderFactory.createLineBorder(new Color(58, 53, 48)),
+                    createRoundedLineBorder(new Color(58, 53, 48), 1, RADIUS_BUTTON),
                     new EmptyBorder(3, 5, 3, 5)
             ));
             bankSearchField.setFont(new Font("Monospaced", Font.PLAIN, FONT_META));
@@ -4845,14 +4927,14 @@ whatsNewBox.add(seeMoreLabel);
                 public void focusGained(FocusEvent e)
                 {
                     bankSearchField.setBorder(BorderFactory.createCompoundBorder(
-                            new MatteBorder(1, 1, 1, 1, GOLD),
+                            createRoundedLineBorder(GOLD, 1, RADIUS_BUTTON),
                             new EmptyBorder(3, 5, 3, 5)
                     ));
                 }
                 public void focusLost(FocusEvent e)
                 {
                     bankSearchField.setBorder(BorderFactory.createCompoundBorder(
-                            BorderFactory.createLineBorder(new Color(58, 53, 48)),
+                            createRoundedLineBorder(new Color(58, 53, 48), 1, RADIUS_BUTTON),
                             new EmptyBorder(3, 5, 3, 5)
                     ));
                 }
@@ -5679,20 +5761,42 @@ whatsNewBox.add(seeMoreLabel);
 
     private JPanel buildTimeFrameBar()
     {
-        JPanel bar = new JPanel(new GridLayout(1, 3, 3, 0));
+        JPanel bar = new JPanel(new GridLayout(1, 3, 3, 0)) {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_TIMEFRAME * 2, RADIUS_TIMEFRAME * 2);
+                g2.dispose();
+            }
+        };
+        bar.setOpaque(false);
         bar.setBackground(new Color(26, 23, 24));
         bar.setBorder(new EmptyBorder(5, 6, 5, 6));
 
         String[] frames = {"1H", "6H", "24H"};
         for (String frame : frames)
         {
-            JButton btn = new JButton(frame);
+            JButton btn = new JButton(frame) {
+                @Override
+                protected void paintComponent(java.awt.Graphics g) {
+                    java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                    g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setColor(getBackground());
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_TIMEFRAME * 2, RADIUS_TIMEFRAME * 2);
+                    g2.dispose();
+                    super.paintComponent(g);
+                }
+            };
             btn.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
             btn.setFocusPainted(false);
+            btn.setContentAreaFilled(false);
+            btn.setOpaque(false);
             btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             btn.setBackground(frame.equals(activeTimeFrame) ? new Color(26, 21, 0) : new Color(14, 12, 13));
             btn.setForeground(frame.equals(activeTimeFrame) ? GOLD : TAB_INACTIVE);
-            btn.setBorder(BorderFactory.createLineBorder(frame.equals(activeTimeFrame) ? GOLD : new Color(58, 53, 48)));
+            btn.setBorder(createRoundedLineBorder(frame.equals(activeTimeFrame) ? GOLD : new Color(58, 53, 48), 1, RADIUS_TIMEFRAME));
             btn.addMouseListener(new MouseAdapter()
             {
                 @Override
@@ -5701,7 +5805,7 @@ whatsNewBox.add(seeMoreLabel);
                     if (!frame.equals(activeTimeFrame))
                     {
                         btn.setForeground(new Color(0x8F, 0x87, 0x7D));
-                        btn.setBorder(BorderFactory.createLineBorder(new Color(0x66, 0x5E, 0x55)));
+                        btn.setBorder(createRoundedLineBorder(new Color(0x66, 0x5E, 0x55), 1, RADIUS_TIMEFRAME));
                     }
                 }
 
@@ -5711,7 +5815,7 @@ whatsNewBox.add(seeMoreLabel);
                     if (!frame.equals(activeTimeFrame))
                     {
                         btn.setForeground(TAB_INACTIVE);
-                        btn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+                        btn.setBorder(createRoundedLineBorder(new Color(58, 53, 48), 1, RADIUS_TIMEFRAME));
                     }
                 }
             });
@@ -6073,16 +6177,28 @@ whatsNewBox.add(seeMoreLabel);
         JButton[] tfBtns = new JButton[5];
         for (int i = 0; i < frames.length; i++)
         {
-            JButton b = new JButton(frames[i]);
+            JButton b = new JButton(frames[i]) {
+                @Override
+                protected void paintComponent(java.awt.Graphics g) {
+                    java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                    g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setColor(getBackground());
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_TIMEFRAME * 2, RADIUS_TIMEFRAME * 2);
+                    g2.dispose();
+                    super.paintComponent(g);
+                }
+            };
             b.setFont(new Font("Monospaced", Font.PLAIN, FONT_TIMEFRAME));
             b.setFocusPainted(false);
+            b.setContentAreaFilled(false);
+            b.setOpaque(false);
             b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             b.setBackground(new Color(14, 12, 13));
             boolean active = frames[i].equals(initialTimeframe);
             b.setForeground(active ? GOLD : TAB_INACTIVE);
             b.setBorder(active
-                    ? BorderFactory.createLineBorder(GOLD)
-                    : BorderFactory.createLineBorder(new Color(58, 53, 48)));
+                    ? createRoundedLineBorder(GOLD, 1, RADIUS_TIMEFRAME)
+                    : createRoundedLineBorder(new Color(58, 53, 48), 1, RADIUS_TIMEFRAME));
             final String frame = frames[i];
 
             b.addMouseListener(new MouseAdapter()
@@ -6093,7 +6209,7 @@ whatsNewBox.add(seeMoreLabel);
                     if (!frame.equals(activeFrame[0]))
                     {
                         b.setForeground(new Color(0x8F, 0x87, 0x7D));
-                        b.setBorder(BorderFactory.createLineBorder(new Color(0x66, 0x5E, 0x55)));
+                        b.setBorder(createRoundedLineBorder(new Color(0x66, 0x5E, 0x55), 1, RADIUS_TIMEFRAME));
                     }
                 }
 
@@ -6103,7 +6219,7 @@ whatsNewBox.add(seeMoreLabel);
                     if (!frame.equals(activeFrame[0]))
                     {
                         b.setForeground(TAB_INACTIVE);
-                        b.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+                        b.setBorder(createRoundedLineBorder(new Color(58, 53, 48), 1, RADIUS_TIMEFRAME));
                     }
                 }
             });
