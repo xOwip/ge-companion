@@ -1906,7 +1906,7 @@ private String openBankItemName = null;
                     long gpDiff = currentPrice - historicalPrice;
                     boolean isUp = gpDiff > 0;
                     boolean isDown = gpDiff < 0;
-                    String gpStr = (isUp ? "+" : "") + formatPrice(String.valueOf(Math.abs(gpDiff))) + " gp";
+                    String gpStr = (isUp ? "+" : isDown ? "-" : "") + formatPrice(String.valueOf(Math.abs(gpDiff))) + " gp";
                     Color color = isUp ? GREEN_UP : isDown ? RED_DOWN : TAB_INACTIVE;
                     javax.swing.SwingUtilities.invokeLater(() -> {
                         label.setText(gpStr);
