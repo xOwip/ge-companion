@@ -4978,18 +4978,28 @@ whatsNewBox.add(seeMoreLabel);
             @Override
             protected void paintComponent(Graphics g)
             {
-                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                // Paint the rounded base background ourselves (bypassing super.paintComponent's square fill),
+                // then clip the gradient wash to the same rounded shape so it respects the curved corners.
+                java.awt.geom.RoundRectangle2D roundedShape = new java.awt.geom.RoundRectangle2D.Float(
+                        0, 0, getWidth(), getHeight(), RADIUS_CARD * 2, RADIUS_CARD * 2);
+                g2.setColor(getBackground());
+                g2.fill(roundedShape);
                 if (colorCode && (isUp || isDown))
                 {
-                    Graphics2D g2 = (Graphics2D) g.create();
+                    java.awt.Shape oldClip = g2.getClip();
+                    g2.clip(roundedShape);
                     Color gradColor = isUp ? new Color(0, 180, 0, 220) : new Color(200, 0, 0, 220);
                     GradientPaint gp = new GradientPaint(0, 0, gradColor, getWidth() * 0.75f, 0, new Color(0, 0, 0, 0));
                     g2.setPaint(gp);
                     g2.fillRect(0, 0, getWidth(), getHeight());
-                    g2.dispose();
+                    g2.setClip(oldClip);
                 }
+                g2.dispose();
             }
         };
+        block.setOpaque(false);
         block.setLayout(new BoxLayout(block, BoxLayout.Y_AXIS));
         block.setBackground(bgColor);
         block.setAlignmentX(Component.LEFT_ALIGNMENT);
