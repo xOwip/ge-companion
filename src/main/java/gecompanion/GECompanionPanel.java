@@ -57,7 +57,7 @@ public class GECompanionPanel extends PluginPanel
 
     // Stage 1 UI geometry pass: subtle corner radii by component role. Keep these consistent - don't
 // introduce ad-hoc radius values elsewhere. Chart internals, gridlines, and tiny separators stay square.
-    private static final int RADIUS_PANEL = 5;   // main panels/containers (Total Wealth, Statistics, etc.)
+    private static final int RADIUS_PANEL = 7;   // main panels/containers (Total Wealth, Statistics, etc.)
     private static final int RADIUS_CARD = 8;    // item cards/rows (Bank/Watchlist/Search items)
     private static final int RADIUS_ICON = 6;    // item icon frames
     private static final int RADIUS_BUTTON = 3;  // footer buttons, Show Price Chart button
@@ -4057,6 +4057,7 @@ whatsNewBox.add(seeMoreLabel);
 
         // Row 1: Timeframe buttons row 1
         JPanel wealthTfRow1 = new JPanel(new GridLayout(1, 5, 3, 0));
+        wealthTfRow1.setOpaque(false);
         wealthTfRow1.setBackground(BG_DARK);
         wealthTfRow1.setBorder(new EmptyBorder(6, 6, 2, 6));
         String[] wealthFrames1 = {"1H", "6H", "24H", "7D", "30D"};
