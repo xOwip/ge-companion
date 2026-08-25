@@ -2116,7 +2116,7 @@ private String openBankItemName = null;
         boolean isWatched = pinnedItems.contains(item[0]);
         JButton watchBtn = buildFooterBtn(isWatched ? "✓ Watch" : "+ Watch", isWatched);
         if (isWatchlist || isWatched)
-            watchBtn.setBorder(BorderFactory.createLineBorder(GOLD));
+            watchBtn.setBorder(createRoundedLineBorder(GOLD, 1, RADIUS_BUTTON));
         watchBtn.addActionListener(e -> {
             boolean currentlyWatched = pinnedItems.contains(item[0]);
             if (isWatchlist || currentlyWatched)
@@ -2180,10 +2180,22 @@ private String openBankItemName = null;
         final JLabel[] statsLblHolder = {null};
         final JPanel[] statsHeaderHolder = {null};
 
-        JButton chartBtn = new JButton("▼ Show Price Chart");
+        JButton chartBtn = new JButton("▼ Show Price Chart") {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        chartBtn.setContentAreaFilled(false);
+        chartBtn.setOpaque(false);
         chartBtn.setForeground(TAB_INACTIVE);
         chartBtn.setBackground(BG_DETAIL);
-        chartBtn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+        chartBtn.setBorder(createRoundedLineBorder(new Color(58, 53, 48), 1, RADIUS_BUTTON));
         chartBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_TAB));
         chartBtn.setFocusPainted(false);
         chartBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -2196,7 +2208,7 @@ private String openBankItemName = null;
                 if (!graphOpen[0])
                 {
                     chartBtn.setForeground(TEXT_SECONDARY);
-                    chartBtn.setBorder(BorderFactory.createLineBorder(TEXT_SECONDARY));
+                    chartBtn.setBorder(createRoundedLineBorder(TEXT_SECONDARY, 1, RADIUS_BUTTON));
                 }
             }
 
@@ -2206,7 +2218,7 @@ private String openBankItemName = null;
                 if (!graphOpen[0])
                 {
                     chartBtn.setForeground(TAB_INACTIVE);
-                    chartBtn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+                    chartBtn.setBorder(createRoundedLineBorder(new Color(58, 53, 48), 1, RADIUS_BUTTON));
                 }
             }
         });
@@ -2263,7 +2275,7 @@ private String openBankItemName = null;
                 if (statsHeaderHolder[0] != null) statsHeaderHolder[0].setVisible(true);
                 chartBtn.setText("▲ Hide Price Chart");
                 chartBtn.setForeground(GOLD);
-                chartBtn.setBorder(BorderFactory.createLineBorder(GOLD));
+                chartBtn.setBorder(createRoundedLineBorder(GOLD, 1, RADIUS_BUTTON));
             } else {
                 // close animation
                 int fullH = graphViewport.getView() != null
@@ -2300,7 +2312,7 @@ private String openBankItemName = null;
                 }
                 chartBtn.setText("▼ Show Price Chart");
                 chartBtn.setForeground(TAB_INACTIVE);
-                chartBtn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+                chartBtn.setBorder(createRoundedLineBorder(new Color(58, 53, 48), 1, RADIUS_BUTTON));
             }
         });
 
@@ -7815,10 +7827,22 @@ whatsNewBox.add(seeMoreLabel);
 
     private JButton buildFooterBtn(String text, boolean isGold)
     {
-        JButton btn = new JButton(text);
+        JButton btn = new JButton(text) {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        btn.setContentAreaFilled(false);
+        btn.setOpaque(false);
         btn.setForeground(isGold ? GOLD : TAB_INACTIVE);
         btn.setBackground(BG_DETAIL);
-        btn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+        btn.setBorder(createRoundedLineBorder(new Color(58, 53, 48), 1, RADIUS_BUTTON));
         btn.setFont(new Font("Monospaced", Font.PLAIN, FONT_BUTTON));
         btn.setFocusPainted(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -7831,7 +7855,7 @@ whatsNewBox.add(seeMoreLabel);
                 if (!isGold)
                 {
                     btn.setForeground(TEXT_SECONDARY);
-                    btn.setBorder(BorderFactory.createLineBorder(TEXT_SECONDARY));
+                    btn.setBorder(createRoundedLineBorder(TEXT_SECONDARY, 1, RADIUS_BUTTON));
                 }
             }
 
@@ -7841,7 +7865,7 @@ whatsNewBox.add(seeMoreLabel);
                 if (!isGold)
                 {
                     btn.setForeground(TAB_INACTIVE);
-                    btn.setBorder(BorderFactory.createLineBorder(new Color(58, 53, 48)));
+                    btn.setBorder(createRoundedLineBorder(new Color(58, 53, 48), 1, RADIUS_BUTTON));
                 }
             }
         });
