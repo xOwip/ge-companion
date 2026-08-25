@@ -5073,6 +5073,18 @@ whatsNewBox.add(seeMoreLabel);
         row.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         JPanel iconPanel = new JPanel() {
             @Override
+            public void paint(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                // Clip everything (background, sprite, badge) to a rounded shape - visual clipping only,
+                // never modifies the underlying sprite image data.
+                java.awt.geom.RoundRectangle2D roundedShape = new java.awt.geom.RoundRectangle2D.Float(
+                        0, 0, getWidth(), getHeight(), RADIUS_ICON * 2, RADIUS_ICON * 2);
+                g2.clip(roundedShape);
+                super.paint(g2);
+                g2.dispose();
+            }
+            @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 if (isVariant) {
@@ -5091,7 +5103,7 @@ whatsNewBox.add(seeMoreLabel);
         iconPanel.setPreferredSize(new Dimension(42, 42));
         iconPanel.setBackground(new Color(14, 12, 13));
         iconPanel.setOpaque(true);
-        iconPanel.setBorder(BorderFactory.createLineBorder(colorCode && isUp ? new Color(0, 100, 0) : colorCode && isDown ? new Color(100, 0, 0) : new Color(42, 37, 40)));
+        iconPanel.setBorder(createRoundedLineBorder(colorCode && isUp ? new Color(0, 100, 0) : colorCode && isDown ? new Color(100, 0, 0) : new Color(42, 37, 40), 1, RADIUS_ICON));
 
         Integer bankItemId = nameToId.get(name.toLowerCase()
                 .replace('\u2019', '\'')
@@ -5969,12 +5981,22 @@ whatsNewBox.add(seeMoreLabel);
             public java.awt.Point getToolTipLocation(java.awt.event.MouseEvent e) {
                 return new java.awt.Point(0, -160);
             }
+            @Override
+            public void paint(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                java.awt.geom.RoundRectangle2D roundedShape = new java.awt.geom.RoundRectangle2D.Float(
+                        0, 0, getWidth(), getHeight(), RADIUS_ICON * 2, RADIUS_ICON * 2);
+                g2.clip(roundedShape);
+                super.paint(g2);
+                g2.dispose();
+            }
         };
         iconBoxWithTooltip.setPreferredSize(new Dimension(42, 42));
         iconBoxWithTooltip.setMaximumSize(new Dimension(42, 42));
         iconBoxWithTooltip.setMinimumSize(new Dimension(42, 42));
         iconBoxWithTooltip.setBackground(new Color(14, 12, 13));
-        iconBoxWithTooltip.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 40)));
+        iconBoxWithTooltip.setBorder(createRoundedLineBorder(new Color(42, 37, 40), 1, RADIUS_ICON));
         iconBoxWithTooltip.setToolTipText(finalTooltipHtml);
 
         // Load icon directly into iconBoxWithTooltip
@@ -5995,14 +6017,30 @@ whatsNewBox.add(seeMoreLabel);
         }
 
 // Build floating stats panel content
-        JPanel statsFloatPanel = new JPanel();
+        JPanel statsFloatPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_PANEL * 2, RADIUS_PANEL * 2);
+                g2.dispose();
+            }
+            @Override
+            protected void paintBorder(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(80, 65, 20));
+                g2.setStroke(new java.awt.BasicStroke(1));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, RADIUS_PANEL * 2, RADIUS_PANEL * 2);
+                g2.dispose();
+            }
+        };
+        statsFloatPanel.setOpaque(false);
         statsFloatPanel.setLayout(new BoxLayout(statsFloatPanel, BoxLayout.Y_AXIS));
         statsFloatPanel.setBackground(new Color(14, 12, 13));
         statsFloatPanel.addMouseListener(new MouseAdapter() {}); // consume clicks so they don't pass through
-        statsFloatPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(80, 65, 20), 1),
-                BorderFactory.createEmptyBorder(6, 10, 6, 10)
-        ));
+        statsFloatPanel.setBorder(BorderFactory.createEmptyBorder(6, 10, 6, 10));
 
         // Build stat rows
         if (detailItemId != null) {
@@ -6074,12 +6112,12 @@ whatsNewBox.add(seeMoreLabel);
         iconBoxWithTooltip.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent e) {
-                iconBoxWithTooltip.setBorder(BorderFactory.createLineBorder(new Color(100, 80, 20)));
+                iconBoxWithTooltip.setBorder(createRoundedLineBorder(new Color(100, 80, 20), 1, RADIUS_ICON));
             }
             @Override
             public void mouseExited(java.awt.event.MouseEvent e) {
                 if (!statsOpen[0])
-                    iconBoxWithTooltip.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 40)));
+                    iconBoxWithTooltip.setBorder(createRoundedLineBorder(new Color(42, 37, 40), 1, RADIUS_ICON));
             }
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -6091,7 +6129,7 @@ whatsNewBox.add(seeMoreLabel);
                     // Close
 // Slide down animation
                     statsOpen[0] = false;
-                    iconBoxWithTooltip.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 40)));
+                    iconBoxWithTooltip.setBorder(createRoundedLineBorder(new Color(42, 37, 40), 1, RADIUS_ICON));
                     int[] curH2 = {statsFloatPanel.getHeight()};
                     final int closingY = statsFloatPanel.getY();
                     final int closingX = statsFloatPanel.getX();
@@ -6142,7 +6180,7 @@ whatsNewBox.add(seeMoreLabel);
                         }
                     });
                     openTimer.start();
-                    iconBoxWithTooltip.setBorder(BorderFactory.createLineBorder(new Color(140, 110, 30)));
+                    iconBoxWithTooltip.setBorder(createRoundedLineBorder(new Color(140, 110, 30), 1, RADIUS_ICON));
                 }
             }
         });
