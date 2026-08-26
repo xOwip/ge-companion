@@ -5046,12 +5046,25 @@ whatsNewBox.add(seeMoreLabel);
         JPanel row = new JPanel(new BorderLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
+                // Top corners rounded, bottom corners always square - row's bottom edge is a flat seam,
+                // either against empty space (collapsed) or the detail panel below (expanded). Rounding
+                // the bottom corners left tiny unfilled triangular slivers where block's accent/gradient
+                // showed through underneath - this was the source of the row/detail seam artifact.
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
-                java.awt.geom.RoundRectangle2D roundedShape = new java.awt.geom.RoundRectangle2D.Float(
-                        0, 0, getWidth(), getHeight(), RADIUS_CARD * 2, RADIUS_CARD * 2);
+                int w = getWidth();
+                int h = getHeight();
+                int r = RADIUS_CARD * 2;
+                java.awt.geom.Path2D.Float path = new java.awt.geom.Path2D.Float();
+                path.moveTo(0, h);
+                path.lineTo(0, r / 2.0);
+                path.quadTo(0, 0, r / 2.0, 0);
+                path.lineTo(w - r / 2.0, 0);
+                path.quadTo(w, 0, w, r / 2.0);
+                path.lineTo(w, h);
+                path.closePath();
                 g2.setColor(getBackground());
-                g2.fill(roundedShape);
+                g2.fill(path);
                 g2.dispose();
                 super.paintComponent(g);
             }
