@@ -5067,7 +5067,7 @@ whatsNewBox.add(seeMoreLabel);
         row.putClientProperty(ROW_EXPANDED_GOLD_KEY, false);
         row.setOpaque(false);
         row.setBackground(bgColor);
-        row.setBorder(new EmptyBorder(0, 4, 0, 0));
+        row.setBorder(new EmptyBorder(1, 4, 0, 0));
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 68));
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
         row.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
