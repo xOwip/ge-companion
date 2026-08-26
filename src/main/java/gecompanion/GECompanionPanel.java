@@ -4999,8 +4999,28 @@ whatsNewBox.add(seeMoreLabel);
             {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
-                java.awt.geom.RoundRectangle2D roundedShape = new java.awt.geom.RoundRectangle2D.Float(
-                        0, 0, getWidth(), getHeight(), RADIUS_CARD * 2, RADIUS_CARD * 2);
+                // When expanded (row is showing its gold selection outline), square off the bottom corners
+                // to match row's shape - otherwise this panel's own rounded bottom corners peek out from
+                // underneath row's now-square bottom edge, leaving a sliver of the gradient/accent visible.
+                Boolean blockExpanded = (Boolean) getClientProperty(ROW_EXPANDED_GOLD_KEY);
+                java.awt.Shape roundedShape;
+                if (Boolean.TRUE.equals(blockExpanded)) {
+                    int w = getWidth();
+                    int h = getHeight();
+                    int r = RADIUS_CARD * 2;
+                    java.awt.geom.Path2D.Float path = new java.awt.geom.Path2D.Float();
+                    path.moveTo(0, h);
+                    path.lineTo(0, r / 2.0);
+                    path.quadTo(0, 0, r / 2.0, 0);
+                    path.lineTo(w - r / 2.0, 0);
+                    path.quadTo(w, 0, w, r / 2.0);
+                    path.lineTo(w, h);
+                    path.closePath();
+                    roundedShape = path;
+                } else {
+                    roundedShape = new java.awt.geom.RoundRectangle2D.Float(
+                            0, 0, getWidth(), getHeight(), RADIUS_CARD * 2, RADIUS_CARD * 2);
+                }
                 g2.setColor(getBackground());
                 g2.fill(roundedShape);
                 if (colorCode && (isUp || isDown))
@@ -5041,13 +5061,23 @@ whatsNewBox.add(seeMoreLabel);
                 g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
                 Boolean expandedGold = (Boolean) getClientProperty(ROW_EXPANDED_GOLD_KEY);
                 if (Boolean.TRUE.equals(expandedGold)) {
-                    // Expanded/selected: thin rounded gold outline communicates selection on its own -
-                    // no separate thick accent needed alongside it.
-                    java.awt.geom.RoundRectangle2D outline = new java.awt.geom.RoundRectangle2D.Float(
-                            0, 0, getWidth() - 1, getHeight() - 1, RADIUS_CARD * 2, RADIUS_CARD * 2);
+                    // Expanded/selected: gold outline on top+left+right, rounded only at the top corners.
+                    // Bottom stays open/flat since the detail panel continues seamlessly below this row -
+                    // together they form one continuous rounded card (top corners here, bottom corners
+                    // rounded on the detail panel, flat seam where they meet in the middle).
+                    int w = getWidth() - 1;
+                    int h = getHeight() - 1;
+                    int r = RADIUS_CARD * 2;
+                    java.awt.geom.Path2D.Float path = new java.awt.geom.Path2D.Float();
+                    path.moveTo(0, h);
+                    path.lineTo(0, r / 2.0);
+                    path.quadTo(0, 0, r / 2.0, 0);
+                    path.lineTo(w - r / 2.0, 0);
+                    path.quadTo(w, 0, w, r / 2.0);
+                    path.lineTo(w, h);
                     g2.setColor(GOLD);
                     g2.setStroke(new java.awt.BasicStroke(1));
-                    g2.draw(outline);
+                    g2.draw(path);
                 } else {
                     // Collapsed: thick gainer/loser accent along the left edge, clipped to the rounded shape
                     // so it follows the corner curve rather than terminating abruptly.
@@ -5065,6 +5095,7 @@ whatsNewBox.add(seeMoreLabel);
         };
         row.putClientProperty(ROW_ACCENT_COLOR_KEY, borderColor);
         row.putClientProperty(ROW_EXPANDED_GOLD_KEY, false);
+        block.putClientProperty(ROW_EXPANDED_GOLD_KEY, false);
         row.setOpaque(false);
         row.setBackground(bgColor);
         row.setBorder(new EmptyBorder(1, 4, 0, 0));
@@ -5281,6 +5312,10 @@ whatsNewBox.add(seeMoreLabel);
                         currentOpenBankRow.putClientProperty(ROW_ACCENT_COLOR_KEY, borderColor);
                         currentOpenBankRow.putClientProperty(ROW_EXPANDED_GOLD_KEY, false);
                         currentOpenBankRow.repaint();
+                        if (currentOpenBankRow.getParent() instanceof JComponent) {
+                            ((JComponent) currentOpenBankRow.getParent()).putClientProperty(ROW_EXPANDED_GOLD_KEY, false);
+                            currentOpenBankRow.getParent().repaint();
+                        }
                         info.setBackground(bgColor);
                         deltaRow.setBackground(bgColor);
                         for (Component c : currentOpenBankRow.getComponents())
@@ -5343,6 +5378,10 @@ whatsNewBox.add(seeMoreLabel);
                     currentOpenBankRow.putClientProperty(ROW_ACCENT_COLOR_KEY, currentOpenBankBorderColor != null ? currentOpenBankBorderColor : borderColor);
                     currentOpenBankRow.putClientProperty(ROW_EXPANDED_GOLD_KEY, false);
                     currentOpenBankRow.repaint();
+                    if (currentOpenBankRow.getParent() instanceof JComponent) {
+                        ((JComponent) currentOpenBankRow.getParent()).putClientProperty(ROW_EXPANDED_GOLD_KEY, false);
+                        currentOpenBankRow.getParent().repaint();
+                    }
                     currentOpenBankBorderColor = null;
                     if (currentOpenBankInfo != null) currentOpenBankInfo.setBackground(currentOpenBankRowColor);
                     if (currentOpenBankDeltaRow != null) currentOpenBankDeltaRow.setBackground(currentOpenBankRowColor);
@@ -5360,6 +5399,8 @@ whatsNewBox.add(seeMoreLabel);
                 currentOpenBankBorderColor = borderColor;
                 row.putClientProperty(ROW_EXPANDED_GOLD_KEY, true);
                 row.repaint();
+                block.putClientProperty(ROW_EXPANDED_GOLD_KEY, true);
+                block.repaint();
 
                 detailSlot.removeAll();
                 detailSlot.add(buildInlineDetail(item, false), BorderLayout.CENTER);
