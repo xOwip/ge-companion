@@ -5985,6 +5985,14 @@ whatsNewBox.add(seeMoreLabel);
             public void paint(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                // Explicitly clear our full square bounds to the parent's background color first. Without
+                // this, the four small corner triangles outside the rounded clip are never painted by us,
+                // and depend on the parent/RepaintManager correctly re-painting behind us on every repaint -
+                // which isn't guaranteed with incremental/damaged-region repaints, leaving stale pixels
+                // from whatever was previously on screen at those exact corner pixels (varies by scroll/layout).
+                java.awt.Container parent = getParent();
+                g2.setColor(parent != null ? parent.getBackground() : getBackground());
+                g2.fillRect(0, 0, getWidth(), getHeight());
                 java.awt.geom.RoundRectangle2D roundedShape = new java.awt.geom.RoundRectangle2D.Float(
                         0, 0, getWidth(), getHeight(), RADIUS_ICON * 2, RADIUS_ICON * 2);
                 g2.clip(roundedShape);
