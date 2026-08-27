@@ -5032,16 +5032,8 @@ whatsNewBox.add(seeMoreLabel);
                 Boolean blockExpanded = (Boolean) getClientProperty(ROW_EXPANDED_GOLD_KEY);
                 java.awt.Shape roundedShape;
                 if (Boolean.TRUE.equals(blockExpanded)) {
-                    int r = RADIUS_CARD * 2;
-                    java.awt.geom.Path2D.Float path = new java.awt.geom.Path2D.Float();
-                    path.moveTo(fx, fy + fh);
-                    path.lineTo(fx, fy + r / 2.0);
-                    path.quadTo(fx, fy, fx + r / 2.0, fy);
-                    path.lineTo(fx + fw - r / 2.0, fy);
-                    path.quadTo(fx + fw, fy, fx + fw, fy + r / 2.0);
-                    path.lineTo(fx + fw, fy + fh);
-                    path.closePath();
-                    roundedShape = path;
+                    roundedShape = new java.awt.geom.RoundRectangle2D.Float(
+                            fx, fy, fw, fh, RADIUS_CARD * 2, RADIUS_CARD * 2);
                 } else {
                     roundedShape = new java.awt.geom.RoundRectangle2D.Float(
                             fx, fy, fw, fh, RADIUS_CARD * 2, RADIUS_CARD * 2);
@@ -5218,6 +5210,7 @@ whatsNewBox.add(seeMoreLabel);
         JPanel info = new JPanel();
         info.setLayout(new BoxLayout(info, BoxLayout.Y_AXIS));
         info.setBackground(bgColor);
+        info.setOpaque(false); // TEMPORARY DIAGNOSTIC
         info.setBorder(new EmptyBorder(5, 7, 8, 0));
 
         JLabel nameLabel = new JLabel(name);
@@ -5257,11 +5250,13 @@ whatsNewBox.add(seeMoreLabel);
         final JButton[] watchBtnRef = {null};
         JPanel detailSlot = new JPanel(new BorderLayout());
         detailSlot.setBackground(BG_DARK);
+        detailSlot.setOpaque(false);
         detailSlot.setBorder(javax.swing.BorderFactory.createEmptyBorder());
         detailSlot.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         javax.swing.JViewport detailViewport = new javax.swing.JViewport();
         detailViewport.setView(detailSlot);
+        detailViewport.setOpaque(false); // TEMPORARY DIAGNOSTIC
         detailViewport.setVisible(false);
         detailViewport.setBorder(null);
         detailViewport.setAlignmentX(Component.LEFT_ALIGNMENT);
