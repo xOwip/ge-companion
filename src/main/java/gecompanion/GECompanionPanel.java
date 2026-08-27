@@ -5053,14 +5053,26 @@ whatsNewBox.add(seeMoreLabel);
                 g2.dispose();
             }
             @Override
-            protected void paintBorder(Graphics g)
+            public void paint(Graphics g)
             {
+                super.paint(g);
+
                 Boolean isExpanded = (Boolean) getClientProperty(ROW_EXPANDED_GOLD_KEY);
                 if (!Boolean.TRUE.equals(isExpanded)) return;
+
                 Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
-                java.awt.geom.RoundRectangle2D outline = new java.awt.geom.RoundRectangle2D.Float(
-                        0, 0, getWidth() - 1, getHeight() - 1, RADIUS_CARD * 2, RADIUS_CARD * 2);
+                g2.setRenderingHint(
+                        java.awt.RenderingHints.KEY_ANTIALIASING,
+                        java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+
+                java.awt.geom.RoundRectangle2D outline =
+                        new java.awt.geom.RoundRectangle2D.Float(
+                                0, 0,
+                                getWidth() - 1,
+                                getHeight() - 1,
+                                RADIUS_CARD * 2,
+                                RADIUS_CARD * 2);
+
                 g2.setColor(GOLD);
                 g2.setStroke(new java.awt.BasicStroke(1));
                 g2.draw(outline);
