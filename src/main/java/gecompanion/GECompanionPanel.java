@@ -2012,17 +2012,38 @@ private String openBankItemName = null;
 
         boolean isUp = profit.startsWith("+");
 
-        JPanel det = new JPanel(new BorderLayout());
+        JPanel det = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                int w = getWidth();
+                int h = getHeight();
+                int r = RADIUS_CARD * 2;
+                java.awt.geom.Path2D.Float path = new java.awt.geom.Path2D.Float();
+                path.moveTo(0, 0);
+                path.lineTo(w, 0);
+                path.lineTo(w, h - r / 2.0);
+                path.quadTo(w, h, w - r / 2.0, h);
+                path.lineTo(r / 2.0, h);
+                path.quadTo(0, h, 0, h - r / 2.0);
+                path.closePath();
+                g2.setColor(getBackground());
+                g2.fill(path);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        det.setOpaque(false);
         det.setBackground(BG_DETAIL);
-        det.setBorder(new MatteBorder(0, 2, 0, 0, GOLD));
+        det.setBorder(javax.swing.BorderFactory.createEmptyBorder());
         det.setMaximumSize(new Dimension(230, Integer.MAX_VALUE));
 
         JPanel inner = new JPanel();
         inner.setLayout(new BoxLayout(inner, BoxLayout.Y_AXIS));
         inner.setBackground(BG_DETAIL);
-        inner.setBorder(new javax.swing.border.CompoundBorder(
-                new MatteBorder(0, 0, 1, 0, GOLD),
-                new EmptyBorder(6, 7, 6, 7)));
+        inner.setOpaque(false);
+        inner.setBorder(new EmptyBorder(6, 7, 6, 7));
         inner.add(buildDetailHeader(name, price, item.length > 6 ? item[6] : "?"));
         inner.add(Box.createVerticalStrut(6));
 
@@ -5002,24 +5023,28 @@ whatsNewBox.add(seeMoreLabel);
                 // When expanded (row is showing its gold selection outline), square off the bottom corners
                 // to match row's shape - otherwise this panel's own rounded bottom corners peek out from
                 // underneath row's now-square bottom edge, leaving a sliver of the gradient/accent visible.
+                // Fill only within our own reserved insets, so the 1px margin reserved for the gold
+                // outline doesn't expose an extra ring of background/gradient around row when collapsed.
+                java.awt.Insets in = getInsets();
+                int fx = in.left, fy = in.top;
+                int fw = getWidth() - in.left - in.right;
+                int fh = getHeight() - in.top - in.bottom;
                 Boolean blockExpanded = (Boolean) getClientProperty(ROW_EXPANDED_GOLD_KEY);
                 java.awt.Shape roundedShape;
                 if (Boolean.TRUE.equals(blockExpanded)) {
-                    int w = getWidth();
-                    int h = getHeight();
                     int r = RADIUS_CARD * 2;
                     java.awt.geom.Path2D.Float path = new java.awt.geom.Path2D.Float();
-                    path.moveTo(0, h);
-                    path.lineTo(0, r / 2.0);
-                    path.quadTo(0, 0, r / 2.0, 0);
-                    path.lineTo(w - r / 2.0, 0);
-                    path.quadTo(w, 0, w, r / 2.0);
-                    path.lineTo(w, h);
+                    path.moveTo(fx, fy + fh);
+                    path.lineTo(fx, fy + r / 2.0);
+                    path.quadTo(fx, fy, fx + r / 2.0, fy);
+                    path.lineTo(fx + fw - r / 2.0, fy);
+                    path.quadTo(fx + fw, fy, fx + fw, fy + r / 2.0);
+                    path.lineTo(fx + fw, fy + fh);
                     path.closePath();
                     roundedShape = path;
                 } else {
                     roundedShape = new java.awt.geom.RoundRectangle2D.Float(
-                            0, 0, getWidth(), getHeight(), RADIUS_CARD * 2, RADIUS_CARD * 2);
+                            fx, fy, fw, fh, RADIUS_CARD * 2, RADIUS_CARD * 2);
                 }
                 g2.setColor(getBackground());
                 g2.fill(roundedShape);
@@ -5035,12 +5060,26 @@ whatsNewBox.add(seeMoreLabel);
                 }
                 g2.dispose();
             }
+            @Override
+            protected void paintBorder(Graphics g)
+            {
+                Boolean isExpanded = (Boolean) getClientProperty(ROW_EXPANDED_GOLD_KEY);
+                if (!Boolean.TRUE.equals(isExpanded)) return;
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                java.awt.geom.RoundRectangle2D outline = new java.awt.geom.RoundRectangle2D.Float(
+                        0, 0, getWidth() - 1, getHeight() - 1, RADIUS_CARD * 2, RADIUS_CARD * 2);
+                g2.setColor(GOLD);
+                g2.setStroke(new java.awt.BasicStroke(1));
+                g2.draw(outline);
+                g2.dispose();
+            }
         };
         block.setOpaque(false);
         block.setLayout(new BoxLayout(block, BoxLayout.Y_AXIS));
         block.setBackground(bgColor);
         block.setAlignmentX(Component.LEFT_ALIGNMENT);
-        block.setBorder(javax.swing.BorderFactory.createEmptyBorder());
+        block.setBorder(new EmptyBorder(1, 1, 1, 1));
         block.setMaximumSize(new Dimension(Integer.MAX_VALUE, 800));
 
         JPanel row = new JPanel(new BorderLayout()) {
@@ -5070,38 +5109,17 @@ whatsNewBox.add(seeMoreLabel);
             }
             @Override
             protected void paintBorder(Graphics g) {
+                Boolean expandedGold = (Boolean) getClientProperty(ROW_EXPANDED_GOLD_KEY);
+                if (Boolean.TRUE.equals(expandedGold)) return;
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
-                Boolean expandedGold = (Boolean) getClientProperty(ROW_EXPANDED_GOLD_KEY);
-                if (Boolean.TRUE.equals(expandedGold)) {
-                    // Expanded/selected: gold outline on top+left+right, rounded only at the top corners.
-                    // Bottom stays open/flat since the detail panel continues seamlessly below this row -
-                    // together they form one continuous rounded card (top corners here, bottom corners
-                    // rounded on the detail panel, flat seam where they meet in the middle).
-                    int w = getWidth() - 1;
-                    int h = getHeight() - 1;
-                    int r = RADIUS_CARD * 2;
-                    java.awt.geom.Path2D.Float path = new java.awt.geom.Path2D.Float();
-                    path.moveTo(0, h);
-                    path.lineTo(0, r / 2.0);
-                    path.quadTo(0, 0, r / 2.0, 0);
-                    path.lineTo(w - r / 2.0, 0);
-                    path.quadTo(w, 0, w, r / 2.0);
-                    path.lineTo(w, h);
-                    g2.setColor(GOLD);
-                    g2.setStroke(new java.awt.BasicStroke(1));
-                    g2.draw(path);
-                } else {
-                    // Collapsed: thick gainer/loser accent along the left edge, clipped to the rounded shape
-                    // so it follows the corner curve rather than terminating abruptly.
-                    Color accent = (Color) getClientProperty(ROW_ACCENT_COLOR_KEY);
-                    if (accent != null) {
-                        java.awt.geom.RoundRectangle2D clipShape = new java.awt.geom.RoundRectangle2D.Float(
-                                0, 0, getWidth(), getHeight(), RADIUS_CARD * 2, RADIUS_CARD * 2);
-                        g2.clip(clipShape);
-                        g2.setColor(accent);
-                        g2.fillRect(0, 0, 4, getHeight());
-                    }
+                Color accent = (Color) getClientProperty(ROW_ACCENT_COLOR_KEY);
+                if (accent != null) {
+                    java.awt.geom.RoundRectangle2D clipShape = new java.awt.geom.RoundRectangle2D.Float(
+                            0, 0, getWidth(), getHeight(), RADIUS_CARD * 2, RADIUS_CARD * 2);
+                    g2.clip(clipShape);
+                    g2.setColor(accent);
+                    g2.fillRect(0, 0, 4, getHeight());
                 }
                 g2.dispose();
             }
