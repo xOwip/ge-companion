@@ -1535,29 +1535,65 @@ private String openBankItemName = null;
         ));
         slidePanel.setVisible(false);
 
-        JButton reportBtn = new JButton("Report Issue");
+        JButton reportBtn = new JButton("Report Issue") {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        reportBtn.setContentAreaFilled(false);
+        reportBtn.setOpaque(false);
         reportBtn.setForeground(GOLD);
         reportBtn.setBackground(new Color(20, 18, 19));
         reportBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
-        reportBtn.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(GOLD, 1), BorderFactory.createEmptyBorder(0, 6, 0, 6)));
+        reportBtn.setBorder(BorderFactory.createCompoundBorder(createRoundedLineBorder(GOLD, 1, RADIUS_BUTTON), BorderFactory.createEmptyBorder(0, 6, 0, 6)));
         reportBtn.setFocusPainted(false);
         reportBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         reportBtn.addActionListener(e -> openGitHubForm("bug"));
 
-        JButton featureBtn = new JButton("Request Feature");
+        JButton featureBtn = new JButton("Request Feature") {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        featureBtn.setContentAreaFilled(false);
+        featureBtn.setOpaque(false);
         featureBtn.setForeground(GOLD);
         featureBtn.setBackground(new Color(20, 18, 19));
         featureBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
-        featureBtn.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(GOLD, 1), BorderFactory.createEmptyBorder(0, 6, 0, 6)));
+        featureBtn.setBorder(BorderFactory.createCompoundBorder(createRoundedLineBorder(GOLD, 1, RADIUS_BUTTON), BorderFactory.createEmptyBorder(0, 6, 0, 6)));
         featureBtn.setFocusPainted(false);
         featureBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         featureBtn.addActionListener(e -> openGitHubForm("feature"));
 
-        JButton updatesBtn = new JButton("Updates");
+        JButton updatesBtn = new JButton("Updates") {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        updatesBtn.setContentAreaFilled(false);
+        updatesBtn.setOpaque(false);
         updatesBtn.setForeground(GOLD);
         updatesBtn.setBackground(new Color(20, 18, 19));
         updatesBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
-        updatesBtn.setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(GOLD, 1), BorderFactory.createEmptyBorder(0, 6, 0, 6)));
+        updatesBtn.setBorder(BorderFactory.createCompoundBorder(createRoundedLineBorder(GOLD, 1, RADIUS_BUTTON), BorderFactory.createEmptyBorder(0, 6, 0, 6)));
         updatesBtn.setFocusPainted(false);
         updatesBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         updatesBtn.addActionListener(e -> openUpdatesDialog());
@@ -2378,9 +2414,28 @@ private String openBankItemName = null;
         });
 
 // ── statistics section (at detail panel level, outside graph viewport) ──
-        JPanel statsHeader = new JPanel(new BorderLayout());
+        JPanel statsHeader = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+            @Override
+            protected void paintBorder(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(42, 37, 32));
+                g2.setStroke(new java.awt.BasicStroke(1));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
+                g2.dispose();
+            }
+        };
+        statsHeader.setOpaque(false);
         statsHeader.setBackground(BG_DETAIL);
-        statsHeader.setBorder(BorderFactory.createLineBorder(new Color(42, 37, 32)));
         statsHeader.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
         statsHeader.setAlignmentX(Component.LEFT_ALIGNMENT);
         statsHeader.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -7028,19 +7083,19 @@ whatsNewBox.add(seeMoreLabel);
                     int buyLabelY = 1;
                     int sellLabelY = buyLabelY + labelH + gap;
 
-                    // buy volume label
+// buy volume label
                     g2.setColor(new Color(30, 25, 10));
-                    g2.fillRect(lx, buyLabelY, buyLabelW, labelH);
+                    g2.fillRoundRect(lx, buyLabelY, buyLabelW, labelH, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
                     g2.setColor(GOLD);
-                    g2.drawRect(lx, buyLabelY, buyLabelW, labelH);
+                    g2.drawRoundRect(lx, buyLabelY, buyLabelW, labelH, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
                     g2.drawString(buyStr, lx + 3, buyLabelY + labelH - 3);
 
-                    // sell volume label
+// sell volume label
                     int sellLx = nearRight ? x - sellLabelW - 6 : x + 6;
                     g2.setColor(new Color(10, 15, 30));
-                    g2.fillRect(sellLx, sellLabelY, sellLabelW, labelH);
+                    g2.fillRoundRect(sellLx, sellLabelY, sellLabelW, labelH, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
                     g2.setColor(new Color(74, 122, 191));
-                    g2.drawRect(sellLx, sellLabelY, sellLabelW, labelH);
+                    g2.drawRoundRect(sellLx, sellLabelY, sellLabelW, labelH, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
                     g2.drawString(sellStr, sellLx + 3, sellLabelY + labelH - 3);
                 }
 
@@ -7322,10 +7377,10 @@ whatsNewBox.add(seeMoreLabel);
                     g2.fillPolygon(ax, ay, 3);
                     // box background
                     g2.setColor(new Color(30, 27, 25));
-                    g2.fillRect(boxX, boxY, boxW, boxH);
+                    g2.fillRoundRect(boxX, boxY, boxW, boxH, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
                     // box border
                     g2.setColor(new Color(80, 72, 60));
-                    g2.drawRect(boxX, boxY, boxW, boxH);
+                    g2.drawRoundRect(boxX, boxY, boxW, boxH, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
                     // date text (white)
                     g2.setColor(Color.WHITE);
                     g2.drawString(text, boxX + pad, boxY + lineH - 2);
