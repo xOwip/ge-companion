@@ -7799,8 +7799,8 @@ whatsNewBox.add(seeMoreLabel);
                     boolean a = frames[j].equals(frame);
                     tfBtns[j].setForeground(a ? GOLD : TAB_INACTIVE);
                     tfBtns[j].setBorder(a
-                            ? BorderFactory.createLineBorder(GOLD)
-                            : BorderFactory.createLineBorder(new Color(58, 53, 48)));
+                            ? createRoundedLineBorder(GOLD, 1, RADIUS_TIMEFRAME)
+                            : createRoundedLineBorder(new Color(58, 53, 48), 1, RADIUS_TIMEFRAME));
                 }
 
                 // load data then animate in
