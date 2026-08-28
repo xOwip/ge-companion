@@ -2055,7 +2055,27 @@ private String openBankItemName = null;
         String buyPriceLabel = "BUY PRICE" + (buyTimeStr.equals("unknown") ? "" : "  ·  " + buyTimeStr);
         String buyPriceDisplay = buyPriceVal <= 0 ? "?" : formatFullPrice(String.valueOf(buyPriceVal)) + " gp";
 
-        JPanel buyPriceBox = new JPanel();
+        JPanel buyPriceBox = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+            @Override
+            protected void paintBorder(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(50, 46, 42));
+                g2.setStroke(new java.awt.BasicStroke(1));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
+                g2.dispose();
+            }
+        };
+        buyPriceBox.setOpaque(false);
         buyPriceBox.setLayout(new BoxLayout(buyPriceBox, BoxLayout.Y_AXIS));
         buyPriceBox.setBackground(new Color(14, 12, 13));
         buyPriceBox.setBorder(new EmptyBorder(6, 5, 6, 5));
@@ -2089,7 +2109,27 @@ private String openBankItemName = null;
         String sellPriceLabel = "SELL PRICE" + (sellTimeStr.equals("unknown") ? "" : "  ·  " + sellTimeStr);
         String sellPriceDisplay = sellPriceVal <= 0 ? "?" : formatFullPrice(String.valueOf(sellPriceVal)) + " gp";
 
-        JPanel sellPriceBox = new JPanel();
+        JPanel sellPriceBox = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+            @Override
+            protected void paintBorder(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(50, 46, 42));
+                g2.setStroke(new java.awt.BasicStroke(1));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
+                g2.dispose();
+            }
+        };
+        sellPriceBox.setOpaque(false);
         sellPriceBox.setLayout(new BoxLayout(sellPriceBox, BoxLayout.Y_AXIS));
         sellPriceBox.setBackground(new Color(14, 12, 13));
         sellPriceBox.setBorder(new EmptyBorder(6, 5, 6, 5));
@@ -2361,16 +2401,36 @@ private String openBankItemName = null;
         JPanel statsContent = new JPanel(new GridLayout(2, 2, 2, 2));
         statsContent.setBackground(BG_DETAIL);
         statsContent.setAlignmentX(Component.LEFT_ALIGNMENT);
-        statsContent.setPreferredSize(new Dimension(200, 110));
-        statsContent.setMaximumSize(new Dimension(200, 200));
+        statsContent.setPreferredSize(new Dimension(200, 96));
+        statsContent.setMaximumSize(new Dimension(200, 96));
 
         String[] statNames = {"Buying High", "Buying Low", "Selling High", "Selling Low"};
         Color[] statColors = {GOLD, GOLD, STAT_BLUE, STAT_BLUE};
         for (int i = 0; i < 4; i++) {
-            JPanel box = new JPanel();
+            JPanel box = new JPanel() {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setColor(getBackground());
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
+                    g2.dispose();
+                    super.paintComponent(g);
+                }
+                @Override
+                protected void paintBorder(Graphics g) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setColor(new Color(50, 46, 42));
+                    g2.setStroke(new java.awt.BasicStroke(1));
+                    g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
+                    g2.dispose();
+                }
+            };
+            box.setOpaque(false);
             box.setLayout(new BoxLayout(box, BoxLayout.Y_AXIS));
             box.setBackground(new Color(14, 12, 13));
-            box.setBorder(new EmptyBorder(8, 5, 0, 5));
+            box.setBorder(new EmptyBorder(5, 5, 5, 5));
             JLabel nameLabel = new JLabel(statNames[i].toUpperCase(), SwingConstants.CENTER);
             nameLabel.setForeground(TEXT_SECONDARY);
             nameLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
@@ -2381,8 +2441,10 @@ private String openBankItemName = null;
             valLabel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
             nameLabel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 16));
             statsLabels[i] = valLabel;
+            box.add(Box.createVerticalGlue());
             box.add(nameLabel);
             box.add(valLabel);
+            box.add(Box.createVerticalGlue());
             statsContent.add(box);
         }
         liveStatsLabels = statsLabels;
@@ -2466,6 +2528,7 @@ private String openBankItemName = null;
         inner.add(Box.createVerticalStrut(4));
         statsHeader.setVisible(false);
         inner.add(statsHeader);
+        inner.add(Box.createVerticalStrut(4));
         inner.add(statsViewport);
         inner.add(Box.createVerticalStrut(4));
         inner.add(footer);
@@ -7899,7 +7962,27 @@ whatsNewBox.add(seeMoreLabel);
 
     private JPanel buildStatBox(String label, String value, Color valueColor, String tooltip)
     {
-        JPanel box = new JPanel();
+        JPanel box = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+            @Override
+            protected void paintBorder(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(50, 46, 42));
+                g2.setStroke(new java.awt.BasicStroke(1));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
+                g2.dispose();
+            }
+        };
+        box.setOpaque(false);
         box.setLayout(new BoxLayout(box, BoxLayout.Y_AXIS));
         box.setBackground(new Color(14, 12, 13));
         box.setBorder(new EmptyBorder(5, 5, 5, 5));
