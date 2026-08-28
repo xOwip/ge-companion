@@ -6635,6 +6635,8 @@ whatsNewBox.add(seeMoreLabel);
                 super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
+                g2.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
                 int w = getWidth(), h = getHeight();
                 if (animating[0] && revealW[0] < 100) {
                     g2.setClip(0, 0, (int)(w * revealW[0] / 100.0), h);
@@ -7351,6 +7353,8 @@ whatsNewBox.add(seeMoreLabel);
                 super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
+                g2.setRenderingHint(RenderingHints.KEY_FRACTIONALMETRICS, RenderingHints.VALUE_FRACTIONALMETRICS_ON);
                 int w = getWidth(), h = getHeight();
                 g2.setColor(new Color(14, 12, 13));
                 g2.fillRect(0, 0, w, h);
