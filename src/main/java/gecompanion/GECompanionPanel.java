@@ -6794,17 +6794,17 @@ whatsNewBox.add(seeMoreLabel);
                         if (bHas[ci]) {
 
                             g2.setColor(new Color(30, 25, 10));
-                            g2.fillRect(lx, buyLabelY, labelW, labelH);
+                            g2.fillRoundRect(lx, buyLabelY, labelW, labelH, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
                             g2.setColor(GOLD);
-                            g2.drawRect(lx, buyLabelY, labelW, labelH);
+                            g2.drawRoundRect(lx, buyLabelY, labelW, labelH, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
                             g2.drawString(buyStr2, lx + 3, buyLabelY + labelH - 3);
                         }
                         if (sHas[ci]) {
 
                             g2.setColor(new Color(10, 15, 30));
-                            g2.fillRect(lx, sellLabelY, labelW, labelH);
+                            g2.fillRoundRect(lx, sellLabelY, labelW, labelH, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
                             g2.setColor(new Color(74, 122, 191));
-                            g2.drawRect(lx, sellLabelY, labelW, labelH);
+                            g2.drawRoundRect(lx, sellLabelY, labelW, labelH, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
                             g2.drawString(sellStr2, lx + 3, sellLabelY + labelH - 3);
                         }
                     } // end if (!magnifying[0])
@@ -6945,9 +6945,9 @@ whatsNewBox.add(seeMoreLabel);
                         int mlx = mNearRight ? zcx - mlw - 3 : zcx + 3;
                         int mly = Math.max(magY + 2, zby[zci] - 18);
                         g2.setColor(new Color(30, 25, 10));
-                        g2.fillRect(mlx, mly, mlw, 12);
+                        g2.fillRoundRect(mlx, mly, mlw, 12, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
                         g2.setColor(GOLD);
-                        g2.drawRect(mlx, mly, mlw, 12);
+                        g2.drawRoundRect(mlx, mly, mlw, 12, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
                         g2.drawString(mBuyStr, mlx + 3, mly + 10);
                     }
                     if (zsy[zci] >= 0 && mcp.sellPrice > 0) {
@@ -6959,9 +6959,9 @@ whatsNewBox.add(seeMoreLabel);
                         if (zby[zci] >= 0 && Math.abs(zby[zci] - zsy[zci]) < 14) mly = zby[zci] + 14;
                         mly = Math.max(magY + 1, mly);
                         g2.setColor(new Color(10, 15, 30));
-                        g2.fillRect(mlx, mly, mlw, 12);
+                        g2.fillRoundRect(mlx, mly, mlw, 12, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
                         g2.setColor(new Color(74, 122, 191));
-                        g2.drawRect(mlx, mly, mlw, 12);
+                        g2.drawRoundRect(mlx, mly, mlw, 12, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
                         g2.drawString(mSellStr, mlx + 3, mly + 10);
                     }
 
@@ -7217,10 +7217,10 @@ whatsNewBox.add(seeMoreLabel);
                                 Math.min(255, dc.getRed() / 4 + 20),
                                 Math.min(255, dc.getGreen() / 4 + 15),
                                 Math.min(255, dc.getBlue() / 4 + 15)));
-                        g2.fillRect(boxX, boxY, boxW, boxH);
+                        g2.fillRoundRect(boxX, boxY, boxW, boxH, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
                         // box border
                         g2.setColor(dc.darker());
-                        g2.drawRect(boxX, boxY, boxW, boxH);
+                        g2.drawRoundRect(boxX, boxY, boxW, boxH, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
                         // date (white)
                         g2.setColor(Color.WHITE);
                         g2.drawString(dateStr, boxX + pad, boxY + lineH - 2);
