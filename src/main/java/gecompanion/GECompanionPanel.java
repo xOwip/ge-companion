@@ -3741,25 +3741,91 @@ whatsNewBox.add(seeMoreLabel);
 
         Color rowBg = (index % 2 == 0) ? BG_DARK : new Color(20, 18, 19);
 
-        JPanel block = new JPanel();
+        JPanel block = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                java.awt.Insets in = getInsets();
+                int fx = in.left, fy = in.top;
+                int fw = getWidth() - in.left - in.right;
+                int fh = getHeight() - in.top - in.bottom;
+                java.awt.geom.RoundRectangle2D roundedShape = new java.awt.geom.RoundRectangle2D.Float(
+                        fx, fy, fw, fh, RADIUS_CARD * 2, RADIUS_CARD * 2);
+                g2.setColor(getBackground());
+                g2.fill(roundedShape);
+                g2.dispose();
+            }
+            @Override
+            public void paint(Graphics g) {
+                super.paint(g);
+                Boolean isExpanded = (Boolean) getClientProperty(ROW_EXPANDED_GOLD_KEY);
+                if (!Boolean.TRUE.equals(isExpanded)) return;
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                java.awt.geom.RoundRectangle2D outline = new java.awt.geom.RoundRectangle2D.Float(
+                        0, 0, getWidth() - 1, getHeight() - 1, RADIUS_CARD * 2, RADIUS_CARD * 2);
+                g2.setColor(GOLD);
+                g2.setStroke(new java.awt.BasicStroke(1));
+                g2.draw(outline);
+                g2.dispose();
+            }
+        };
+        block.setOpaque(false);
         block.setLayout(new BoxLayout(block, BoxLayout.Y_AXIS));
         block.setBackground(rowBg);
         block.setAlignmentX(Component.LEFT_ALIGNMENT);
-        block.setBorder(javax.swing.BorderFactory.createEmptyBorder());
+        block.setBorder(new EmptyBorder(1, 1, 1, 1));
         block.setMaximumSize(new Dimension(Integer.MAX_VALUE, 800));
 
-        JPanel row = new JPanel(new BorderLayout());
+        JPanel row = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                int w = getWidth();
+                int h = getHeight();
+                int r = RADIUS_CARD * 2;
+                java.awt.geom.Path2D.Float path = new java.awt.geom.Path2D.Float();
+                path.moveTo(0, h);
+                path.lineTo(0, r / 2.0);
+                path.quadTo(0, 0, r / 2.0, 0);
+                path.lineTo(w - r / 2.0, 0);
+                path.quadTo(w, 0, w, r / 2.0);
+                path.lineTo(w, h);
+                path.closePath();
+                g2.setColor(getBackground());
+                g2.fill(path);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        row.setOpaque(false);
         row.setBackground(rowBg);
-        row.setBorder(javax.swing.BorderFactory.createEmptyBorder());
+        row.setBorder(new EmptyBorder(1, 0, 0, 0));
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 68));
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
         row.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-        JPanel iconPanel = new JPanel(new java.awt.GridBagLayout());
+        JPanel iconPanel = new JPanel(new java.awt.GridBagLayout()) {
+            @Override
+            public void paint(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                java.awt.Container parent = getParent();
+                g2.setColor(parent != null ? parent.getBackground() : getBackground());
+                g2.fillRect(0, 0, getWidth(), getHeight());
+                java.awt.geom.RoundRectangle2D roundedShape = new java.awt.geom.RoundRectangle2D.Float(
+                        0, 0, getWidth(), getHeight(), RADIUS_ICON * 2, RADIUS_ICON * 2);
+                g2.clip(roundedShape);
+                super.paint(g2);
+                g2.dispose();
+            }
+        };
         iconPanel.setPreferredSize(new Dimension(42, 42));
         iconPanel.setBackground(new Color(14, 12, 13));
         iconPanel.setOpaque(true);
-        iconPanel.setBorder(BorderFactory.createLineBorder(isUp ? new Color(0, 100, 0) : isDown ? new Color(100, 0, 0) : new Color(42, 37, 40)));
+        iconPanel.setBorder(createRoundedLineBorder(isUp ? new Color(0, 100, 0) : isDown ? new Color(100, 0, 0) : new Color(42, 37, 40), 1, RADIUS_ICON));
 
         Integer itemId = nameToId.get(name.toLowerCase()
                 .replace('\u2019', '\'')
@@ -3772,6 +3838,7 @@ whatsNewBox.add(seeMoreLabel);
 
         final JPanel iconWrapper = new JPanel(new java.awt.GridBagLayout());
         iconWrapper.setBackground(rowBg);
+        iconWrapper.setOpaque(false);
         iconWrapper.add(iconPanel);
         iconWrapper.setToolTipText(name);
         row.add(iconWrapper, BorderLayout.WEST);
@@ -3779,6 +3846,7 @@ whatsNewBox.add(seeMoreLabel);
         JPanel info = new JPanel();
         info.setLayout(new BoxLayout(info, BoxLayout.Y_AXIS));
         info.setBackground(rowBg);
+        info.setOpaque(false);
         info.setBorder(new EmptyBorder(5, 7, 8, 0));
 
         JLabel nameLabel = new JLabel(name);
@@ -3951,6 +4019,7 @@ whatsNewBox.add(seeMoreLabel);
 
         javax.swing.JViewport detailViewport = new javax.swing.JViewport();
         detailViewport.setView(detailSlot);
+        detailViewport.setOpaque(false);
         detailViewport.setVisible(false);
         detailViewport.setBorder(null);
         detailViewport.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -4063,7 +4132,7 @@ whatsNewBox.add(seeMoreLabel);
                         if (curH2[0] <= 0)
                         {
                             if (closingVP != null) { closingVP.setVisible(false); closingVP.setPreferredSize(null); }
-                            if (currentOpenWatchlistRow != null) { currentOpenWatchlistRow.setBackground(currentOpenWatchlistRowColor); }
+                            if (currentOpenWatchlistRow != null) { currentOpenWatchlistRow.setBackground(currentOpenWatchlistRowColor); if (currentOpenWatchlistRow.getParent() instanceof JComponent) { ((JComponent) currentOpenWatchlistRow.getParent()).putClientProperty(ROW_EXPANDED_GOLD_KEY, false); currentOpenWatchlistRow.getParent().repaint(); } }
                             if (currentOpenWatchlistInfo != null) { currentOpenWatchlistInfo.setBackground(currentOpenWatchlistRowColor); currentOpenWatchlistInfo = null; }
                             if (currentOpenWatchlistIconWrapper != null) { currentOpenWatchlistIconWrapper.setBackground(currentOpenWatchlistRowColor); currentOpenWatchlistIconWrapper = null; }
                             if (currentOpenWatchlistDeltaRow != null) { currentOpenWatchlistDeltaRow.setBackground(currentOpenWatchlistRowColor); currentOpenWatchlistDeltaRow = null; }
@@ -4088,7 +4157,8 @@ whatsNewBox.add(seeMoreLabel);
                     if (currentOpenWatchlistRow != null)
                     {
                         currentOpenWatchlistRow.setBackground(BG_DARK);
-                        currentOpenWatchlistRow.setBorder(javax.swing.BorderFactory.createEmptyBorder());
+                        currentOpenWatchlistRow.setBorder(new EmptyBorder(1, 0, 0, 0));
+                        if (currentOpenWatchlistRow.getParent() instanceof JComponent) { ((JComponent) currentOpenWatchlistRow.getParent()).putClientProperty(ROW_EXPANDED_GOLD_KEY, false); currentOpenWatchlistRow.getParent().repaint(); }
                         for (Component c : currentOpenWatchlistRow.getComponents())
                         {
                             if (c instanceof JPanel)
@@ -4146,7 +4216,7 @@ whatsNewBox.add(seeMoreLabel);
                         if (curH3[0] <= 0)
                         {
                             if (closingVP2 != null) { closingVP2.setVisible(false); closingVP2.setPreferredSize(null); }
-                            if (currentOpenWatchlistRow != null) { currentOpenWatchlistRow.setBackground(currentOpenWatchlistRowColor); }
+                            if (currentOpenWatchlistRow != null) { currentOpenWatchlistRow.setBackground(currentOpenWatchlistRowColor); if (currentOpenWatchlistRow.getParent() instanceof JComponent) { ((JComponent) currentOpenWatchlistRow.getParent()).putClientProperty(ROW_EXPANDED_GOLD_KEY, false); currentOpenWatchlistRow.getParent().repaint(); } }
                             if (currentOpenWatchlistInfo != null) { currentOpenWatchlistInfo.setBackground(currentOpenWatchlistRowColor); currentOpenWatchlistInfo = null; }
                             if (currentOpenWatchlistIconWrapper != null) { currentOpenWatchlistIconWrapper.setBackground(currentOpenWatchlistRowColor); currentOpenWatchlistIconWrapper = null; }
                             if (currentOpenWatchlistDeltaRow != null) { currentOpenWatchlistDeltaRow.setBackground(currentOpenWatchlistRowColor); currentOpenWatchlistDeltaRow = null; }
@@ -4162,7 +4232,8 @@ whatsNewBox.add(seeMoreLabel);
                 if (currentOpenWatchlistRow != null)
                 {
                     currentOpenWatchlistRow.setBackground(currentOpenWatchlistRowColor);
-                    currentOpenWatchlistRow.setBorder(javax.swing.BorderFactory.createEmptyBorder());
+                    currentOpenWatchlistRow.setBorder(new EmptyBorder(1, 0, 0, 0));
+                    if (currentOpenWatchlistRow.getParent() instanceof JComponent) { ((JComponent) currentOpenWatchlistRow.getParent()).putClientProperty(ROW_EXPANDED_GOLD_KEY, false); currentOpenWatchlistRow.getParent().repaint(); }
                     for (Component c : currentOpenWatchlistRow.getComponents())
                     {
                         if (c instanceof JPanel)
@@ -4186,6 +4257,8 @@ whatsNewBox.add(seeMoreLabel);
                 if (bellPanelRef[0] != null) { bellPanelRef[0].setOpaque(false); bellPanelRef[0].repaint(); }
                 selectedWatchlistItemName = name;
                 currentOpenWatchlistRow = row;
+                block.putClientProperty(ROW_EXPANDED_GOLD_KEY, true);
+                block.repaint();
                 currentOpenWatchlistRowColor = rowBg;
                 currentOpenWatchlistDetail = detailSlot;
                 currentOpenWatchlistInfo = info;
@@ -4217,6 +4290,10 @@ whatsNewBox.add(seeMoreLabel);
                             detailViewport.setPreferredSize(null);
                             detailViewport.setViewPosition(new java.awt.Point(0, 0));
                             openTimer.stop();
+                            javax.swing.SwingUtilities.invokeLater(() -> {
+                                block.revalidate();
+                                block.repaint();
+                            });
                         }
                     });
                     openTimer.start();
