@@ -142,29 +142,34 @@ public class GECompanionPanel extends PluginPanel
         private int pauseTicksRemaining = 0;
         private static final int TICK_MS = 30;
         private static final int DELAY_MS = 1000;
-        private static final int END_PAUSE_TICKS = 40;
+        private static final int END_PAUSE_TICKS = 80;
         private static final int START_PAUSE_TICKS = 40;
 
-        MarqueeLabel(String text, Color color, Font font) {
+        private final int targetWidth;
+        private final int targetHeight;
+
+        MarqueeLabel(String text, Color color, Font font, int targetWidth, int targetHeight) {
             this.fullText = text;
             this.color = color;
             this.labelFont = font;
+            this.targetWidth = targetWidth;
+            this.targetHeight = targetHeight;
             setOpaque(false);
         }
 
         @Override
         public Dimension getMaximumSize() {
-            return new Dimension(360, 20);
+            return new Dimension(targetWidth, targetHeight);
         }
 
         @Override
         public Dimension getPreferredSize() {
-            return new Dimension(360, 20);
+            return new Dimension(targetWidth, targetHeight);
         }
 
         @Override
         public Dimension getMinimumSize() {
-            return new Dimension(0, 20);
+            return new Dimension(0, targetHeight);
         }
 
         private boolean isTruncated() {
@@ -420,6 +425,7 @@ public class GECompanionPanel extends PluginPanel
     private final java.util.Map<Integer, String> variantPopupNameCache = new java.util.HashMap<>();
     // Single reusable popup window for the improved variant info popup. Lazily created once, content rebuilt per hover.
     private javax.swing.JWindow variantPopupWindow = null;
+    private MarqueeLabel variantPopupHeaderLabel = null;
     // Suppresses new variant popup activation for a brief window after a structural Top Gainers/Losers
 // rebuild, so a stray mouseEntered fired by Swing reflowing a new component under a stationary
 // cursor doesn't immediately reopen/change the popup. Cleared via a short delayed Timer, not just
@@ -1109,7 +1115,7 @@ private String openBankItemName = null;
         content.setBackground(VARIANT_POPUP_BG);
         content.setBorder(new EmptyBorder(10, 12, 10, 12));
 
-        // Header: item/base name, then badge stacked underneath (avoids truncating long names)
+// Header: item/base name — never truncates in practice, plain label
         JLabel headerName = new JLabel(headerText);
         headerName.setForeground(TEXT_PRIMARY);
         headerName.setFont(new Font("Monospaced", Font.BOLD, 13));
@@ -1178,9 +1184,9 @@ private String openBankItemName = null;
         JPanel baseInfo = new JPanel();
         baseInfo.setLayout(new BoxLayout(baseInfo, BoxLayout.Y_AXIS));
         baseInfo.setBackground(VARIANT_POPUP_PANEL_BG);
-        JLabel baseNameLabel = new JLabel(baseName);
-        baseNameLabel.setForeground(TEXT_SECONDARY);
-        baseNameLabel.setFont(new Font("Monospaced", Font.PLAIN, 11));
+        baseInfo.setMaximumSize(new Dimension(178, 44));
+        baseInfo.setPreferredSize(new Dimension(178, 44));
+        MarqueeLabel baseNameLabel = new MarqueeLabel(baseName, TEXT_SECONDARY, new Font("Monospaced", Font.PLAIN, 11), 356, 16);
         String priceLimitText = (basePriceData != null && basePrice > 0 ? formatPrice(String.valueOf(basePrice)) + " gp" : "No price data")
                 + "  \u2022  Limit: " + (baseLimit != null ? baseLimit : "?");
         JLabel basePriceLimitLabel = new JLabel(priceLimitText);
@@ -1262,11 +1268,18 @@ private String openBankItemName = null;
         }
         variantPopupWindow.setLocation(x, y);
         variantPopupWindow.setVisible(true);
+        variantPopupHeaderLabel = baseNameLabel;
+        baseNameLabel.startHoverDelay();
     }
 
     // Hides the shared variant popup window, if currently showing.
     private void hideVariantPopup()
     {
+        if (variantPopupHeaderLabel != null)
+        {
+            variantPopupHeaderLabel.stopAll();
+            variantPopupHeaderLabel = null;
+        }
         if (variantPopupWindow != null)
         {
             variantPopupWindow.setVisible(false);
@@ -1277,6 +1290,11 @@ private String openBankItemName = null;
 // window resource doesn't linger across plugin disable/re-enable cycles.
     private void disposeVariantPopup()
     {
+        if (variantPopupHeaderLabel != null)
+        {
+            variantPopupHeaderLabel.stopAll();
+            variantPopupHeaderLabel = null;
+        }
         if (variantPopupWindow != null)
         {
             variantPopupWindow.setVisible(false);
@@ -5466,7 +5484,7 @@ whatsNewBox.add(seeMoreLabel);
         info.setOpaque(false);
         info.setBorder(new EmptyBorder(5, 7, 8, 0));
 
-        MarqueeLabel nameLabel = new MarqueeLabel(name, TEXT_PRIMARY, new Font("Monospaced", Font.PLAIN, FONT_ITEM_NAME));
+        MarqueeLabel nameLabel = new MarqueeLabel(name, TEXT_PRIMARY, new Font("Monospaced", Font.PLAIN, FONT_ITEM_NAME), 360, 20);
 
         JLabel priceLabel = new JLabel(formatPrice(price) + " gp");
         priceLabel.setForeground(PRICE_GOLD);
