@@ -4014,6 +4014,7 @@ whatsNewBox.add(seeMoreLabel);
         final JButton[] watchBtnRef = {null};
         JPanel detailSlot = new JPanel(new BorderLayout());
         detailSlot.setBackground(BG_DARK);
+        detailSlot.setOpaque(false);
         detailSlot.setBorder(javax.swing.BorderFactory.createEmptyBorder());
         detailSlot.setAlignmentX(Component.LEFT_ALIGNMENT);
 
