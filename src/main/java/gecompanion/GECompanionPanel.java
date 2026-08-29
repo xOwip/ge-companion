@@ -4331,7 +4331,6 @@ whatsNewBox.add(seeMoreLabel);
                                     if (graphWasOpen) reopenGraph(newDetailSlot);
                                     currentOpenWatchlistDetail = newDetailSlot;
                                     selectedWatchlistItemName = itemData[0];
-                                    newRow.setBorder(new MatteBorder(1, 3, 0, 0, GOLD));
                                     currentOpenWatchlistRow = newRow;
                                     return;
                                 }
@@ -4344,8 +4343,6 @@ whatsNewBox.add(seeMoreLabel);
                 info.setBackground(BG_ROW_SELECTED);
                 iconWrapper.setBackground(BG_ROW_SELECTED);
                 deltaLimitRow.setBackground(BG_ROW_SELECTED);
-                row.setBorder(BorderFactory.createEmptyBorder());
-                row.setBorder(new MatteBorder(1, 3, 0, 0, GOLD));
                 tabContentPanel.revalidate();
                 tabContentPanel.repaint();
             }
