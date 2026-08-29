@@ -126,6 +126,129 @@ public class GECompanionPanel extends PluginPanel
         };
     }
 
+    // Reusable marquee-scrolling label for Stage 1's truncated-name UX pass. Behaves exactly like a
+// normal truncating JLabel until hovered; if the text doesn't fit, hovering for ~1s starts a slow
+// horizontal scroll to reveal the full text, pausing briefly at the end before looping. Call
+// startHoverDelay() on mouseEntered and stopAll() on mouseExited/click.
+    private static class MarqueeLabel extends JComponent {
+        private String fullText;
+        private Color color;
+        private Font labelFont;
+        private int offset = 0;
+        private javax.swing.Timer delayTimer;
+        private javax.swing.Timer scrollTimer;
+        private boolean scrolling = false;
+        private boolean paused = false;
+        private int pauseTicksRemaining = 0;
+        private static final int TICK_MS = 30;
+        private static final int DELAY_MS = 1000;
+        private static final int END_PAUSE_TICKS = 40;
+        private static final int START_PAUSE_TICKS = 40;
+
+        MarqueeLabel(String text, Color color, Font font) {
+            this.fullText = text;
+            this.color = color;
+            this.labelFont = font;
+            setOpaque(false);
+        }
+
+        @Override
+        public Dimension getMaximumSize() {
+            return new Dimension(360, 20);
+        }
+
+        @Override
+        public Dimension getPreferredSize() {
+            return new Dimension(360, 20);
+        }
+
+        @Override
+        public Dimension getMinimumSize() {
+            return new Dimension(0, 20);
+        }
+
+        private boolean isTruncated() {
+            FontMetrics fm = getFontMetrics(labelFont);
+            return fm.stringWidth(fullText) > getWidth();
+        }
+
+        void startHoverDelay() {
+            stopAll();
+            if (!isTruncated()) return;
+            delayTimer = new javax.swing.Timer(DELAY_MS, e -> startScrolling());
+            delayTimer.setRepeats(false);
+            delayTimer.start();
+        }
+
+        private void startScrolling() {
+            scrolling = true;
+            offset = 0;
+            paused = true;
+            pauseTicksRemaining = START_PAUSE_TICKS;
+            scrollTimer = new javax.swing.Timer(TICK_MS, e -> tick());
+            scrollTimer.start();
+        }
+
+        private void tick() {
+            FontMetrics fm = getFontMetrics(labelFont);
+            int maxOffset = Math.max(0, fm.stringWidth(fullText) - getWidth());
+            if (paused) {
+                pauseTicksRemaining--;
+                if (pauseTicksRemaining <= 0) {
+                    if (offset >= maxOffset) {
+                        // end pause just finished - reset to start, then pause there too
+                        offset = 0;
+                        pauseTicksRemaining = START_PAUSE_TICKS;
+                    } else {
+                        // start pause just finished - begin scrolling
+                        paused = false;
+                    }
+                }
+            } else {
+                offset += 1;
+                if (offset >= maxOffset) {
+                    offset = maxOffset;
+                    paused = true;
+                    pauseTicksRemaining = END_PAUSE_TICKS;
+                }
+            }
+            repaint();
+        }
+
+        void stopAll() {
+            if (delayTimer != null) { delayTimer.stop(); delayTimer = null; }
+            if (scrollTimer != null) { scrollTimer.stop(); scrollTimer = null; }
+            scrolling = false;
+            paused = false;
+            offset = 0;
+            repaint();
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_LCD_HRGB);
+            g2.setFont(labelFont);
+            g2.setColor(color);
+            FontMetrics fm = g2.getFontMetrics();
+            int y = (getHeight() - fm.getHeight()) / 2 + fm.getAscent();
+            if (scrolling) {
+                g2.setClip(0, 0, getWidth(), getHeight());
+                g2.drawString(fullText, -offset, y);
+            } else {
+                String display = fullText;
+                if (fm.stringWidth(display) > getWidth()) {
+                    while (display.length() > 0 && fm.stringWidth(display + "...") > getWidth()) {
+                        display = display.substring(0, display.length() - 1);
+                    }
+                    display += "...";
+                }
+                g2.drawString(display, 0, y);
+            }
+            g2.dispose();
+        }
+    }
+
     private final GECompanionConfig config;
     private final GECompanionPlugin plugin;
     private net.runelite.client.config.ConfigManager configManager;
@@ -5340,13 +5463,10 @@ whatsNewBox.add(seeMoreLabel);
         JPanel info = new JPanel();
         info.setLayout(new BoxLayout(info, BoxLayout.Y_AXIS));
         info.setBackground(bgColor);
-        info.setOpaque(false); // TEMPORARY DIAGNOSTIC
+        info.setOpaque(false);
         info.setBorder(new EmptyBorder(5, 7, 8, 0));
 
-        JLabel nameLabel = new JLabel(name);
-        nameLabel.setForeground(TEXT_PRIMARY);
-        nameLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_ITEM_NAME));
-        nameLabel.setMaximumSize(new Dimension(175, 20));
+        MarqueeLabel nameLabel = new MarqueeLabel(name, TEXT_PRIMARY, new Font("Monospaced", Font.PLAIN, FONT_ITEM_NAME));
 
         JLabel priceLabel = new JLabel(formatPrice(price) + " gp");
         priceLabel.setForeground(PRICE_GOLD);
@@ -5375,6 +5495,14 @@ whatsNewBox.add(seeMoreLabel);
         info.add(priceLabel);
         info.add(deltaRow);
         row.add(info, BorderLayout.CENTER);
+        row.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) { nameLabel.startHoverDelay(); }
+            @Override
+            public void mouseExited(MouseEvent e) { nameLabel.stopAll(); }
+            @Override
+            public void mouseClicked(MouseEvent e) { nameLabel.stopAll(); }
+        });
 
 // Inline detail slot
         final JButton[] watchBtnRef = {null};
