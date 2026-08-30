@@ -3849,10 +3849,7 @@ whatsNewBox.add(seeMoreLabel);
         info.setOpaque(false);
         info.setBorder(new EmptyBorder(5, 7, 8, 0));
 
-        JLabel nameLabel = new JLabel(name);
-        nameLabel.setForeground(TEXT_PRIMARY);
-        nameLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_ITEM_NAME));
-        nameLabel.setMaximumSize(new Dimension(190, 20));
+        MarqueeLabel nameLabel = new MarqueeLabel(name, TEXT_PRIMARY, new Font("Monospaced", Font.PLAIN, FONT_ITEM_NAME), 360, 20);
 
         JLabel priceLabel = new JLabel(formatPrice(price) + " gp");
         priceLabel.setForeground(PRICE_GOLD);
@@ -3881,6 +3878,14 @@ whatsNewBox.add(seeMoreLabel);
         info.add(priceLabel);
         info.add(deltaLimitRow);
         row.add(info, BorderLayout.CENTER);
+        row.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) { nameLabel.startHoverDelay(); }
+            @Override
+            public void mouseExited(MouseEvent e) { nameLabel.stopAll(); }
+            @Override
+            public void mouseClicked(MouseEvent e) { nameLabel.stopAll(); }
+        });
 
 // Bell icon for price alerts (only shown when not in edit mode)
         final JPanel[] bellPanelRef = {null};
