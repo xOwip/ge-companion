@@ -4208,6 +4208,7 @@ whatsNewBox.add(seeMoreLabel);
                 {
                     final JPanel closingDetail2 = currentOpenWatchlistDetail;
                     currentOpenWatchlistDetail = null;
+                    final Component closingRowParent = currentOpenWatchlistRow != null ? currentOpenWatchlistRow.getParent() : null;
                     final javax.swing.JViewport closingVP2 = (javax.swing.JViewport) closingDetail2.getParent();
                     final int fullH2 = closingVP2 != null ? closingVP2.getHeight() : 0;
                     int[] curH3 = {fullH2};
@@ -4222,7 +4223,7 @@ whatsNewBox.add(seeMoreLabel);
                         if (curH3[0] <= 0)
                         {
                             if (closingVP2 != null) { closingVP2.setVisible(false); closingVP2.setPreferredSize(null); }
-                            if (currentOpenWatchlistRow != null) { currentOpenWatchlistRow.setBackground(currentOpenWatchlistRowColor); if (currentOpenWatchlistRow.getParent() instanceof JComponent) { ((JComponent) currentOpenWatchlistRow.getParent()).putClientProperty(ROW_EXPANDED_GOLD_KEY, false); currentOpenWatchlistRow.getParent().repaint(); } }
+                            if (closingRowParent instanceof JComponent) { ((JComponent) closingRowParent).putClientProperty(ROW_EXPANDED_GOLD_KEY, false); closingRowParent.repaint(); }
                             if (currentOpenWatchlistInfo != null) { currentOpenWatchlistInfo.setBackground(currentOpenWatchlistRowColor); currentOpenWatchlistInfo = null; }
                             if (currentOpenWatchlistIconWrapper != null) { currentOpenWatchlistIconWrapper.setBackground(currentOpenWatchlistRowColor); currentOpenWatchlistIconWrapper = null; }
                             if (currentOpenWatchlistDeltaRow != null) { currentOpenWatchlistDeltaRow.setBackground(currentOpenWatchlistRowColor); currentOpenWatchlistDeltaRow = null; }
