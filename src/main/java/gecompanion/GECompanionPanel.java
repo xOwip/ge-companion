@@ -3039,6 +3039,11 @@ whatsNewBox.add(seeMoreLabel);
         if (currentOpenSearchRow != null)
         {
             currentOpenSearchRow.setBackground(BG_DARK);
+            if (currentOpenSearchRow.getParent() instanceof JComponent) {
+                ((JComponent) currentOpenSearchRow.getParent()).putClientProperty(ROW_EXPANDED_GOLD_KEY, false);
+                currentOpenSearchRow.getParent().setBackground(BG_DARK);
+                currentOpenSearchRow.getParent().repaint();
+            }
             currentOpenSearchRow = null;
         }
         selectedItemName = null;
@@ -3192,43 +3197,101 @@ whatsNewBox.add(seeMoreLabel);
         boolean isDown = delta.startsWith("-");
         Color rowBg = (index % 2 == 0) ? BG_DARK : new Color(20, 18, 19);
 
-        JPanel block = new JPanel();
+        JPanel block = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                java.awt.Insets in = getInsets();
+                int fx = in.left, fy = in.top;
+                int fw = getWidth() - in.left - in.right;
+                int fh = getHeight() - in.top - in.bottom;
+                java.awt.geom.RoundRectangle2D roundedShape = new java.awt.geom.RoundRectangle2D.Float(
+                        fx, fy, fw, fh, RADIUS_CARD * 2, RADIUS_CARD * 2);
+                g2.setColor(getBackground());
+                g2.fill(roundedShape);
+                g2.dispose();
+            }
+            @Override
+            public void paint(Graphics g) {
+                super.paint(g);
+                Boolean isExpanded = (Boolean) getClientProperty(ROW_EXPANDED_GOLD_KEY);
+                if (!Boolean.TRUE.equals(isExpanded)) return;
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                java.awt.geom.RoundRectangle2D outline = new java.awt.geom.RoundRectangle2D.Float(
+                        0, 0, getWidth() - 1, getHeight() - 1, RADIUS_CARD * 2, RADIUS_CARD * 2);
+                g2.setColor(GOLD);
+                g2.setStroke(new java.awt.BasicStroke(1));
+                g2.draw(outline);
+                g2.dispose();
+            }
+        };
+        block.setOpaque(false);
         block.setLayout(new BoxLayout(block, BoxLayout.Y_AXIS));
         block.setBackground(rowBg);
         block.setAlignmentX(Component.LEFT_ALIGNMENT);
-        block.setBorder(javax.swing.BorderFactory.createEmptyBorder());
+        block.setBorder(new EmptyBorder(1, 1, 1, 1));
         block.setMaximumSize(new Dimension(Integer.MAX_VALUE, 800));
-        block.setBorder(javax.swing.BorderFactory.createEmptyBorder());
 
-        JPanel row = new JPanel(new BorderLayout())
-        {
+        JPanel row = new JPanel(new BorderLayout()) {
             @Override
-            protected void paintComponent(Graphics g)
-            {
-                super.paintComponent(g);
-                if (name.equals(selectedItemName))
-                {
-                    Graphics2D g2 = (Graphics2D) g.create();
-                    GradientPaint gp = new GradientPaint(0, 0, new Color(212, 175, 55, 180), getWidth(), 0, new Color(0, 0, 0, 0));
-                    g2.setPaint(gp);
-                    g2.fillRect(0, 0, getWidth(), 3);
-                    g2.dispose();
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                int w = getWidth();
+                int h = getHeight();
+                int r = RADIUS_CARD * 2;
+                java.awt.Container p = getParent();
+                Boolean expanded = p instanceof JComponent ? (Boolean) ((JComponent) p).getClientProperty(ROW_EXPANDED_GOLD_KEY) : null;
+                java.awt.Shape shape;
+                if (Boolean.TRUE.equals(expanded)) {
+                    java.awt.geom.Path2D.Float path = new java.awt.geom.Path2D.Float();
+                    path.moveTo(0, h);
+                    path.lineTo(0, r / 2.0);
+                    path.quadTo(0, 0, r / 2.0, 0);
+                    path.lineTo(w - r / 2.0, 0);
+                    path.quadTo(w, 0, w, r / 2.0);
+                    path.lineTo(w, h);
+                    path.closePath();
+                    shape = path;
+                } else {
+                    shape = new java.awt.geom.RoundRectangle2D.Float(0, 0, w, h, r, r);
                 }
+                g2.setColor(getBackground());
+                g2.fill(shape);
+                g2.dispose();
+                super.paintComponent(g);
             }
         };
+        row.setOpaque(false);
         row.setBackground(rowBg);
-        row.setBorder(javax.swing.BorderFactory.createEmptyBorder());
+        row.setBorder(new EmptyBorder(1, 0, 0, 0));
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 68));
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
         row.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
         row.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-        JPanel iconPanel = new JPanel(new java.awt.GridBagLayout());
+        JPanel iconPanel = new JPanel(new java.awt.GridBagLayout()) {
+            @Override
+            public void paint(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                java.awt.Container parent = getParent();
+                g2.setColor(parent != null ? parent.getBackground() : getBackground());
+                g2.fillRect(0, 0, getWidth(), getHeight());
+                java.awt.geom.RoundRectangle2D roundedShape = new java.awt.geom.RoundRectangle2D.Float(
+                        0, 0, getWidth(), getHeight(), RADIUS_ICON * 2, RADIUS_ICON * 2);
+                g2.clip(roundedShape);
+                super.paint(g2);
+                g2.dispose();
+            }
+        };
         iconPanel.setPreferredSize(new Dimension(42, 42));
         iconPanel.setBackground(new Color(14, 12, 13));
         iconPanel.setOpaque(true);
-        iconPanel.setBorder(BorderFactory.createLineBorder(isUp ? new Color(0, 100, 0) : isDown ? new Color(100, 0, 0) : new Color(42, 37, 40)));
+        iconPanel.setBorder(createRoundedLineBorder(isUp ? new Color(0, 100, 0) : isDown ? new Color(100, 0, 0) : new Color(42, 37, 40), 1, RADIUS_ICON));
 
         Integer itemId = nameToId.get(name.toLowerCase()
                 .replace('\u2019', '\'')
@@ -3241,6 +3304,7 @@ whatsNewBox.add(seeMoreLabel);
 
         final JPanel iconWrapper = new JPanel(new java.awt.GridBagLayout());
         iconWrapper.setBackground(rowBg);
+        iconWrapper.setOpaque(false);
         iconWrapper.add(iconPanel);
         iconWrapper.setToolTipText(name);
         row.add(iconWrapper, BorderLayout.WEST);
@@ -3248,12 +3312,10 @@ whatsNewBox.add(seeMoreLabel);
         JPanel info = new JPanel();
         info.setLayout(new BoxLayout(info, BoxLayout.Y_AXIS));
         info.setBackground(rowBg);
+        info.setOpaque(false);
         info.setBorder(new EmptyBorder(6, 7, 6, 7));
 
-        JLabel nameLabel = new JLabel(name);
-        nameLabel.setForeground(TEXT_PRIMARY);
-        nameLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_ITEM_NAME));
-        nameLabel.setMaximumSize(new Dimension(190, 20));
+        MarqueeLabel nameLabel = new MarqueeLabel(name, TEXT_PRIMARY, new Font("Monospaced", Font.PLAIN, FONT_ITEM_NAME), 360, 20);
 
         JLabel priceLabel = new JLabel(formatPrice(price) + " gp");
         priceLabel.setForeground(PRICE_GOLD);
@@ -3291,11 +3353,13 @@ whatsNewBox.add(seeMoreLabel);
         final JButton[] watchBtnRef = {null};
         JPanel detailSlot = new JPanel(new BorderLayout());
         detailSlot.setBackground(BG_DARK);
+        detailSlot.setOpaque(false);
         detailSlot.setBorder(javax.swing.BorderFactory.createEmptyBorder());
         detailSlot.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         javax.swing.JViewport detailViewport = new javax.swing.JViewport();
         detailViewport.setView(detailSlot);
+        detailViewport.setOpaque(false);
         detailViewport.setVisible(false);
         detailViewport.setBorder(null);
         detailViewport.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -3364,7 +3428,7 @@ whatsNewBox.add(seeMoreLabel);
                         if (curH2[0] <= 0)
                         {
                             if (closingVP != null) { closingVP.setVisible(false); closingVP.setPreferredSize(null); }
-                            if (currentOpenSearchRow != null) { currentOpenSearchRow.setBackground(currentOpenSearchRowColor); }
+                            if (currentOpenSearchRow != null) { currentOpenSearchRow.setBackground(currentOpenSearchRowColor); if (currentOpenSearchRow.getParent() instanceof JComponent) { ((JComponent) currentOpenSearchRow.getParent()).putClientProperty(ROW_EXPANDED_GOLD_KEY, false); currentOpenSearchRow.getParent().setBackground(currentOpenSearchRowColor); currentOpenSearchRow.getParent().repaint(); } }
                             if (currentOpenSearchInfo != null) { currentOpenSearchInfo.setBackground(currentOpenSearchRowColor); currentOpenSearchInfo = null; }
                             if (currentOpenSearchIconWrapper != null) { currentOpenSearchIconWrapper.setBackground(currentOpenSearchRowColor); currentOpenSearchIconWrapper = null; }
                             if (currentOpenSearchDeltaRow != null) { currentOpenSearchDeltaRow.setBackground(currentOpenSearchRowColor); currentOpenSearchDeltaRow = null; }
@@ -3374,10 +3438,11 @@ whatsNewBox.add(seeMoreLabel);
                         }
                     });
                     closeTimer.start();
-                        if (currentOpenSearchRow != null)
-                        {
+                    if (currentOpenSearchRow != null)
+                    {
                         currentOpenSearchRow.setBackground(currentOpenSearchRowColor);
-                        currentOpenSearchRow.setBorder(new MatteBorder(0, 3, 0, 1, new Color(26, 24, 24)));
+                        currentOpenSearchRow.setBorder(new EmptyBorder(1, 0, 0, 0));
+                        if (currentOpenSearchRow.getParent() instanceof JComponent) { ((JComponent) currentOpenSearchRow.getParent()).putClientProperty(ROW_EXPANDED_GOLD_KEY, false); currentOpenSearchRow.getParent().repaint(); }
                         for (Component c : currentOpenSearchRow.getComponents())
                         {
                             if (c instanceof JPanel)
@@ -3424,6 +3489,7 @@ whatsNewBox.add(seeMoreLabel);
                 {
                     final JPanel closingDetail2 = currentOpenSearchDetail;
                     currentOpenSearchDetail = null;
+                    final Component closingRowParent = currentOpenSearchRow != null ? currentOpenSearchRow.getParent() : null;
                     final javax.swing.JViewport closingVP2 = (javax.swing.JViewport) closingDetail2.getParent();
                     final int fullH2 = closingVP2 != null ? closingVP2.getHeight() : 0;
                     int[] curH3 = {fullH2};
@@ -3438,7 +3504,7 @@ whatsNewBox.add(seeMoreLabel);
                         if (curH3[0] <= 0)
                         {
                             if (closingVP2 != null) { closingVP2.setVisible(false); closingVP2.setPreferredSize(null); }
-                            if (currentOpenSearchRow != null) { currentOpenSearchRow.setBackground(currentOpenSearchRowColor); }
+                            if (closingRowParent instanceof JComponent) { ((JComponent) closingRowParent).putClientProperty(ROW_EXPANDED_GOLD_KEY, false); closingRowParent.setBackground(currentOpenSearchRowColor); closingRowParent.repaint(); }
                             if (currentOpenSearchInfo != null) { currentOpenSearchInfo.setBackground(currentOpenSearchRowColor); currentOpenSearchInfo = null; }
                             if (currentOpenSearchIconWrapper != null) { currentOpenSearchIconWrapper.setBackground(currentOpenSearchRowColor); currentOpenSearchIconWrapper = null; }
                             if (currentOpenSearchDeltaRow != null) { currentOpenSearchDeltaRow.setBackground(currentOpenSearchRowColor); currentOpenSearchDeltaRow = null; }
@@ -3453,7 +3519,8 @@ whatsNewBox.add(seeMoreLabel);
                 if (currentOpenSearchRow != null)
                 {
                     currentOpenSearchRow.setBackground(BG_DARK);
-                    currentOpenSearchRow.setBorder(new MatteBorder(0, 3, 0, 1, new Color(26, 24, 24)));
+                    if (currentOpenSearchRow.getParent() != null) { currentOpenSearchRow.getParent().setBackground(BG_DARK); currentOpenSearchRow.getParent().repaint(); }
+                    currentOpenSearchRow.setBorder(new EmptyBorder(1, 0, 0, 0));
                     for (Component c : currentOpenSearchRow.getComponents())
                     {
                         if (c instanceof JPanel)
@@ -3549,11 +3616,8 @@ whatsNewBox.add(seeMoreLabel);
                                     if (graphWasOpen) reopenGraph(newDetailSlot);
                                     currentOpenSearchDetail = newDetailSlot;
                                     selectedItemName = itemData[0];
-                                    newRow.setBorder(BorderFactory.createCompoundBorder(
-                                            new MatteBorder(1, 3, 0, 0, GOLD),
-                                            new MatteBorder(0, 0, 1, 0, new Color(26, 24, 24))
-                                    ));
                                     currentOpenSearchRow = newRow;
+                                    if (newRow.getParent() instanceof JComponent) { ((JComponent) newRow.getParent()).putClientProperty(ROW_EXPANDED_GOLD_KEY, true); newRow.getParent().repaint(); }
                                     return;
                                 }
                             }
@@ -3565,10 +3629,7 @@ whatsNewBox.add(seeMoreLabel);
                 info.setBackground(BG_ROW_SELECTED);
                 iconWrapper.setBackground(BG_ROW_SELECTED);
                 deltaLimitRow.setBackground(BG_ROW_SELECTED);
-                row.setBorder(BorderFactory.createCompoundBorder(
-                        new MatteBorder(1, 3, 0, 0, GOLD),
-                        new MatteBorder(0, 0, 1, 0, new Color(26, 24, 24))
-                ));
+                if (row.getParent() instanceof JComponent) { ((JComponent) row.getParent()).putClientProperty(ROW_EXPANDED_GOLD_KEY, true); row.getParent().repaint(); }
 
                 searchResultsPanel.revalidate();
                 searchResultsPanel.repaint();
@@ -3587,8 +3648,11 @@ whatsNewBox.add(seeMoreLabel);
             }
             public void mouseEntered(MouseEvent e)
             {
+                nameLabel.startHoverDelay();
                 if (!name.equals(selectedItemName))
                 {
+                    block.setBackground(BG_ROW_HOVER);
+                    block.repaint();
                     row.setBackground(BG_ROW_HOVER);
                     info.setBackground(BG_ROW_HOVER);
                     iconWrapper.setBackground(BG_ROW_HOVER);
@@ -3597,8 +3661,11 @@ whatsNewBox.add(seeMoreLabel);
             }
             public void mouseExited(MouseEvent e)
             {
+                nameLabel.stopAll();
                 if (!name.equals(selectedItemName))
                 {
+                    block.setBackground(rowBg);
+                    block.repaint();
                     row.setBackground(rowBg);
                     info.setBackground(rowBg);
                     iconWrapper.setBackground(rowBg);
