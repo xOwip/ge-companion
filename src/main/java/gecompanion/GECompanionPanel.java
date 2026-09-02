@@ -2940,14 +2940,33 @@ private String openBankItemName = null;
             whatsNewBox.add(whatsNewText);
             whatsNewBox.add(Box.createVerticalStrut(4));
 whatsNewBox.add(Box.createVerticalStrut(4));
-JLabel seeMoreLabel = new JLabel("<html><body style='width:150px;color:#D4AF37;font-family:monospaced;font-size:9px;'>See full changelog →</body></html>");
-seeMoreLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-seeMoreLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-seeMoreLabel.addMouseListener(new MouseAdapter() {
-    public void mouseClicked(MouseEvent e) { openUpdatesDialog(); }
-    public void mouseEntered(MouseEvent e) { seeMoreLabel.setText("<html><body style='width:150px;color:#FFD700;font-family:monospaced;font-size:9px;'>See full changelog →</body></html>"); }
-    public void mouseExited(MouseEvent e) { seeMoreLabel.setText("<html><body style='width:150px;color:#D4AF37;font-family:monospaced;font-size:9px;'>See full changelog →</body></html>"); }
-});
+            JLabel seeMoreLabel = new JLabel("<html><body style='width:150px;font-family:monospaced;font-size:9px;'>See full changelog →</body></html>");
+            seeMoreLabel.setForeground(GOLD);
+            seeMoreLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+            seeMoreLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            final float[] seeMoreHoverProgress = {0f};
+            final javax.swing.Timer[] seeMoreAnimTimer = {null};
+            seeMoreLabel.addMouseListener(new MouseAdapter() {
+                public void mouseClicked(MouseEvent e) { openUpdatesDialog(); }
+                public void mouseEntered(MouseEvent e) {
+                    if (seeMoreAnimTimer[0] != null) seeMoreAnimTimer[0].stop();
+                    seeMoreAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                        seeMoreHoverProgress[0] = Math.min(1f, seeMoreHoverProgress[0] + 0.15f);
+                        seeMoreLabel.setForeground(lerpColor(GOLD, new Color(0xFF, 0xD7, 0x00), seeMoreHoverProgress[0]));
+                        if (seeMoreHoverProgress[0] >= 1f) seeMoreAnimTimer[0].stop();
+                    });
+                    seeMoreAnimTimer[0].start();
+                }
+                public void mouseExited(MouseEvent e) {
+                    if (seeMoreAnimTimer[0] != null) seeMoreAnimTimer[0].stop();
+                    seeMoreAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                        seeMoreHoverProgress[0] = Math.max(0f, seeMoreHoverProgress[0] - 0.15f);
+                        seeMoreLabel.setForeground(lerpColor(GOLD, new Color(0xFF, 0xD7, 0x00), seeMoreHoverProgress[0]));
+                        if (seeMoreHoverProgress[0] <= 0f) seeMoreAnimTimer[0].stop();
+                    });
+                    seeMoreAnimTimer[0].start();
+                }
+            });
 whatsNewBox.add(seeMoreLabel);
 
             whatsNewClose.addMouseListener(new MouseAdapter() {
@@ -4849,6 +4868,8 @@ whatsNewBox.add(seeMoreLabel);
         heroLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
         heroLabel.setToolTipText(heroLabelTooltip);
         heroLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        final float[] heroLabelHoverProgress = {0f};
+        final javax.swing.Timer[] heroLabelAnimTimer = {null};
         heroLabel.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 showTotalWealth = !showTotalWealth;
@@ -4859,8 +4880,24 @@ whatsNewBox.add(seeMoreLabel);
                 }
                 showTab(activeTab);
             }
-            public void mouseEntered(MouseEvent e) { heroLabel.setForeground(GOLD); }
-            public void mouseExited(MouseEvent e) { heroLabel.setForeground(TEXT_SECONDARY); }
+            public void mouseEntered(MouseEvent e) {
+                if (heroLabelAnimTimer[0] != null) heroLabelAnimTimer[0].stop();
+                heroLabelAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                    heroLabelHoverProgress[0] = Math.min(1f, heroLabelHoverProgress[0] + 0.15f);
+                    heroLabel.setForeground(lerpColor(TEXT_SECONDARY, GOLD, heroLabelHoverProgress[0]));
+                    if (heroLabelHoverProgress[0] >= 1f) heroLabelAnimTimer[0].stop();
+                });
+                heroLabelAnimTimer[0].start();
+            }
+            public void mouseExited(MouseEvent e) {
+                if (heroLabelAnimTimer[0] != null) heroLabelAnimTimer[0].stop();
+                heroLabelAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                    heroLabelHoverProgress[0] = Math.max(0f, heroLabelHoverProgress[0] - 0.15f);
+                    heroLabel.setForeground(lerpColor(TEXT_SECONDARY, GOLD, heroLabelHoverProgress[0]));
+                    if (heroLabelHoverProgress[0] <= 0f) heroLabelAnimTimer[0].stop();
+                });
+                heroLabelAnimTimer[0].start();
+            }
         });
 
         liveBankValueHeaderLabel = heroLabel;
@@ -4906,6 +4943,9 @@ whatsNewBox.add(seeMoreLabel);
         heroValue.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         liveBankValueLabel = heroValue;
         heroValue.setToolTipText(bankHidden ? "Click to reveal bank value" : "Click to hide bank value");
+        final Color heroValueBaseColor = bankHidden ? TEXT_DIM : PRICE_GOLD;
+        final float[] heroValueHoverProgress = {0f};
+        final javax.swing.Timer[] heroValueAnimTimer = {null};
         heroValue.addMouseListener(new MouseAdapter()
         {
             public void mouseClicked(MouseEvent e)
@@ -4913,8 +4953,24 @@ whatsNewBox.add(seeMoreLabel);
                 plugin.setBankValueHidden(!plugin.isBankValueHidden());
                 showTab(activeTab);
             }
-            public void mouseEntered(MouseEvent e) { heroValue.setForeground(TEXT_PRIMARY); }
-            public void mouseExited(MouseEvent e) { heroValue.setForeground(bankHidden ? TEXT_DIM : PRICE_GOLD); }
+            public void mouseEntered(MouseEvent e) {
+                if (heroValueAnimTimer[0] != null) heroValueAnimTimer[0].stop();
+                heroValueAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                    heroValueHoverProgress[0] = Math.min(1f, heroValueHoverProgress[0] + 0.15f);
+                    heroValue.setForeground(lerpColor(heroValueBaseColor, TEXT_PRIMARY, heroValueHoverProgress[0]));
+                    if (heroValueHoverProgress[0] >= 1f) heroValueAnimTimer[0].stop();
+                });
+                heroValueAnimTimer[0].start();
+            }
+            public void mouseExited(MouseEvent e) {
+                if (heroValueAnimTimer[0] != null) heroValueAnimTimer[0].stop();
+                heroValueAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                    heroValueHoverProgress[0] = Math.max(0f, heroValueHoverProgress[0] - 0.15f);
+                    heroValue.setForeground(lerpColor(heroValueBaseColor, TEXT_PRIMARY, heroValueHoverProgress[0]));
+                    if (heroValueHoverProgress[0] <= 0f) heroValueAnimTimer[0].stop();
+                });
+                heroValueAnimTimer[0].start();
+            }
         });
         gbc.gridy = 4;
         gbc.insets = new java.awt.Insets(0, 6, 2, 6);
