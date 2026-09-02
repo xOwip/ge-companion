@@ -1926,10 +1926,13 @@ private String openBankItemName = null;
             tab.setBorder(new EmptyBorder(5, 0, 5, 0));
             tab.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             updateTabStyle(tab, i == activeTab);
+            final float[] tabHoverProgress = {0f};
+            final javax.swing.Timer[] tabAnimTimer = {null};
             tab.addMouseListener(new MouseAdapter()
             {
                 public void mouseClicked(MouseEvent e)
                 {
+                    if (tabAnimTimer[0] != null) tabAnimTimer[0].stop();
                     // Collapse bank metadata when leaving the bank tab
                     if (activeTab == 2 && idx != 2 && bankMetadataExpanded) {
                         bankMetadataExpanded = false;
@@ -1948,11 +1951,29 @@ private String openBankItemName = null;
                 }
                 public void mouseEntered(MouseEvent e)
                 {
-                    if (idx != activeTab) tab.setForeground(TEXT_PRIMARY);
+                    if (idx != activeTab) {
+                        if (tabAnimTimer[0] != null) tabAnimTimer[0].stop();
+                        tabAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                            if (idx == activeTab) { tabAnimTimer[0].stop(); return; }
+                            tabHoverProgress[0] = Math.min(1f, tabHoverProgress[0] + 0.15f);
+                            tab.setForeground(lerpColor(TAB_INACTIVE, TEXT_PRIMARY, tabHoverProgress[0]));
+                            if (tabHoverProgress[0] >= 1f) tabAnimTimer[0].stop();
+                        });
+                        tabAnimTimer[0].start();
+                    }
                 }
                 public void mouseExited(MouseEvent e)
                 {
-                    if (idx != activeTab) tab.setForeground(TAB_INACTIVE);
+                    if (idx != activeTab) {
+                        if (tabAnimTimer[0] != null) tabAnimTimer[0].stop();
+                        tabAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                            if (idx == activeTab) { tabAnimTimer[0].stop(); return; }
+                            tabHoverProgress[0] = Math.max(0f, tabHoverProgress[0] - 0.15f);
+                            tab.setForeground(lerpColor(TAB_INACTIVE, TEXT_PRIMARY, tabHoverProgress[0]));
+                            if (tabHoverProgress[0] <= 0f) tabAnimTimer[0].stop();
+                        });
+                        tabAnimTimer[0].start();
+                    }
                 }
             });
             tabLabels[i] = tab;
@@ -2361,9 +2382,7 @@ private String openBankItemName = null;
         footer.setMaximumSize(new Dimension(220, 24));
 
         boolean isWatched = pinnedItems.contains(item[0]);
-        JButton watchBtn = buildFooterBtn(isWatched ? "✓ Watch" : "+ Watch", isWatched);
-        if (isWatchlist || isWatched)
-            watchBtn.setBorder(createRoundedLineBorder(GOLD, 1, RADIUS_BUTTON));
+        JButton watchBtn = buildFooterBtn(isWatched ? "✓ Watch" : "+ Watch", isWatched || isWatchlist);
         watchBtn.addActionListener(e -> {
             boolean currentlyWatched = pinnedItems.contains(item[0]);
             if (isWatchlist || currentlyWatched)
@@ -2385,10 +2404,8 @@ private String openBankItemName = null;
             // Update button live
             boolean nowWatched = pinnedItems.contains(item[0]);
             watchBtn.setText(isWatchlist ? "- Unwatch" : (nowWatched ? "✓ Watch" : "+ Watch"));
-            watchBtn.setBorder(BorderFactory.createLineBorder(
-                (isWatchlist || nowWatched) ? GOLD : new Color(58, 53, 48)
-            ));
-            watchBtn.setForeground(nowWatched || isWatchlist ? GOLD : TAB_INACTIVE);
+            watchBtn.putClientProperty(FOOTER_BTN_GOLD_KEY, isWatchlist || nowWatched);
+            watchBtn.repaint();
         });
         footer.add(watchBtn);
 
@@ -3727,15 +3744,28 @@ whatsNewBox.add(seeMoreLabel);
         pinnedLabel.setFont(new Font("Monospaced", Font.PLAIN, FONT_SECTION));
         pinnedLabel.setBorder(new EmptyBorder(4, 7, 2, 7));
 
-        JLabel editBtn = new JLabel(watchlistEditMode ? "Done" : "Edit");
-        editBtn.setForeground(TAB_INACTIVE);
+        final float[] editBtnHoverProgress = {0f};
+        final javax.swing.Timer[] editBtnAnimTimer = {null};
+        JLabel editBtn = new JLabel(watchlistEditMode ? "Done" : "Edit") {
+            @Override
+            protected void paintComponent(Graphics g) {
+                if (watchlistEditMode || editBtnHoverProgress[0] > 0f) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    Color borderColor = watchlistEditMode ? GOLD : lerpColor(new Color(0, 0, 0, 0), TAB_INACTIVE, editBtnHoverProgress[0]);
+                    g2.setColor(borderColor);
+                    g2.setStroke(new java.awt.BasicStroke(1));
+                    g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
+                    g2.dispose();
+                }
+                super.paintComponent(g);
+            }
+        };
+        editBtn.setForeground(watchlistEditMode ? GOLD : TAB_INACTIVE);
         editBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
-        editBtn.setBorder(watchlistEditMode ?
-                BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(GOLD), new EmptyBorder(3, 6, 1, 6)) :
-                new EmptyBorder(4, 7, 2, 7));
+        editBtn.setBorder(new EmptyBorder(4, 7, 2, 7));
         editBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         editBtn.setVisible(watchlistEditMode);
-        editBtn.setForeground(watchlistEditMode ? GOLD : TAB_INACTIVE);
 
         pinnedHeader.add(pinnedLabel, BorderLayout.WEST);
         pinnedHeader.add(editBtn, BorderLayout.EAST);
@@ -3751,23 +3781,35 @@ whatsNewBox.add(seeMoreLabel);
             @Override
             public void mouseEntered(MouseEvent e) {
                 editBtn.setVisible(true);
-                editBtn.setForeground(watchlistEditMode ? GOLD : TAB_INACTIVE);
-                editBtn.setBorder(BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(watchlistEditMode ? GOLD : TAB_INACTIVE),
-                        new EmptyBorder(3, 6, 1, 6)));
+                if (!watchlistEditMode) {
+                    if (editBtnAnimTimer[0] != null) editBtnAnimTimer[0].stop();
+                    editBtnAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                        editBtnHoverProgress[0] = Math.min(1f, editBtnHoverProgress[0] + 0.15f);
+                        editBtn.repaint();
+                        if (editBtnHoverProgress[0] >= 1f) editBtnAnimTimer[0].stop();
+                    });
+                    editBtnAnimTimer[0].start();
+                }
             }
             @Override
             public void mouseExited(MouseEvent e) {
-                editBtn.setForeground(watchlistEditMode ? GOLD : TAB_INACTIVE);
-                editBtn.setBorder(watchlistEditMode ?
-                        BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(GOLD), new EmptyBorder(3, 6, 1, 6)) :
-                        new EmptyBorder(4, 7, 2, 7));
-                if (!watchlistEditMode) editBtn.setVisible(false);
+                if (!watchlistEditMode) {
+                    if (editBtnAnimTimer[0] != null) editBtnAnimTimer[0].stop();
+                    editBtnAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                        editBtnHoverProgress[0] = Math.max(0f, editBtnHoverProgress[0] - 0.15f);
+                        editBtn.repaint();
+                        if (editBtnHoverProgress[0] <= 0f) { editBtnAnimTimer[0].stop(); editBtn.setVisible(false); }
+                    });
+                    editBtnAnimTimer[0].start();
+                }
             }
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (currentOpenWatchlistDetail != null) return;
                 watchlistEditMode = !watchlistEditMode;
+                editBtn.setText(watchlistEditMode ? "Done" : "Edit");
+                editBtn.setForeground(watchlistEditMode ? GOLD : TAB_INACTIVE);
+                editBtnHoverProgress[0] = 0f;
                 showTab(0);
             }
         });
@@ -4084,6 +4126,8 @@ whatsNewBox.add(seeMoreLabel);
             arrowPanel.add(downArrow);
             arrowPanel.add(Box.createVerticalGlue());
 
+            final float[] upArrowHoverProgress = {0f};
+            final javax.swing.Timer[] upArrowAnimTimer = {null};
             upArrow.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
@@ -4095,11 +4139,31 @@ whatsNewBox.add(seeMoreLabel);
                     }
                 }
                 @Override
-                public void mouseEntered(MouseEvent e) { if (index > 0) upArrow.setForeground(GOLD); }
+                public void mouseEntered(MouseEvent e) {
+                    if (index > 0) {
+                        if (upArrowAnimTimer[0] != null) upArrowAnimTimer[0].stop();
+                        upArrowAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                            upArrowHoverProgress[0] = Math.min(1f, upArrowHoverProgress[0] + 0.15f);
+                            upArrow.setForeground(lerpColor(TEXT_DIM, GOLD, upArrowHoverProgress[0]));
+                            if (upArrowHoverProgress[0] >= 1f) upArrowAnimTimer[0].stop();
+                        });
+                        upArrowAnimTimer[0].start();
+                    }
+                }
                 @Override
-                public void mouseExited(MouseEvent e) { upArrow.setForeground(TEXT_DIM); }
+                public void mouseExited(MouseEvent e) {
+                    if (upArrowAnimTimer[0] != null) upArrowAnimTimer[0].stop();
+                    upArrowAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                        upArrowHoverProgress[0] = Math.max(0f, upArrowHoverProgress[0] - 0.15f);
+                        upArrow.setForeground(lerpColor(TEXT_DIM, GOLD, upArrowHoverProgress[0]));
+                        if (upArrowHoverProgress[0] <= 0f) upArrowAnimTimer[0].stop();
+                    });
+                    upArrowAnimTimer[0].start();
+                }
             });
 
+            final float[] downArrowHoverProgress = {0f};
+            final javax.swing.Timer[] downArrowAnimTimer = {null};
             downArrow.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
@@ -4111,9 +4175,27 @@ whatsNewBox.add(seeMoreLabel);
                     }
                 }
                 @Override
-                public void mouseEntered(MouseEvent e) { if (index < totalItems - 1) downArrow.setForeground(GOLD); }
+                public void mouseEntered(MouseEvent e) {
+                    if (index < totalItems - 1) {
+                        if (downArrowAnimTimer[0] != null) downArrowAnimTimer[0].stop();
+                        downArrowAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                            downArrowHoverProgress[0] = Math.min(1f, downArrowHoverProgress[0] + 0.15f);
+                            downArrow.setForeground(lerpColor(TEXT_DIM, GOLD, downArrowHoverProgress[0]));
+                            if (downArrowHoverProgress[0] >= 1f) downArrowAnimTimer[0].stop();
+                        });
+                        downArrowAnimTimer[0].start();
+                    }
+                }
                 @Override
-                public void mouseExited(MouseEvent e) { downArrow.setForeground(TEXT_DIM); }
+                public void mouseExited(MouseEvent e) {
+                    if (downArrowAnimTimer[0] != null) downArrowAnimTimer[0].stop();
+                    downArrowAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                        downArrowHoverProgress[0] = Math.max(0f, downArrowHoverProgress[0] - 0.15f);
+                        downArrow.setForeground(lerpColor(TEXT_DIM, GOLD, downArrowHoverProgress[0]));
+                        if (downArrowHoverProgress[0] <= 0f) downArrowAnimTimer[0].stop();
+                    });
+                    downArrowAnimTimer[0].start();
+                }
             });
 
             row.add(arrowPanel, BorderLayout.EAST);
@@ -6558,18 +6640,23 @@ whatsNewBox.add(seeMoreLabel);
             public void paint(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                // Explicitly clear our full square bounds to the parent's background color first. Without
-                // this, the four small corner triangles outside the rounded clip are never painted by us,
-                // and depend on the parent/RepaintManager correctly re-painting behind us on every repaint -
-                // which isn't guaranteed with incremental/damaged-region repaints, leaving stale pixels
-                // from whatever was previously on screen at those exact corner pixels (varies by scroll/layout).
                 java.awt.Container parent = getParent();
                 g2.setColor(parent != null ? parent.getBackground() : getBackground());
                 g2.fillRect(0, 0, getWidth(), getHeight());
                 java.awt.geom.RoundRectangle2D roundedShape = new java.awt.geom.RoundRectangle2D.Float(
                         0, 0, getWidth(), getHeight(), RADIUS_ICON * 2, RADIUS_ICON * 2);
+                java.awt.Shape oldClip = g2.getClip();
                 g2.clip(roundedShape);
                 super.paint(g2);
+                g2.setClip(oldClip);
+                Color normalBorder = new Color(42, 37, 40), hoverBorder = new Color(100, 80, 20);
+                Boolean open = (Boolean) getClientProperty("geCompanionFlippingStatsOpen");
+                Float hoverProg = (Float) getClientProperty("geCompanionFlippingStatsHover");
+                float prog = hoverProg != null ? hoverProg : 0f;
+                Color borderColor = Boolean.TRUE.equals(open) ? new Color(140, 110, 30) : lerpColor(normalBorder, hoverBorder, prog);
+                g2.setColor(borderColor);
+                g2.setStroke(new java.awt.BasicStroke(1));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, RADIUS_ICON * 2, RADIUS_ICON * 2);
                 g2.dispose();
             }
         };
@@ -6577,7 +6664,7 @@ whatsNewBox.add(seeMoreLabel);
         iconBoxWithTooltip.setMaximumSize(new Dimension(42, 42));
         iconBoxWithTooltip.setMinimumSize(new Dimension(42, 42));
         iconBoxWithTooltip.setBackground(new Color(14, 12, 13));
-        iconBoxWithTooltip.setBorder(createRoundedLineBorder(new Color(42, 37, 40), 1, RADIUS_ICON));
+        iconBoxWithTooltip.setBorder(new EmptyBorder(1, 1, 1, 1));
         iconBoxWithTooltip.setToolTipText(finalTooltipHtml);
 
         // Load icon directly into iconBoxWithTooltip
@@ -6690,15 +6777,35 @@ whatsNewBox.add(seeMoreLabel);
         // Hover border highlight + ▲ indicator
         iconBoxWithTooltip.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         iconBoxWithTooltip.setToolTipText(null); // remove old tooltip — replaced by floating panel
+        final javax.swing.Timer[] statsIconAnimTimer = {null};
         iconBoxWithTooltip.addMouseListener(new java.awt.event.MouseAdapter() {
             @Override
             public void mouseEntered(java.awt.event.MouseEvent e) {
-                iconBoxWithTooltip.setBorder(createRoundedLineBorder(new Color(100, 80, 20), 1, RADIUS_ICON));
+                if (!statsOpen[0]) {
+                    if (statsIconAnimTimer[0] != null) statsIconAnimTimer[0].stop();
+                    statsIconAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                        Float p = (Float) iconBoxWithTooltip.getClientProperty("geCompanionFlippingStatsHover");
+                        float prog = Math.min(1f, (p != null ? p : 0f) + 0.15f);
+                        iconBoxWithTooltip.putClientProperty("geCompanionFlippingStatsHover", prog);
+                        iconBoxWithTooltip.repaint();
+                        if (prog >= 1f) statsIconAnimTimer[0].stop();
+                    });
+                    statsIconAnimTimer[0].start();
+                }
             }
             @Override
             public void mouseExited(java.awt.event.MouseEvent e) {
-                if (!statsOpen[0])
-                    iconBoxWithTooltip.setBorder(createRoundedLineBorder(new Color(42, 37, 40), 1, RADIUS_ICON));
+                if (!statsOpen[0]) {
+                    if (statsIconAnimTimer[0] != null) statsIconAnimTimer[0].stop();
+                    statsIconAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                        Float p = (Float) iconBoxWithTooltip.getClientProperty("geCompanionFlippingStatsHover");
+                        float prog = Math.max(0f, (p != null ? p : 0f) - 0.15f);
+                        iconBoxWithTooltip.putClientProperty("geCompanionFlippingStatsHover", prog);
+                        iconBoxWithTooltip.repaint();
+                        if (prog <= 0f) statsIconAnimTimer[0].stop();
+                    });
+                    statsIconAnimTimer[0].start();
+                }
             }
             @Override
             public void mouseClicked(java.awt.event.MouseEvent e) {
@@ -6710,7 +6817,8 @@ whatsNewBox.add(seeMoreLabel);
                     // Close
 // Slide down animation
                     statsOpen[0] = false;
-                    iconBoxWithTooltip.setBorder(createRoundedLineBorder(new Color(42, 37, 40), 1, RADIUS_ICON));
+                    iconBoxWithTooltip.putClientProperty("geCompanionFlippingStatsOpen", false);
+                    iconBoxWithTooltip.repaint();
                     int[] curH2 = {statsFloatPanel.getHeight()};
                     final int closingY = statsFloatPanel.getY();
                     final int closingX = statsFloatPanel.getX();
@@ -6761,7 +6869,9 @@ whatsNewBox.add(seeMoreLabel);
                         }
                     });
                     openTimer.start();
-                    iconBoxWithTooltip.setBorder(createRoundedLineBorder(new Color(140, 110, 30), 1, RADIUS_ICON));
+                    iconBoxWithTooltip.putClientProperty("geCompanionFlippingStatsOpen", true);
+                    iconBoxWithTooltip.putClientProperty("geCompanionFlippingStatsHover", 0f);
+                    iconBoxWithTooltip.repaint();
                 }
             }
         });
@@ -8474,24 +8584,38 @@ whatsNewBox.add(seeMoreLabel);
         return null;
     }
 
+    private static final String FOOTER_BTN_GOLD_KEY = "geCompanionFooterBtnGold";
+
     private JButton buildFooterBtn(String text, boolean isGold)
     {
+        final float[] hoverProgress = {0f};
+        final javax.swing.Timer[] animTimer = {null};
         JButton btn = new JButton(text) {
             @Override
             protected void paintComponent(java.awt.Graphics g) {
+                Boolean goldState = (Boolean) getClientProperty(FOOTER_BTN_GOLD_KEY);
+                boolean gold = Boolean.TRUE.equals(goldState);
+                Color normalFg = TAB_INACTIVE, hoverFg = TEXT_SECONDARY;
+                Color normalBorder = new Color(58, 53, 48), hoverBorder = TEXT_SECONDARY;
+                Color fg = gold ? GOLD : lerpColor(normalFg, hoverFg, hoverProgress[0]);
+                Color borderColor = gold ? GOLD : lerpColor(normalBorder, hoverBorder, hoverProgress[0]);
+                setForeground(fg);
                 java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
                 g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(getBackground());
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
+                g2.setColor(borderColor);
+                g2.setStroke(new java.awt.BasicStroke(1));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
                 g2.dispose();
                 super.paintComponent(g);
             }
         };
+        btn.putClientProperty(FOOTER_BTN_GOLD_KEY, isGold);
         btn.setContentAreaFilled(false);
         btn.setOpaque(false);
-        btn.setForeground(isGold ? GOLD : TAB_INACTIVE);
         btn.setBackground(BG_DETAIL);
-        btn.setBorder(createRoundedLineBorder(new Color(58, 53, 48), 1, RADIUS_BUTTON));
+        btn.setBorder(new EmptyBorder(1, 1, 1, 1));
         btn.setFont(new Font("Monospaced", Font.PLAIN, FONT_BUTTON));
         btn.setFocusPainted(false);
         btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -8501,20 +8625,30 @@ whatsNewBox.add(seeMoreLabel);
             @Override
             public void mouseEntered(MouseEvent e)
             {
-                if (!isGold)
+                if (!Boolean.TRUE.equals(btn.getClientProperty(FOOTER_BTN_GOLD_KEY)))
                 {
-                    btn.setForeground(TEXT_SECONDARY);
-                    btn.setBorder(createRoundedLineBorder(TEXT_SECONDARY, 1, RADIUS_BUTTON));
+                    if (animTimer[0] != null) animTimer[0].stop();
+                    animTimer[0] = new javax.swing.Timer(16, ev -> {
+                        hoverProgress[0] = Math.min(1f, hoverProgress[0] + 0.15f);
+                        btn.repaint();
+                        if (hoverProgress[0] >= 1f) animTimer[0].stop();
+                    });
+                    animTimer[0].start();
                 }
             }
 
             @Override
             public void mouseExited(MouseEvent e)
             {
-                if (!isGold)
+                if (!Boolean.TRUE.equals(btn.getClientProperty(FOOTER_BTN_GOLD_KEY)))
                 {
-                    btn.setForeground(TAB_INACTIVE);
-                    btn.setBorder(createRoundedLineBorder(new Color(58, 53, 48), 1, RADIUS_BUTTON));
+                    if (animTimer[0] != null) animTimer[0].stop();
+                    animTimer[0] = new javax.swing.Timer(16, ev -> {
+                        hoverProgress[0] = Math.max(0f, hoverProgress[0] - 0.15f);
+                        btn.repaint();
+                        if (hoverProgress[0] <= 0f) animTimer[0].stop();
+                    });
+                    animTimer[0].start();
                 }
             }
         });
