@@ -92,6 +92,15 @@ public class GECompanionPanel extends PluginPanel
     private static final Color VARIANT_POPUP_MULTI_PURPLE = new Color(0xB8, 0x8B, 0xFF);
     private static final String CURRENT_VERSION = "1.2.3";
 
+    // Linear-interpolates between two colors for smooth hover-fade animations. progress 0 = a, 1 = b.
+    private static Color lerpColor(Color a, Color b, float progress) {
+        progress = Math.max(0f, Math.min(1f, progress));
+        int r = (int) (a.getRed() + (b.getRed() - a.getRed()) * progress);
+        int g = (int) (a.getGreen() + (b.getGreen() - a.getGreen()) * progress);
+        int bl = (int) (a.getBlue() + (b.getBlue() - a.getBlue()) * progress);
+        return new Color(r, g, bl);
+    }
+
     // Reusable rounded-corner line border for Stage 1's geometry pass. Mirrors BorderFactory.createLineBorder's
 // role but draws rounded corners. Use createRoundedLineBorder(color, thickness, radius) as a drop-in
 // replacement where a component's role calls for subtle rounding (see RADIUS_* constants above).
@@ -6372,13 +6381,24 @@ whatsNewBox.add(seeMoreLabel);
         String[] frames = {"1H", "6H", "24H"};
         for (String frame : frames)
         {
+            final float[] hoverProgress = {0f};
+            final javax.swing.Timer[] animTimer = {null};
             JButton btn = new JButton(frame) {
                 @Override
                 protected void paintComponent(java.awt.Graphics g) {
+                    boolean isActive = frame.equals(activeTimeFrame);
+                    Color normalFg = TAB_INACTIVE, hoverFg = new Color(0x8F, 0x87, 0x7D);
+                    Color normalBorder = new Color(58, 53, 48), hoverBorder = new Color(0x66, 0x5E, 0x55);
+                    Color fg = isActive ? GOLD : lerpColor(normalFg, hoverFg, hoverProgress[0]);
+                    Color borderColor = isActive ? GOLD : lerpColor(normalBorder, hoverBorder, hoverProgress[0]);
+                    setForeground(fg);
                     java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
                     g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
-                    g2.setColor(getBackground());
+                    g2.setColor(isActive ? new Color(26, 21, 0) : new Color(14, 12, 13));
                     g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_TIMEFRAME * 2, RADIUS_TIMEFRAME * 2);
+                    g2.setColor(borderColor);
+                    g2.setStroke(new java.awt.BasicStroke(1));
+                    g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, RADIUS_TIMEFRAME * 2, RADIUS_TIMEFRAME * 2);
                     g2.dispose();
                     super.paintComponent(g);
                 }
@@ -6388,29 +6408,31 @@ whatsNewBox.add(seeMoreLabel);
             btn.setContentAreaFilled(false);
             btn.setOpaque(false);
             btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            btn.setBackground(frame.equals(activeTimeFrame) ? new Color(26, 21, 0) : new Color(14, 12, 13));
-            btn.setForeground(frame.equals(activeTimeFrame) ? GOLD : TAB_INACTIVE);
-            btn.setBorder(createRoundedLineBorder(frame.equals(activeTimeFrame) ? GOLD : new Color(58, 53, 48), 1, RADIUS_TIMEFRAME));
+            btn.setBorder(new EmptyBorder(1, 1, 1, 1));
             btn.addMouseListener(new MouseAdapter()
             {
                 @Override
                 public void mouseEntered(MouseEvent e)
                 {
-                    if (!frame.equals(activeTimeFrame))
-                    {
-                        btn.setForeground(new Color(0x8F, 0x87, 0x7D));
-                        btn.setBorder(createRoundedLineBorder(new Color(0x66, 0x5E, 0x55), 1, RADIUS_TIMEFRAME));
-                    }
+                    if (animTimer[0] != null) animTimer[0].stop();
+                    animTimer[0] = new javax.swing.Timer(16, ev -> {
+                        hoverProgress[0] = Math.min(1f, hoverProgress[0] + 0.15f);
+                        btn.repaint();
+                        if (hoverProgress[0] >= 1f) animTimer[0].stop();
+                    });
+                    animTimer[0].start();
                 }
 
                 @Override
                 public void mouseExited(MouseEvent e)
                 {
-                    if (!frame.equals(activeTimeFrame))
-                    {
-                        btn.setForeground(TAB_INACTIVE);
-                        btn.setBorder(createRoundedLineBorder(new Color(58, 53, 48), 1, RADIUS_TIMEFRAME));
-                    }
+                    if (animTimer[0] != null) animTimer[0].stop();
+                    animTimer[0] = new javax.swing.Timer(16, ev -> {
+                        hoverProgress[0] = Math.max(0f, hoverProgress[0] - 0.15f);
+                        btn.repaint();
+                        if (hoverProgress[0] <= 0f) animTimer[0].stop();
+                    });
+                    animTimer[0].start();
                 }
             });
             btn.addActionListener(e -> {
