@@ -2427,22 +2427,31 @@ private String openBankItemName = null;
         final JLabel[] statsLblHolder = {null};
         final JPanel[] statsHeaderHolder = {null};
 
+        final float[] chartBtnHoverProgress = {0f};
+        final javax.swing.Timer[] chartBtnAnimTimer = {null};
         JButton chartBtn = new JButton("▼ Show Price Chart") {
             @Override
             protected void paintComponent(java.awt.Graphics g) {
+                Color normalFg = TAB_INACTIVE, normalBorder = new Color(58, 53, 48);
+                Color hoverFg = TEXT_SECONDARY, hoverBorder = TEXT_SECONDARY;
+                Color fg = graphOpen[0] ? GOLD : lerpColor(normalFg, hoverFg, chartBtnHoverProgress[0]);
+                Color borderColor = graphOpen[0] ? GOLD : lerpColor(normalBorder, hoverBorder, chartBtnHoverProgress[0]);
+                setForeground(fg);
                 java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
                 g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(getBackground());
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
+                g2.setColor(borderColor);
+                g2.setStroke(new java.awt.BasicStroke(1));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
                 g2.dispose();
                 super.paintComponent(g);
             }
         };
         chartBtn.setContentAreaFilled(false);
         chartBtn.setOpaque(false);
-        chartBtn.setForeground(TAB_INACTIVE);
         chartBtn.setBackground(BG_DETAIL);
-        chartBtn.setBorder(createRoundedLineBorder(new Color(58, 53, 48), 1, RADIUS_BUTTON));
+        chartBtn.setBorder(new EmptyBorder(1, 1, 1, 1));
         chartBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_TAB));
         chartBtn.setFocusPainted(false);
         chartBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -2454,8 +2463,13 @@ private String openBankItemName = null;
             {
                 if (!graphOpen[0])
                 {
-                    chartBtn.setForeground(TEXT_SECONDARY);
-                    chartBtn.setBorder(createRoundedLineBorder(TEXT_SECONDARY, 1, RADIUS_BUTTON));
+                    if (chartBtnAnimTimer[0] != null) chartBtnAnimTimer[0].stop();
+                    chartBtnAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                        chartBtnHoverProgress[0] = Math.min(1f, chartBtnHoverProgress[0] + 0.15f);
+                        chartBtn.repaint();
+                        if (chartBtnHoverProgress[0] >= 1f) chartBtnAnimTimer[0].stop();
+                    });
+                    chartBtnAnimTimer[0].start();
                 }
             }
 
@@ -2464,8 +2478,13 @@ private String openBankItemName = null;
             {
                 if (!graphOpen[0])
                 {
-                    chartBtn.setForeground(TAB_INACTIVE);
-                    chartBtn.setBorder(createRoundedLineBorder(new Color(58, 53, 48), 1, RADIUS_BUTTON));
+                    if (chartBtnAnimTimer[0] != null) chartBtnAnimTimer[0].stop();
+                    chartBtnAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                        chartBtnHoverProgress[0] = Math.max(0f, chartBtnHoverProgress[0] - 0.15f);
+                        chartBtn.repaint();
+                        if (chartBtnHoverProgress[0] <= 0f) chartBtnAnimTimer[0].stop();
+                    });
+                    chartBtnAnimTimer[0].start();
                 }
             }
         });
@@ -2521,8 +2540,7 @@ private String openBankItemName = null;
                 graphWasOpen = true;
                 if (statsHeaderHolder[0] != null) statsHeaderHolder[0].setVisible(true);
                 chartBtn.setText("▲ Hide Price Chart");
-                chartBtn.setForeground(GOLD);
-                chartBtn.setBorder(createRoundedLineBorder(GOLD, 1, RADIUS_BUTTON));
+                chartBtn.repaint();
             } else {
                 // close animation
                 int fullH = graphViewport.getView() != null
@@ -2558,8 +2576,7 @@ private String openBankItemName = null;
                     if (statsHeaderHolder[0] != null) statsHeaderHolder[0].setBorder(BorderFactory.createLineBorder(new Color(42, 37, 32)));
                 }
                 chartBtn.setText("▼ Show Price Chart");
-                chartBtn.setForeground(TAB_INACTIVE);
-                chartBtn.setBorder(createRoundedLineBorder(new Color(58, 53, 48), 1, RADIUS_BUTTON));
+                chartBtn.repaint();
             }
         });
 
