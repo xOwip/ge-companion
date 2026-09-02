@@ -1897,10 +1897,28 @@ private String openBankItemName = null;
         refresh.setForeground(TAB_INACTIVE);
         refresh.setFont(new Font("Monospaced", Font.PLAIN, FONT_REFRESH));
         refresh.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        final float[] refreshHoverProgress = {0f};
+        final javax.swing.Timer[] refreshAnimTimer = {null};
         refresh.addMouseListener(new MouseAdapter()
         {
-            public void mouseEntered(MouseEvent e) { refresh.setForeground(GOLD); }
-            public void mouseExited(MouseEvent e) { refresh.setForeground(TAB_INACTIVE); }
+            public void mouseEntered(MouseEvent e) {
+                if (refreshAnimTimer[0] != null) refreshAnimTimer[0].stop();
+                refreshAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                    refreshHoverProgress[0] = Math.min(1f, refreshHoverProgress[0] + 0.15f);
+                    refresh.setForeground(lerpColor(TAB_INACTIVE, GOLD, refreshHoverProgress[0]));
+                    if (refreshHoverProgress[0] >= 1f) refreshAnimTimer[0].stop();
+                });
+                refreshAnimTimer[0].start();
+            }
+            public void mouseExited(MouseEvent e) {
+                if (refreshAnimTimer[0] != null) refreshAnimTimer[0].stop();
+                refreshAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                    refreshHoverProgress[0] = Math.max(0f, refreshHoverProgress[0] - 0.15f);
+                    refresh.setForeground(lerpColor(TAB_INACTIVE, GOLD, refreshHoverProgress[0]));
+                    if (refreshHoverProgress[0] <= 0f) refreshAnimTimer[0].stop();
+                });
+                refreshAnimTimer[0].start();
+            }
             public void mouseClicked(MouseEvent e)
             {
                 refresh.setForeground(GOLD);
@@ -3121,12 +3139,34 @@ whatsNewBox.add(seeMoreLabel);
                     removeBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
                     chipRow.add(chip, BorderLayout.CENTER);
                     chipRow.add(removeBtn, BorderLayout.EAST);
+                    final float[] chipHoverProgress = {0f};
+                    final javax.swing.Timer[] chipAnimTimer = {null};
                     chip.addMouseListener(new MouseAdapter()
                     {
                         public void mouseClicked(MouseEvent e) { searchField.setText(recentItem); }
-                        public void mouseEntered(MouseEvent e) { chip.setForeground(TEXT_PRIMARY); chipRow.setBackground(BG_ROW_HOVER); }
-                        public void mouseExited(MouseEvent e) { chip.setForeground(TAB_INACTIVE); chipRow.setBackground(BG_DARK); }
+                        public void mouseEntered(MouseEvent e) {
+                            if (chipAnimTimer[0] != null) chipAnimTimer[0].stop();
+                            chipAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                                chipHoverProgress[0] = Math.min(1f, chipHoverProgress[0] + 0.15f);
+                                chip.setForeground(lerpColor(TAB_INACTIVE, TEXT_PRIMARY, chipHoverProgress[0]));
+                                chipRow.setBackground(lerpColor(BG_DARK, BG_ROW_HOVER, chipHoverProgress[0]));
+                                if (chipHoverProgress[0] >= 1f) chipAnimTimer[0].stop();
+                            });
+                            chipAnimTimer[0].start();
+                        }
+                        public void mouseExited(MouseEvent e) {
+                            if (chipAnimTimer[0] != null) chipAnimTimer[0].stop();
+                            chipAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                                chipHoverProgress[0] = Math.max(0f, chipHoverProgress[0] - 0.15f);
+                                chip.setForeground(lerpColor(TAB_INACTIVE, TEXT_PRIMARY, chipHoverProgress[0]));
+                                chipRow.setBackground(lerpColor(BG_DARK, BG_ROW_HOVER, chipHoverProgress[0]));
+                                if (chipHoverProgress[0] <= 0f) chipAnimTimer[0].stop();
+                            });
+                            chipAnimTimer[0].start();
+                        }
                     });
+                    final float[] removeBtnHoverProgress = {0f};
+                    final javax.swing.Timer[] removeBtnAnimTimer = {null};
                     removeBtn.addMouseListener(new MouseAdapter()
                     {
                         public void mouseClicked(MouseEvent e)
@@ -3135,8 +3175,24 @@ whatsNewBox.add(seeMoreLabel);
                             saveRecentSearches();
                             onSearchChanged("");
                         }
-                        public void mouseEntered(MouseEvent e) { removeBtn.setForeground(TEXT_PRIMARY); }
-                        public void mouseExited(MouseEvent e) { removeBtn.setForeground(TEXT_DIM); }
+                        public void mouseEntered(MouseEvent e) {
+                            if (removeBtnAnimTimer[0] != null) removeBtnAnimTimer[0].stop();
+                            removeBtnAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                                removeBtnHoverProgress[0] = Math.min(1f, removeBtnHoverProgress[0] + 0.15f);
+                                removeBtn.setForeground(lerpColor(TEXT_DIM, TEXT_PRIMARY, removeBtnHoverProgress[0]));
+                                if (removeBtnHoverProgress[0] >= 1f) removeBtnAnimTimer[0].stop();
+                            });
+                            removeBtnAnimTimer[0].start();
+                        }
+                        public void mouseExited(MouseEvent e) {
+                            if (removeBtnAnimTimer[0] != null) removeBtnAnimTimer[0].stop();
+                            removeBtnAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                                removeBtnHoverProgress[0] = Math.max(0f, removeBtnHoverProgress[0] - 0.15f);
+                                removeBtn.setForeground(lerpColor(TEXT_DIM, TEXT_PRIMARY, removeBtnHoverProgress[0]));
+                                if (removeBtnHoverProgress[0] <= 0f) removeBtnAnimTimer[0].stop();
+                            });
+                            removeBtnAnimTimer[0].start();
+                        }
                     });
                     recentSearchesPanel.add(chipRow);
                 }
@@ -3798,7 +3854,7 @@ whatsNewBox.add(seeMoreLabel);
                     editBtnAnimTimer[0] = new javax.swing.Timer(16, ev -> {
                         editBtnHoverProgress[0] = Math.max(0f, editBtnHoverProgress[0] - 0.15f);
                         editBtn.repaint();
-                        if (editBtnHoverProgress[0] <= 0f) { editBtnAnimTimer[0].stop(); editBtn.setVisible(false); }
+                        if (editBtnHoverProgress[0] <= 0f) { editBtnAnimTimer[0].stop(); }
                     });
                     editBtnAnimTimer[0].start();
                 }
@@ -5186,10 +5242,28 @@ whatsNewBox.add(seeMoreLabel);
             gMinusBtn.setForeground(TEXT_DIM);
             gMinusBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
             gMinusBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            final float[] gMinusHoverProgress = {0f};
+            final javax.swing.Timer[] gMinusAnimTimer = {null};
             gMinusBtn.addMouseListener(new MouseAdapter()
             {
-                public void mouseEntered(MouseEvent e) { gMinusBtn.setForeground(TEXT_PRIMARY); }
-                public void mouseExited(MouseEvent e) { gMinusBtn.setForeground(TEXT_DIM); }
+                public void mouseEntered(MouseEvent e) {
+                    if (gMinusAnimTimer[0] != null) gMinusAnimTimer[0].stop();
+                    gMinusAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                        gMinusHoverProgress[0] = Math.min(1f, gMinusHoverProgress[0] + 0.15f);
+                        gMinusBtn.setForeground(lerpColor(TEXT_DIM, TEXT_PRIMARY, gMinusHoverProgress[0]));
+                        if (gMinusHoverProgress[0] >= 1f) gMinusAnimTimer[0].stop();
+                    });
+                    gMinusAnimTimer[0].start();
+                }
+                public void mouseExited(MouseEvent e) {
+                    if (gMinusAnimTimer[0] != null) gMinusAnimTimer[0].stop();
+                    gMinusAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                        gMinusHoverProgress[0] = Math.max(0f, gMinusHoverProgress[0] - 0.15f);
+                        gMinusBtn.setForeground(lerpColor(TEXT_DIM, TEXT_PRIMARY, gMinusHoverProgress[0]));
+                        if (gMinusHoverProgress[0] <= 0f) gMinusAnimTimer[0].stop();
+                    });
+                    gMinusAnimTimer[0].start();
+                }
                 public void mouseClicked(MouseEvent e)
                 {
                     if (config.gainersCount() > 1)
@@ -5206,10 +5280,28 @@ whatsNewBox.add(seeMoreLabel);
             gPlusBtn.setForeground(TEXT_DIM);
             gPlusBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
             gPlusBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            final float[] gPlusHoverProgress = {0f};
+            final javax.swing.Timer[] gPlusAnimTimer = {null};
             gPlusBtn.addMouseListener(new MouseAdapter()
             {
-                public void mouseEntered(MouseEvent e) { gPlusBtn.setForeground(TEXT_PRIMARY); }
-                public void mouseExited(MouseEvent e) { gPlusBtn.setForeground(TEXT_DIM); }
+                public void mouseEntered(MouseEvent e) {
+                    if (gPlusAnimTimer[0] != null) gPlusAnimTimer[0].stop();
+                    gPlusAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                        gPlusHoverProgress[0] = Math.min(1f, gPlusHoverProgress[0] + 0.15f);
+                        gPlusBtn.setForeground(lerpColor(TEXT_DIM, TEXT_PRIMARY, gPlusHoverProgress[0]));
+                        if (gPlusHoverProgress[0] >= 1f) gPlusAnimTimer[0].stop();
+                    });
+                    gPlusAnimTimer[0].start();
+                }
+                public void mouseExited(MouseEvent e) {
+                    if (gPlusAnimTimer[0] != null) gPlusAnimTimer[0].stop();
+                    gPlusAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                        gPlusHoverProgress[0] = Math.max(0f, gPlusHoverProgress[0] - 0.15f);
+                        gPlusBtn.setForeground(lerpColor(TEXT_DIM, TEXT_PRIMARY, gPlusHoverProgress[0]));
+                        if (gPlusHoverProgress[0] <= 0f) gPlusAnimTimer[0].stop();
+                    });
+                    gPlusAnimTimer[0].start();
+                }
                 public void mouseClicked(MouseEvent e)
                 {
                     if (config.gainersCount() < 10)
@@ -5365,10 +5457,28 @@ whatsNewBox.add(seeMoreLabel);
             lMinusBtn.setForeground(TEXT_DIM);
             lMinusBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
             lMinusBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            final float[] lMinusHoverProgress = {0f};
+            final javax.swing.Timer[] lMinusAnimTimer = {null};
             lMinusBtn.addMouseListener(new MouseAdapter()
             {
-                public void mouseEntered(MouseEvent e) { lMinusBtn.setForeground(TEXT_PRIMARY); }
-                public void mouseExited(MouseEvent e) { lMinusBtn.setForeground(TEXT_DIM); }
+                public void mouseEntered(MouseEvent e) {
+                    if (lMinusAnimTimer[0] != null) lMinusAnimTimer[0].stop();
+                    lMinusAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                        lMinusHoverProgress[0] = Math.min(1f, lMinusHoverProgress[0] + 0.15f);
+                        lMinusBtn.setForeground(lerpColor(TEXT_DIM, TEXT_PRIMARY, lMinusHoverProgress[0]));
+                        if (lMinusHoverProgress[0] >= 1f) lMinusAnimTimer[0].stop();
+                    });
+                    lMinusAnimTimer[0].start();
+                }
+                public void mouseExited(MouseEvent e) {
+                    if (lMinusAnimTimer[0] != null) lMinusAnimTimer[0].stop();
+                    lMinusAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                        lMinusHoverProgress[0] = Math.max(0f, lMinusHoverProgress[0] - 0.15f);
+                        lMinusBtn.setForeground(lerpColor(TEXT_DIM, TEXT_PRIMARY, lMinusHoverProgress[0]));
+                        if (lMinusHoverProgress[0] <= 0f) lMinusAnimTimer[0].stop();
+                    });
+                    lMinusAnimTimer[0].start();
+                }
                 public void mouseClicked(MouseEvent e)
                 {
                     if (config.losersCount() > 1)
@@ -5385,10 +5495,28 @@ whatsNewBox.add(seeMoreLabel);
             lPlusBtn.setForeground(TEXT_DIM);
             lPlusBtn.setFont(new Font("Monospaced", Font.PLAIN, FONT_LIMIT));
             lPlusBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            final float[] lPlusHoverProgress = {0f};
+            final javax.swing.Timer[] lPlusAnimTimer = {null};
             lPlusBtn.addMouseListener(new MouseAdapter()
             {
-                public void mouseEntered(MouseEvent e) { lPlusBtn.setForeground(TEXT_PRIMARY); }
-                public void mouseExited(MouseEvent e) { lPlusBtn.setForeground(TEXT_DIM); }
+                public void mouseEntered(MouseEvent e) {
+                    if (lPlusAnimTimer[0] != null) lPlusAnimTimer[0].stop();
+                    lPlusAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                        lPlusHoverProgress[0] = Math.min(1f, lPlusHoverProgress[0] + 0.15f);
+                        lPlusBtn.setForeground(lerpColor(TEXT_DIM, TEXT_PRIMARY, lPlusHoverProgress[0]));
+                        if (lPlusHoverProgress[0] >= 1f) lPlusAnimTimer[0].stop();
+                    });
+                    lPlusAnimTimer[0].start();
+                }
+                public void mouseExited(MouseEvent e) {
+                    if (lPlusAnimTimer[0] != null) lPlusAnimTimer[0].stop();
+                    lPlusAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                        lPlusHoverProgress[0] = Math.max(0f, lPlusHoverProgress[0] - 0.15f);
+                        lPlusBtn.setForeground(lerpColor(TEXT_DIM, TEXT_PRIMARY, lPlusHoverProgress[0]));
+                        if (lPlusHoverProgress[0] <= 0f) lPlusAnimTimer[0].stop();
+                    });
+                    lPlusAnimTimer[0].start();
+                }
                 public void mouseClicked(MouseEvent e)
                 {
                     if (config.losersCount() < 10)
