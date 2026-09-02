@@ -2286,7 +2286,7 @@ private String openBankItemName = null;
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(getBackground());
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_ICON * 2, RADIUS_ICON * 2);
                 g2.dispose();
                 super.paintComponent(g);
             }
@@ -2296,7 +2296,7 @@ private String openBankItemName = null;
                 g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(new Color(50, 46, 42));
                 g2.setStroke(new java.awt.BasicStroke(1));
-                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, RADIUS_ICON * 2, RADIUS_ICON * 2);
                 g2.dispose();
             }
         };
@@ -2340,7 +2340,7 @@ private String openBankItemName = null;
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(getBackground());
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_ICON * 2, RADIUS_ICON * 2);
                 g2.dispose();
                 super.paintComponent(g);
             }
@@ -2350,7 +2350,7 @@ private String openBankItemName = null;
                 g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(new Color(50, 46, 42));
                 g2.setStroke(new java.awt.BasicStroke(1));
-                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, RADIUS_ICON * 2, RADIUS_ICON * 2);
                 g2.dispose();
             }
         };
@@ -2670,7 +2670,7 @@ private String openBankItemName = null;
                     Graphics2D g2 = (Graphics2D) g.create();
                     g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
                     g2.setColor(getBackground());
-                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_ICON * 2, RADIUS_ICON * 2);
                     g2.dispose();
                     super.paintComponent(g);
                 }
@@ -2680,7 +2680,7 @@ private String openBankItemName = null;
                     g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
                     g2.setColor(new Color(50, 46, 42));
                     g2.setStroke(new java.awt.BasicStroke(1));
-                    g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
+                    g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, RADIUS_ICON * 2, RADIUS_ICON * 2);
                     g2.dispose();
                 }
             };
@@ -8703,7 +8703,7 @@ whatsNewBox.add(seeMoreLabel);
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(getBackground());
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), RADIUS_ICON * 2, RADIUS_ICON * 2);
                 g2.dispose();
                 super.paintComponent(g);
             }
@@ -8713,7 +8713,7 @@ whatsNewBox.add(seeMoreLabel);
                 g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING, java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(new Color(50, 46, 42));
                 g2.setStroke(new java.awt.BasicStroke(1));
-                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, RADIUS_BUTTON * 2, RADIUS_BUTTON * 2);
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, RADIUS_ICON * 2, RADIUS_ICON * 2);
                 g2.dispose();
             }
         };
