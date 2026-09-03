@@ -3329,7 +3329,9 @@ whatsNewBox.add(seeMoreLabel);
                 int fh = getHeight() - in.top - in.bottom;
                 java.awt.geom.RoundRectangle2D roundedShape = new java.awt.geom.RoundRectangle2D.Float(
                         fx, fy, fw, fh, RADIUS_CARD * 2, RADIUS_CARD * 2);
-                g2.setColor(lerpColor(rowBg, BG_ROW_HOVER, rowHoverProgress[0]));
+                Boolean expandedForFill = (Boolean) getClientProperty(ROW_EXPANDED_GOLD_KEY);
+                Color fillColor = Boolean.TRUE.equals(expandedForFill) ? new Color(32, 30, 30) : lerpColor(rowBg, BG_ROW_HOVER, rowHoverProgress[0]);
+                g2.setColor(fillColor);
                 g2.fill(roundedShape);
                 g2.dispose();
             }
@@ -3379,7 +3381,8 @@ whatsNewBox.add(seeMoreLabel);
                 } else {
                     shape = new java.awt.geom.RoundRectangle2D.Float(0, 0, w, h, r, r);
                 }
-                g2.setColor(lerpColor(rowBg, BG_ROW_HOVER, rowHoverProgress[0]));
+                Color rowFillColor = Boolean.TRUE.equals(expanded) ? new Color(32, 30, 30) : lerpColor(rowBg, BG_ROW_HOVER, rowHoverProgress[0]);
+                g2.setColor(rowFillColor);
                 g2.fill(shape);
                 g2.dispose();
                 super.paintComponent(g);
