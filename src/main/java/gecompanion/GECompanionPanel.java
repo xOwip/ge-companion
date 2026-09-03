@@ -3330,7 +3330,7 @@ whatsNewBox.add(seeMoreLabel);
                 java.awt.geom.RoundRectangle2D roundedShape = new java.awt.geom.RoundRectangle2D.Float(
                         fx, fy, fw, fh, RADIUS_CARD * 2, RADIUS_CARD * 2);
                 Boolean expandedForFill = (Boolean) getClientProperty(ROW_EXPANDED_GOLD_KEY);
-                Color fillColor = Boolean.TRUE.equals(expandedForFill) ? new Color(26, 24, 24) : lerpColor(rowBg, BG_ROW_HOVER, rowHoverProgress[0]);
+                Color fillColor = Boolean.TRUE.equals(expandedForFill) ? new Color(29, 27, 27) : lerpColor(rowBg, BG_ROW_HOVER, rowHoverProgress[0]);
                 g2.setColor(fillColor);
                 g2.fill(roundedShape);
                 g2.dispose();
@@ -3381,7 +3381,7 @@ whatsNewBox.add(seeMoreLabel);
                 } else {
                     shape = new java.awt.geom.RoundRectangle2D.Float(0, 0, w, h, r, r);
                 }
-                Color rowFillColor = Boolean.TRUE.equals(expanded) ? new Color(26, 24, 24) : lerpColor(rowBg, BG_ROW_HOVER, rowHoverProgress[0]);
+                Color rowFillColor = Boolean.TRUE.equals(expanded) ? new Color(29, 27, 27) : lerpColor(rowBg, BG_ROW_HOVER, rowHoverProgress[0]);
                 g2.setColor(rowFillColor);
                 g2.fill(shape);
                 g2.dispose();
@@ -3788,13 +3788,9 @@ whatsNewBox.add(seeMoreLabel);
                 if (!name.equals(selectedItemName))
                 {
                     if (rowHoverAnimTimer[0] != null) rowHoverAnimTimer[0].stop();
-                    rowHoverAnimTimer[0] = new javax.swing.Timer(16, ev -> {
-                        rowHoverProgress[0] = Math.min(1f, rowHoverProgress[0] + 0.15f);
-                        block.repaint();
-                        row.repaint();
-                        if (rowHoverProgress[0] >= 1f) rowHoverAnimTimer[0].stop();
-                    });
-                    rowHoverAnimTimer[0].start();
+                    rowHoverProgress[0] = 1f;
+                    block.repaint();
+                    row.repaint();
                 }
             }
             public void mouseExited(MouseEvent e)
@@ -3803,13 +3799,9 @@ whatsNewBox.add(seeMoreLabel);
                 if (!name.equals(selectedItemName))
                 {
                     if (rowHoverAnimTimer[0] != null) rowHoverAnimTimer[0].stop();
-                    rowHoverAnimTimer[0] = new javax.swing.Timer(16, ev -> {
-                        rowHoverProgress[0] = Math.max(0f, rowHoverProgress[0] - 0.15f);
-                        block.repaint();
-                        row.repaint();
-                        if (rowHoverProgress[0] <= 0f) rowHoverAnimTimer[0].stop();
-                    });
-                    rowHoverAnimTimer[0].start();
+                    rowHoverProgress[0] = 0f;
+                    block.repaint();
+                    row.repaint();
                 }
             }
         });
