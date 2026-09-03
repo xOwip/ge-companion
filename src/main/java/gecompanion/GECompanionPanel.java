@@ -3315,6 +3315,9 @@ whatsNewBox.add(seeMoreLabel);
         boolean isDown = delta.startsWith("-");
         Color rowBg = (index % 2 == 0) ? BG_DARK : new Color(20, 18, 19);
 
+        final float[] rowHoverProgress = {0f};
+        final javax.swing.Timer[] rowHoverAnimTimer = {null};
+
         JPanel block = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -3326,7 +3329,7 @@ whatsNewBox.add(seeMoreLabel);
                 int fh = getHeight() - in.top - in.bottom;
                 java.awt.geom.RoundRectangle2D roundedShape = new java.awt.geom.RoundRectangle2D.Float(
                         fx, fy, fw, fh, RADIUS_CARD * 2, RADIUS_CARD * 2);
-                g2.setColor(getBackground());
+                g2.setColor(lerpColor(rowBg, BG_ROW_HOVER, rowHoverProgress[0]));
                 g2.fill(roundedShape);
                 g2.dispose();
             }
@@ -3376,7 +3379,7 @@ whatsNewBox.add(seeMoreLabel);
                 } else {
                     shape = new java.awt.geom.RoundRectangle2D.Float(0, 0, w, h, r, r);
                 }
-                g2.setColor(getBackground());
+                g2.setColor(lerpColor(rowBg, BG_ROW_HOVER, rowHoverProgress[0]));
                 g2.fill(shape);
                 g2.dispose();
                 super.paintComponent(g);
@@ -3388,8 +3391,8 @@ whatsNewBox.add(seeMoreLabel);
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 68));
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
         row.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        row.setAlignmentX(Component.LEFT_ALIGNMENT);
-        row.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        row.putClientProperty("geCompanionRowHoverProgress", rowHoverProgress);
+        row.putClientProperty("geCompanionRowHoverAnimTimer", rowHoverAnimTimer);
 
         JPanel iconPanel = new JPanel(new java.awt.GridBagLayout()) {
             @Override
@@ -3457,6 +3460,7 @@ whatsNewBox.add(seeMoreLabel);
 
         JPanel deltaLimitRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         deltaLimitRow.setBackground(rowBg);
+        deltaLimitRow.setOpaque(false);
         deltaLimitRow.setAlignmentX(Component.LEFT_ALIGNMENT);
         deltaLimitRow.add(gpChangeLabel);
         deltaLimitRow.add(Box.createHorizontalStrut(4));
@@ -3608,6 +3612,17 @@ whatsNewBox.add(seeMoreLabel);
                     final JPanel closingDetail2 = currentOpenSearchDetail;
                     currentOpenSearchDetail = null;
                     final Component closingRowParent = currentOpenSearchRow != null ? currentOpenSearchRow.getParent() : null;
+                    final JPanel closingRowForHover = currentOpenSearchRow;
+                    if (closingRowForHover != null) {
+                        Object hp = closingRowForHover.getClientProperty("geCompanionRowHoverProgress");
+                        Object at = closingRowForHover.getClientProperty("geCompanionRowHoverAnimTimer");
+                        if (hp instanceof float[] && at instanceof javax.swing.Timer[]) {
+                            javax.swing.Timer[] timerArr = (javax.swing.Timer[]) at;
+                            if (timerArr[0] != null) timerArr[0].stop();
+                            ((float[]) hp)[0] = 0f;
+                        }
+                        closingRowForHover.repaint();
+                    }
                     final javax.swing.JViewport closingVP2 = (javax.swing.JViewport) closingDetail2.getParent();
                     final int fullH2 = closingVP2 != null ? closingVP2.getHeight() : 0;
                     int[] curH3 = {fullH2};
@@ -3769,12 +3784,14 @@ whatsNewBox.add(seeMoreLabel);
                 nameLabel.startHoverDelay();
                 if (!name.equals(selectedItemName))
                 {
-                    block.setBackground(BG_ROW_HOVER);
-                    block.repaint();
-                    row.setBackground(BG_ROW_HOVER);
-                    info.setBackground(BG_ROW_HOVER);
-                    iconWrapper.setBackground(BG_ROW_HOVER);
-                    deltaLimitRow.setBackground(BG_ROW_HOVER);
+                    if (rowHoverAnimTimer[0] != null) rowHoverAnimTimer[0].stop();
+                    rowHoverAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                        rowHoverProgress[0] = Math.min(1f, rowHoverProgress[0] + 0.15f);
+                        block.repaint();
+                        row.repaint();
+                        if (rowHoverProgress[0] >= 1f) rowHoverAnimTimer[0].stop();
+                    });
+                    rowHoverAnimTimer[0].start();
                 }
             }
             public void mouseExited(MouseEvent e)
@@ -3782,12 +3799,14 @@ whatsNewBox.add(seeMoreLabel);
                 nameLabel.stopAll();
                 if (!name.equals(selectedItemName))
                 {
-                    block.setBackground(rowBg);
-                    block.repaint();
-                    row.setBackground(rowBg);
-                    info.setBackground(rowBg);
-                    iconWrapper.setBackground(rowBg);
-                    deltaLimitRow.setBackground(rowBg);
+                    if (rowHoverAnimTimer[0] != null) rowHoverAnimTimer[0].stop();
+                    rowHoverAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                        rowHoverProgress[0] = Math.max(0f, rowHoverProgress[0] - 0.15f);
+                        block.repaint();
+                        row.repaint();
+                        if (rowHoverProgress[0] <= 0f) rowHoverAnimTimer[0].stop();
+                    });
+                    rowHoverAnimTimer[0].start();
                 }
             }
         });
