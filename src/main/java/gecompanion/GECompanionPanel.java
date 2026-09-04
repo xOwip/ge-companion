@@ -4422,20 +4422,6 @@ whatsNewBox.add(seeMoreLabel);
                         currentOpenWatchlistRow.setBackground(BG_DARK);
                         currentOpenWatchlistRow.setBorder(new EmptyBorder(1, 0, 0, 0));
                         if (currentOpenWatchlistRow.getParent() instanceof JComponent) { ((JComponent) currentOpenWatchlistRow.getParent()).putClientProperty(ROW_EXPANDED_GOLD_KEY, false); currentOpenWatchlistRow.getParent().repaint(); }
-                        for (Component c : currentOpenWatchlistRow.getComponents())
-                        {
-                            if (c instanceof JPanel)
-                            {
-                                if (((JPanel)c).getComponentCount() > 0 && ((JPanel)c).getComponent(0) instanceof JPanel && ((JPanel)c).getComponent(0).getPreferredSize().width == 42)
-                                {
-                                    c.setBackground(BG_DARK);
-                                    continue;
-                                }
-                                c.setBackground(BG_DARK);
-                                for (Component cc : ((JPanel)c).getComponents())
-                                    if (cc instanceof JPanel && cc.getPreferredSize().width != 42) cc.setBackground(BG_DARK);
-                            }
-                        }
                         currentOpenWatchlistRow = null;
                         if (currentOpenWatchlistBellPanel != null) { currentOpenWatchlistBellPanel.setOpaque(false); currentOpenWatchlistBellPanel.repaint(); currentOpenWatchlistBellPanel = null; }
                     }
@@ -4527,18 +4513,6 @@ whatsNewBox.add(seeMoreLabel);
                     currentOpenWatchlistRow.setBackground(currentOpenWatchlistRowColor);
                     currentOpenWatchlistRow.setBorder(new EmptyBorder(1, 0, 0, 0));
                     if (currentOpenWatchlistRow.getParent() instanceof JComponent) { ((JComponent) currentOpenWatchlistRow.getParent()).putClientProperty(ROW_EXPANDED_GOLD_KEY, false); currentOpenWatchlistRow.getParent().repaint(); }
-                    for (Component c : currentOpenWatchlistRow.getComponents())
-                    {
-                        if (c instanceof JPanel)
-                        {
-                            if (((JPanel)c).getComponentCount() > 0 && ((JPanel)c).getComponent(0) instanceof JPanel && ((JPanel)c).getComponent(0).getPreferredSize().width == 42)
-                            {
-                                c.setBackground(currentOpenWatchlistRowColor);
-                                continue;
-                            }
-                            c.setBackground(currentOpenWatchlistRowColor);
-                        }
-                    }
                     if (currentOpenWatchlistBellPanel != null) {
                         currentOpenWatchlistBellPanel.setOpaque(false);
                         currentOpenWatchlistBellPanel.repaint();
