@@ -3938,6 +3938,9 @@ whatsNewBox.add(seeMoreLabel);
 
         Color rowBg = (index % 2 == 0) ? BG_DARK : new Color(20, 18, 19);
 
+        final float[] rowHoverProgress = {0f};
+        final javax.swing.Timer[] rowHoverAnimTimer = {null};
+
         JPanel block = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -3949,7 +3952,9 @@ whatsNewBox.add(seeMoreLabel);
                 int fh = getHeight() - in.top - in.bottom;
                 java.awt.geom.RoundRectangle2D roundedShape = new java.awt.geom.RoundRectangle2D.Float(
                         fx, fy, fw, fh, RADIUS_CARD * 2, RADIUS_CARD * 2);
-                g2.setColor(getBackground());
+                Boolean expandedForFill = (Boolean) getClientProperty(ROW_EXPANDED_GOLD_KEY);
+                Color fillColor = Boolean.TRUE.equals(expandedForFill) ? new Color(29, 27, 27) : lerpColor(rowBg, BG_ROW_HOVER, rowHoverProgress[0]);
+                g2.setColor(fillColor);
                 g2.fill(roundedShape);
                 g2.dispose();
             }
@@ -4001,7 +4006,8 @@ whatsNewBox.add(seeMoreLabel);
                     // Collapsed: row IS the entire card, nothing below it - round all 4 corners.
                     shape = new java.awt.geom.RoundRectangle2D.Float(0, 0, w, h, r, r);
                 }
-                g2.setColor(getBackground());
+                Color rowFillColor = Boolean.TRUE.equals(expanded) ? new Color(29, 27, 27) : lerpColor(rowBg, BG_ROW_HOVER, rowHoverProgress[0]);
+                g2.setColor(rowFillColor);
                 g2.fill(shape);
                 g2.dispose();
                 super.paintComponent(g);
@@ -4013,6 +4019,8 @@ whatsNewBox.add(seeMoreLabel);
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 68));
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
         row.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        row.putClientProperty("geCompanionRowHoverProgress", rowHoverProgress);
+        row.putClientProperty("geCompanionRowHoverAnimTimer", rowHoverAnimTimer);
 
         JPanel iconPanel = new JPanel(new java.awt.GridBagLayout()) {
             @Override
@@ -4076,6 +4084,7 @@ whatsNewBox.add(seeMoreLabel);
 
         JPanel deltaLimitRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         deltaLimitRow.setBackground(rowBg);
+        deltaLimitRow.setOpaque(false);
         deltaLimitRow.setAlignmentX(Component.LEFT_ALIGNMENT);
         deltaLimitRow.add(gpChangeLabel);
         deltaLimitRow.add(Box.createHorizontalStrut(4));
@@ -4159,6 +4168,7 @@ whatsNewBox.add(seeMoreLabel);
             bellPanel.setPreferredSize(new Dimension(22, 68));
             bellPanel.add(bellIcon);
             row.add(bellPanel, BorderLayout.EAST);
+            row.putClientProperty("geCompanionBellPanel", bellPanel);
         }
 
 // ── rearrange arrows (edit mode) ──────────────────────────────
@@ -4456,6 +4466,35 @@ whatsNewBox.add(seeMoreLabel);
                     final JPanel closingDetail2 = currentOpenWatchlistDetail;
                     currentOpenWatchlistDetail = null;
                     final Component closingRowParent = currentOpenWatchlistRow != null ? currentOpenWatchlistRow.getParent() : null;
+                    final JPanel closingRowForHover = currentOpenWatchlistRow;
+                    if (closingRowForHover != null) {
+                        Object hp = closingRowForHover.getClientProperty("geCompanionRowHoverProgress");
+                        Object at = closingRowForHover.getClientProperty("geCompanionRowHoverAnimTimer");
+                        if (hp instanceof float[] && at instanceof javax.swing.Timer[]) {
+                            javax.swing.Timer[] timerArr = (javax.swing.Timer[]) at;
+                            if (timerArr[0] != null) timerArr[0].stop();
+                            ((float[]) hp)[0] = 0f;
+                        }
+                        closingRowForHover.repaint();
+                        Object bp = closingRowForHover.getClientProperty("geCompanionBellPanel");
+                        if (bp instanceof JPanel) {
+                            JPanel closingBellPanel = (JPanel) bp;
+                            closingBellPanel.setOpaque(false);
+                            closingBellPanel.repaint();
+                            boolean bellHasAlert = false;
+                            for (java.awt.Component c : closingBellPanel.getComponents()) {
+                                if (c instanceof JLabel && Boolean.TRUE.equals(((JLabel) c).getClientProperty("hasAlert"))) {
+                                    bellHasAlert = true;
+                                    break;
+                                }
+                            }
+                            if (!bellHasAlert) {
+                                for (java.awt.Component c : closingBellPanel.getComponents()) {
+                                    c.setVisible(false);
+                                }
+                            }
+                        }
+                    }
                     final javax.swing.JViewport closingVP2 = (javax.swing.JViewport) closingDetail2.getParent();
                     final int fullH2 = closingVP2 != null ? closingVP2.getHeight() : 0;
                     int[] curH3 = {fullH2};
@@ -4603,11 +4642,10 @@ whatsNewBox.add(seeMoreLabel);
             {
                 if (!name.equals(selectedWatchlistItemName))
                 {
-                    row.setBackground(BG_ROW_HOVER);
-                    info.setBackground(BG_ROW_HOVER);
-                    iconWrapper.setBackground(BG_ROW_HOVER);
-                    deltaLimitRow.setBackground(BG_ROW_HOVER);
-                    if (watchlistEditMode) row.getComponent(row.getComponentCount()-1).setBackground(BG_ROW_HOVER);
+                    if (rowHoverAnimTimer[0] != null) rowHoverAnimTimer[0].stop();
+                    rowHoverProgress[0] = 1f;
+                    block.repaint();
+                    row.repaint();
                 }
                 if (bellPanelRef[0] != null) {
                     for (java.awt.Component c : bellPanelRef[0].getComponents()) {
@@ -4619,11 +4657,10 @@ whatsNewBox.add(seeMoreLabel);
             {
                 if (!name.equals(selectedWatchlistItemName))
                 {
-                    row.setBackground(rowBg);
-                    info.setBackground(rowBg);
-                    iconWrapper.setBackground(rowBg);
-                    deltaLimitRow.setBackground(rowBg);
-                    if (watchlistEditMode) row.getComponent(row.getComponentCount()-1).setBackground(rowBg);
+                    if (rowHoverAnimTimer[0] != null) rowHoverAnimTimer[0].stop();
+                    rowHoverProgress[0] = 0f;
+                    block.repaint();
+                    row.repaint();
                     if (bellPanelRef[0] != null) {
                         bellPanelRef[0].setOpaque(false);
                         bellPanelRef[0].repaint();
