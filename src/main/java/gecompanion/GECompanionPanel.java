@@ -3568,23 +3568,8 @@ whatsNewBox.add(seeMoreLabel);
                         currentOpenSearchRow.setBackground(currentOpenSearchRowColor);
                         currentOpenSearchRow.setBorder(new EmptyBorder(1, 0, 0, 0));
                         if (currentOpenSearchRow.getParent() instanceof JComponent) { ((JComponent) currentOpenSearchRow.getParent()).putClientProperty(ROW_EXPANDED_GOLD_KEY, false); currentOpenSearchRow.getParent().repaint(); }
-                        for (Component c : currentOpenSearchRow.getComponents())
-                        {
-                            if (c instanceof JPanel)
-                            {
-                                if (((JPanel)c).getComponentCount() > 0 && ((JPanel)c).getComponent(0) instanceof JPanel && ((JPanel)c).getComponent(0).getPreferredSize().width == 42)
-                                {
-                                    c.setBackground(currentOpenSearchRowColor);
-                                    continue;
-                                }
-                                c.setBackground(currentOpenSearchRowColor);
-                                for (Component cc : ((JPanel)c).getComponents())
-                                    if (cc instanceof JPanel && cc.getPreferredSize().width != 42) cc.setBackground(currentOpenSearchRowColor);
-                            }
-                        }
                         currentOpenSearchRow = null;
                         currentOpenSearchRowColor = BG_DARK;
-                        currentOpenSearchRow = null;
                     }
                     selectedItemName = null;
                     searchReopenAction = null;
@@ -3657,18 +3642,6 @@ whatsNewBox.add(seeMoreLabel);
                     currentOpenSearchRow.setBackground(BG_DARK);
                     if (currentOpenSearchRow.getParent() != null) { currentOpenSearchRow.getParent().setBackground(BG_DARK); currentOpenSearchRow.getParent().repaint(); }
                     currentOpenSearchRow.setBorder(new EmptyBorder(1, 0, 0, 0));
-                    for (Component c : currentOpenSearchRow.getComponents())
-                    {
-                        if (c instanceof JPanel)
-                        {
-                            if (((JPanel)c).getComponentCount() > 0 && ((JPanel)c).getComponent(0) instanceof JPanel && ((JPanel)c).getComponent(0).getPreferredSize().width == 42)
-                            {
-                                c.setBackground(BG_DARK);
-                                continue;
-                            }
-                            c.setBackground(BG_DARK);
-                        }
-                    }
                 }
 
 // Open this one
