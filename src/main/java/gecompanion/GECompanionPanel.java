@@ -5623,6 +5623,8 @@ whatsNewBox.add(seeMoreLabel);
             allLabel.setBorder(new EmptyBorder(6, 7, 2, 7));
             allLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
             allLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            final float[] allLabelHoverProgress = {0f};
+            final javax.swing.Timer[] allLabelAnimTimer = {null};
             allLabel.addMouseListener(new MouseAdapter()
             {
                 public void mouseClicked(MouseEvent e)
@@ -5630,8 +5632,24 @@ whatsNewBox.add(seeMoreLabel);
                     bankAllItemsCollapsed = !bankAllItemsCollapsed;
                     showTab(2);
                 }
-                public void mouseEntered(MouseEvent e) { allLabel.setForeground(TEXT_PRIMARY); }
-                public void mouseExited(MouseEvent e) { allLabel.setForeground(TAB_INACTIVE); }
+                public void mouseEntered(MouseEvent e) {
+                    if (allLabelAnimTimer[0] != null) allLabelAnimTimer[0].stop();
+                    allLabelAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                        allLabelHoverProgress[0] = Math.min(1f, allLabelHoverProgress[0] + 0.15f);
+                        allLabel.setForeground(lerpColor(TAB_INACTIVE, TEXT_PRIMARY, allLabelHoverProgress[0]));
+                        if (allLabelHoverProgress[0] >= 1f) allLabelAnimTimer[0].stop();
+                    });
+                    allLabelAnimTimer[0].start();
+                }
+                public void mouseExited(MouseEvent e) {
+                    if (allLabelAnimTimer[0] != null) allLabelAnimTimer[0].stop();
+                    allLabelAnimTimer[0] = new javax.swing.Timer(16, ev -> {
+                        allLabelHoverProgress[0] = Math.max(0f, allLabelHoverProgress[0] - 0.15f);
+                        allLabel.setForeground(lerpColor(TAB_INACTIVE, TEXT_PRIMARY, allLabelHoverProgress[0]));
+                        if (allLabelHoverProgress[0] <= 0f) allLabelAnimTimer[0].stop();
+                    });
+                    allLabelAnimTimer[0].start();
+                }
             });
             listPanel.add(allLabel);
 // Bank search bar — always visible
