@@ -5746,6 +5746,9 @@ whatsNewBox.add(seeMoreLabel);
         Color borderColor = colorCode && isUp ? new Color(0, 180, 0) : colorCode && isDown ? new Color(200, 0, 0) : new Color(80, 75, 70);
         Color bgColor = (index % 2 == 0) ? BG_DARK : new Color(20, 18, 19);
 
+        final float[] rowHoverProgress = {0f};
+        final javax.swing.Timer[] rowHoverAnimTimer = {null};
+
         JPanel block = new JPanel()
         {
             @Override
@@ -5771,7 +5774,8 @@ whatsNewBox.add(seeMoreLabel);
                     roundedShape = new java.awt.geom.RoundRectangle2D.Float(
                             fx, fy, fw, fh, RADIUS_CARD * 2, RADIUS_CARD * 2);
                 }
-                g2.setColor(getBackground());
+                Color fillColor = Boolean.TRUE.equals(blockExpanded) ? new Color(29, 27, 27) : lerpColor(bgColor, BG_ROW_HOVER, rowHoverProgress[0]);
+                g2.setColor(fillColor);
                 g2.fill(roundedShape);
                 if (colorCode && (isUp || isDown))
                 {
@@ -5846,7 +5850,8 @@ whatsNewBox.add(seeMoreLabel);
                 } else {
                     shape = new java.awt.geom.RoundRectangle2D.Float(0, 0, w, h, r, r);
                 }
-                g2.setColor(getBackground());
+                Color rowFillColor = Boolean.TRUE.equals(expanded) ? new Color(29, 27, 27) : lerpColor(bgColor, BG_ROW_HOVER, rowHoverProgress[0]);
+                g2.setColor(rowFillColor);
                 g2.fill(shape);
                 g2.dispose();
                 super.paintComponent(g);
@@ -5877,6 +5882,8 @@ whatsNewBox.add(seeMoreLabel);
         row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 68));
         row.setAlignmentX(Component.LEFT_ALIGNMENT);
         row.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        row.putClientProperty("geCompanionRowHoverProgress", rowHoverProgress);
+        row.putClientProperty("geCompanionRowHoverAnimTimer", rowHoverAnimTimer);
         JPanel iconPanel = new JPanel() {
             @Override
             public void paint(Graphics g) {
@@ -5922,6 +5929,7 @@ whatsNewBox.add(seeMoreLabel);
 
         JPanel iconWrapper = new JPanel(new java.awt.GridBagLayout());
         iconWrapper.setBackground(bgColor);
+        iconWrapper.setOpaque(false);
         iconWrapper.add(iconPanel);
         if (isVariant) {
             Integer origId = item.length > 12 ? Integer.parseInt(item[12]) : null;
@@ -5985,6 +5993,7 @@ whatsNewBox.add(seeMoreLabel);
 
         JPanel deltaRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         deltaRow.setBackground(bgColor);
+        deltaRow.setOpaque(false);
         deltaRow.setAlignmentX(Component.LEFT_ALIGNMENT);
         deltaRow.add(gpChangeLabel);
         deltaRow.add(Box.createHorizontalStrut(4));
@@ -6099,13 +6108,7 @@ whatsNewBox.add(seeMoreLabel);
                             ((JComponent) currentOpenBankRow.getParent()).putClientProperty(ROW_EXPANDED_GOLD_KEY, false);
                             currentOpenBankRow.getParent().repaint();
                         }
-                        info.setBackground(bgColor);
-                        deltaRow.setBackground(bgColor);
-                        for (Component c : currentOpenBankRow.getComponents())
-                            if (c instanceof JPanel) c.setBackground(bgColor);
                         currentOpenBankRow = null;
-                        currentOpenBankInfo = null;
-                        currentOpenBankDeltaRow = null;
                         currentOpenBankRowColor = BG_DARK;
                     }
                     selectedBankItemName = null;
@@ -6160,16 +6163,21 @@ whatsNewBox.add(seeMoreLabel);
                     currentOpenBankRow.setBackground(currentOpenBankRowColor);
                     currentOpenBankRow.putClientProperty(ROW_ACCENT_COLOR_KEY, currentOpenBankBorderColor != null ? currentOpenBankBorderColor : borderColor);
                     currentOpenBankRow.putClientProperty(ROW_EXPANDED_GOLD_KEY, false);
+                    {
+                        Object hp = currentOpenBankRow.getClientProperty("geCompanionRowHoverProgress");
+                        Object at = currentOpenBankRow.getClientProperty("geCompanionRowHoverAnimTimer");
+                        if (hp instanceof float[] && at instanceof javax.swing.Timer[]) {
+                            javax.swing.Timer[] timerArr = (javax.swing.Timer[]) at;
+                            if (timerArr[0] != null) timerArr[0].stop();
+                            ((float[]) hp)[0] = 0f;
+                        }
+                    }
                     currentOpenBankRow.repaint();
                     if (currentOpenBankRow.getParent() instanceof JComponent) {
                         ((JComponent) currentOpenBankRow.getParent()).putClientProperty(ROW_EXPANDED_GOLD_KEY, false);
                         currentOpenBankRow.getParent().repaint();
                     }
                     currentOpenBankBorderColor = null;
-                    if (currentOpenBankInfo != null) currentOpenBankInfo.setBackground(currentOpenBankRowColor);
-                    if (currentOpenBankDeltaRow != null) currentOpenBankDeltaRow.setBackground(currentOpenBankRowColor);
-                    for (Component c : currentOpenBankRow.getComponents())
-                        if (c instanceof JPanel) c.setBackground(currentOpenBankRowColor);
                 }
 
                 // Open this one
@@ -6266,20 +6274,20 @@ whatsNewBox.add(seeMoreLabel);
             {
                 if (!name.equals(selectedBankItemName))
                 {
-                    row.setBackground(BG_ROW_HOVER);
-                    info.setBackground(BG_ROW_HOVER);
-                    iconWrapper.setBackground(BG_ROW_HOVER);
-                    deltaRow.setBackground(BG_ROW_HOVER);
+                    if (rowHoverAnimTimer[0] != null) rowHoverAnimTimer[0].stop();
+                    rowHoverProgress[0] = 1f;
+                    block.repaint();
+                    row.repaint();
                 }
             }
             public void mouseExited(MouseEvent e)
             {
                 if (!name.equals(selectedBankItemName))
                 {
-                    row.setBackground(bgColor);
-                    info.setBackground(bgColor);
-                    deltaRow.setBackground(bgColor);
-                    iconWrapper.setBackground(bgColor);
+                    if (rowHoverAnimTimer[0] != null) rowHoverAnimTimer[0].stop();
+                    rowHoverProgress[0] = 0f;
+                    block.repaint();
+                    row.repaint();
                 }
             }
         });
