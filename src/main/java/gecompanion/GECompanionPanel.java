@@ -4177,6 +4177,7 @@ whatsNewBox.add(seeMoreLabel);
             JPanel arrowPanel = new JPanel();
             arrowPanel.setLayout(new BoxLayout(arrowPanel, BoxLayout.Y_AXIS));
             arrowPanel.setBackground(rowBg);
+            arrowPanel.setOpaque(false);
             arrowPanel.setBorder(new EmptyBorder(0, 4, 0, 8));
             arrowPanel.setPreferredSize(new Dimension(24, 68));
 
