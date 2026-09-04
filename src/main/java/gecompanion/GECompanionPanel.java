@@ -3509,8 +3509,8 @@ whatsNewBox.add(seeMoreLabel);
                         JButton wb = watchBtnRef[0];
                         if (wb != null) {
                             wb.setText(nowWatched ? "✓ Watch" : "+ Watch");
-                            wb.setBorder(BorderFactory.createLineBorder(nowWatched ? GOLD : new Color(58, 53, 48)));
-                            wb.setForeground(nowWatched ? GOLD : TAB_INACTIVE);
+                            wb.putClientProperty(FOOTER_BTN_GOLD_KEY, nowWatched);
+                            wb.repaint();
                         }
                         // update popup item text for next time
                         watchItem.setText(nowWatched ? "- Unwatch" : "+ Watch");
@@ -4313,8 +4313,8 @@ whatsNewBox.add(seeMoreLabel);
                         JButton wb = watchBtnRef[0];
                         if (wb != null) {
                             wb.setText(nowWatched ? "✓ Watch" : "+ Watch");
-                            wb.setBorder(BorderFactory.createLineBorder(nowWatched ? GOLD : new Color(58, 53, 48)));
-                            wb.setForeground(nowWatched ? GOLD : TAB_INACTIVE);
+                            wb.putClientProperty(FOOTER_BTN_GOLD_KEY, nowWatched);
+                            wb.repaint();
                         }
                         watchItem.setText(nowWatched ? "- Unwatch" : "+ Watch");
                     });
@@ -6070,8 +6070,8 @@ whatsNewBox.add(seeMoreLabel);
                         JButton wb = watchBtnRef[0];
                         if (wb != null) {
                             wb.setText(nowWatched ? "✓ Watch" : "+ Watch");
-                            wb.setBorder(BorderFactory.createLineBorder(nowWatched ? GOLD : new Color(58, 53, 48)));
-                            wb.setForeground(nowWatched ? GOLD : TAB_INACTIVE);
+                            wb.putClientProperty(FOOTER_BTN_GOLD_KEY, nowWatched);
+                            wb.repaint();
                         }
                         watchItem.setText(nowWatched ? "- Unwatch" : "+ Watch");
                     });
