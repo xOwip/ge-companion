@@ -2790,6 +2790,53 @@ private String openBankItemName = null;
         inner.add(Box.createVerticalStrut(4));
         inner.add(footer);
         det.add(inner, BorderLayout.CENTER);
+        SwingUtilities.invokeLater(() -> {
+            Component c = det;
+            System.out.println("=== HIERARCHY DUMP START ===");
+            while (c != null) {
+                System.out.println(
+                        "COMPONENT: " + c.getClass().getName()
+                                + " | size=" + c.getWidth() + "x" + c.getHeight()
+                                + " | visible=" + c.isVisible()
+                );
+                c = c.getParent();
+            }
+            JScrollPane sp = (JScrollPane) SwingUtilities.getAncestorOfClass(JScrollPane.class, det);
+            if (sp != null) {
+                JScrollBar vsb = sp.getVerticalScrollBar();
+                JViewport vp = sp.getViewport();
+                Component view = vp.getView();
+                System.out.println(
+                        "VERTICAL SCROLLBAR: visible=" + vsb.isVisible()
+                                + " | size=" + vsb.getWidth() + "x" + vsb.getHeight()
+                                + " | enabled=" + vsb.isEnabled()
+                );
+                System.out.println(
+                        "VIEWPORT: extentSize=" + vp.getExtentSize()
+                                + " | viewSize=" + vp.getViewSize()
+                );
+                if (view != null) {
+                    System.out.println(
+                            "VIEW COMPONENT: class=" + view.getClass().getName()
+                                    + " | height=" + view.getHeight()
+                                    + " | preferredHeight=" + view.getPreferredSize().height
+                                    + " | viewportExtentHeight=" + vp.getExtentSize().height
+                                    + " | overflow=" + (view.getPreferredSize().height > vp.getExtentSize().height)
+                    );
+                }
+                vp.addChangeListener(ev -> {
+                    Component v = vp.getView();
+                    if (v != null) {
+                        System.out.println(
+                                "[" + System.currentTimeMillis() + "] VIEWPORT CHANGED: preferredHeight="
+                                        + v.getPreferredSize().height + " | extentHeight=" + vp.getExtentSize().height
+                                        + " | overflow=" + (v.getPreferredSize().height > vp.getExtentSize().height)
+                        );
+                    }
+                });
+            }
+            System.out.println("=== HIERARCHY DUMP END ===");
+        });
         return det;
     }
 
