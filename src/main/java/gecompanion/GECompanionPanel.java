@@ -2262,7 +2262,9 @@ private String openBankItemName = null;
         det.setOpaque(false);
         det.setBackground(BG_DETAIL);
         det.setBorder(javax.swing.BorderFactory.createEmptyBorder());
-        det.setMaximumSize(new Dimension(230, Integer.MAX_VALUE));
+        final int[] cardWidth = {225};
+        final int[] detWidth = {230};
+        det.setMaximumSize(new Dimension(detWidth[0], Integer.MAX_VALUE));
 
         JPanel inner = new JPanel();
         inner.setLayout(new BoxLayout(inner, BoxLayout.Y_AXIS));
@@ -2305,9 +2307,9 @@ private String openBankItemName = null;
         buyPriceBox.setBackground(new Color(14, 12, 13));
         buyPriceBox.setBorder(new EmptyBorder(6, 5, 6, 5));
         buyPriceBox.setAlignmentX(Component.LEFT_ALIGNMENT);
-        buyPriceBox.setMaximumSize(new Dimension(225, 52));
-        buyPriceBox.setMinimumSize(new Dimension(225, 52));
-        buyPriceBox.setPreferredSize(new Dimension(225, 52));
+        buyPriceBox.setMaximumSize(new Dimension(cardWidth[0], 52));
+        buyPriceBox.setMinimumSize(new Dimension(cardWidth[0], 52));
+        buyPriceBox.setPreferredSize(new Dimension(cardWidth[0], 52));
 
         JLabel buyPriceLabelComp = new JLabel(buyPriceLabel, SwingConstants.CENTER);
         buyPriceLabelComp.setForeground(TEXT_SECONDARY);
@@ -2359,9 +2361,9 @@ private String openBankItemName = null;
         sellPriceBox.setBackground(new Color(14, 12, 13));
         sellPriceBox.setBorder(new EmptyBorder(6, 5, 6, 5));
         sellPriceBox.setAlignmentX(Component.LEFT_ALIGNMENT);
-        sellPriceBox.setMaximumSize(new Dimension(225, 52));
-        sellPriceBox.setMinimumSize(new Dimension(225, 52));
-        sellPriceBox.setPreferredSize(new Dimension(225, 52));
+        sellPriceBox.setMaximumSize(new Dimension(cardWidth[0], 52));
+        sellPriceBox.setMinimumSize(new Dimension(cardWidth[0], 52));
+        sellPriceBox.setPreferredSize(new Dimension(cardWidth[0], 52));
 
         JLabel sellPriceLabelComp = new JLabel(sellPriceLabel, SwingConstants.CENTER);
         sellPriceLabelComp.setForeground(TEXT_SECONDARY);
@@ -2385,7 +2387,7 @@ private String openBankItemName = null;
         JPanel grid = new JPanel(new GridLayout(1, 2, 2, 2));
         grid.setBackground(BG_DETAIL);
         grid.setAlignmentX(Component.LEFT_ALIGNMENT);
-        grid.setMaximumSize(new Dimension(225, 45));
+        grid.setMaximumSize(new Dimension(cardWidth[0], 45));
 
         grid.add(buildStatBox("Buy Qty/hr", item.length > 8 ? formatWithCommas(item[8]) : "?", STAT_GOLD, null));
         grid.add(buildStatBox("Sell Qty/hr", item.length > 9 ? formatWithCommas(item[9]) : "?", STAT_BLUE, null));
@@ -2397,7 +2399,7 @@ private String openBankItemName = null;
         JPanel footer = new JPanel(new GridLayout(1, 3, 2, 0));
         footer.setBackground(BG_DETAIL);
         footer.setAlignmentX(Component.LEFT_ALIGNMENT);
-        footer.setMaximumSize(new Dimension(220, 24));
+        footer.setMaximumSize(new Dimension(cardWidth[0], 24));
 
         boolean isWatched = pinnedItems.contains(item[0]);
         JButton watchBtn = buildFooterBtn(isWatched ? "✓ Watch" : "+ Watch", isWatched || isWatchlist);
@@ -2658,8 +2660,8 @@ private String openBankItemName = null;
         JPanel statsContent = new JPanel(new GridLayout(2, 2, 2, 2));
         statsContent.setBackground(BG_DETAIL);
         statsContent.setAlignmentX(Component.LEFT_ALIGNMENT);
-        statsContent.setPreferredSize(new Dimension(200, 96));
-        statsContent.setMaximumSize(new Dimension(200, 96));
+        statsContent.setPreferredSize(new Dimension(cardWidth[0], 96));
+        statsContent.setMaximumSize(new Dimension(cardWidth[0], 96));
 
         String[] statNames = {"Buying High", "Buying Low", "Selling High", "Selling Low"};
         Color[] statColors = {GOLD, GOLD, STAT_BLUE, STAT_BLUE};
@@ -2791,51 +2793,39 @@ private String openBankItemName = null;
         inner.add(footer);
         det.add(inner, BorderLayout.CENTER);
         SwingUtilities.invokeLater(() -> {
-            Component c = det;
-            System.out.println("=== HIERARCHY DUMP START ===");
-            while (c != null) {
-                System.out.println(
-                        "COMPONENT: " + c.getClass().getName()
-                                + " | size=" + c.getWidth() + "x" + c.getHeight()
-                                + " | visible=" + c.isVisible()
-                );
-                c = c.getParent();
-            }
             JScrollPane sp = (JScrollPane) SwingUtilities.getAncestorOfClass(JScrollPane.class, det);
-            if (sp != null) {
-                JScrollBar vsb = sp.getVerticalScrollBar();
-                JViewport vp = sp.getViewport();
+            if (sp == null) return;
+            JViewport vp = sp.getViewport();
+
+            Runnable applyWidths = () -> {
                 Component view = vp.getView();
-                System.out.println(
-                        "VERTICAL SCROLLBAR: visible=" + vsb.isVisible()
-                                + " | size=" + vsb.getWidth() + "x" + vsb.getHeight()
-                                + " | enabled=" + vsb.isEnabled()
-                );
-                System.out.println(
-                        "VIEWPORT: extentSize=" + vp.getExtentSize()
-                                + " | viewSize=" + vp.getViewSize()
-                );
-                if (view != null) {
-                    System.out.println(
-                            "VIEW COMPONENT: class=" + view.getClass().getName()
-                                    + " | height=" + view.getHeight()
-                                    + " | preferredHeight=" + view.getPreferredSize().height
-                                    + " | viewportExtentHeight=" + vp.getExtentSize().height
-                                    + " | overflow=" + (view.getPreferredSize().height > vp.getExtentSize().height)
-                    );
-                }
-                vp.addChangeListener(ev -> {
-                    Component v = vp.getView();
-                    if (v != null) {
-                        System.out.println(
-                                "[" + System.currentTimeMillis() + "] VIEWPORT CHANGED: preferredHeight="
-                                        + v.getPreferredSize().height + " | extentHeight=" + vp.getExtentSize().height
-                                        + " | overflow=" + (v.getPreferredSize().height > vp.getExtentSize().height)
-                        );
-                    }
-                });
-            }
-            System.out.println("=== HIERARCHY DUMP END ===");
+                if (view == null) return;
+                boolean scrollbarVisible = view.getPreferredSize().height > vp.getExtentSize().height;
+                int newCardWidth = scrollbarVisible ? 220 : 225;
+                int newDetWidth = scrollbarVisible ? 225 : 230;
+                if (newCardWidth == cardWidth[0] && newDetWidth == detWidth[0]) return;
+
+                cardWidth[0] = newCardWidth;
+                detWidth[0] = newDetWidth;
+
+                det.setMaximumSize(new Dimension(detWidth[0], Integer.MAX_VALUE));
+                buyPriceBox.setMaximumSize(new Dimension(cardWidth[0], 52));
+                buyPriceBox.setMinimumSize(new Dimension(cardWidth[0], 52));
+                buyPriceBox.setPreferredSize(new Dimension(cardWidth[0], 52));
+                sellPriceBox.setMaximumSize(new Dimension(cardWidth[0], 52));
+                sellPriceBox.setMinimumSize(new Dimension(cardWidth[0], 52));
+                sellPriceBox.setPreferredSize(new Dimension(cardWidth[0], 52));
+                grid.setMaximumSize(new Dimension(cardWidth[0], 45));
+                footer.setMaximumSize(new Dimension(cardWidth[0], 24));
+                statsContent.setPreferredSize(new Dimension(cardWidth[0], 96));
+                statsContent.setMaximumSize(new Dimension(cardWidth[0], 96));
+
+                det.revalidate();
+                det.repaint();
+            };
+
+            applyWidths.run();
+            vp.addChangeListener(ev -> applyWidths.run());
         });
         return det;
     }
