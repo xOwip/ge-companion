@@ -2719,7 +2719,7 @@ private String openBankItemName = null;
                     statsViewport.setView(statsContent);
                     statsViewport.setVisible(true);
                     statsContent.doLayout();
-                    int fullH = 110;
+                    int fullH = 96;
                     final int targetH = fullH;
                     statsViewport.setPreferredSize(new Dimension(1, 0));
                     statsViewport.setViewPosition(new java.awt.Point(0, targetH));
