@@ -8722,8 +8722,8 @@ whatsNewBox.add(seeMoreLabel);
                 ovLow = Math.min(ovLow, p.sellPrice);
             }
         }
-        long[] vals = {ovHigh, ovLow, buyHigh, buyLow, sellHigh, sellLow};
-        for (int i = 0; i < 6; i++) {
+        long[] vals = {buyHigh, buyLow, sellHigh, sellLow};
+        for (int i = 0; i < 4; i++) {
             final long v = vals[i];
             final int idx = i;
             javax.swing.SwingUtilities.invokeLater(() -> {
