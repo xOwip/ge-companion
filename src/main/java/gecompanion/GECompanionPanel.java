@@ -90,7 +90,7 @@ public class GECompanionPanel extends PluginPanel
     private static final Color VARIANT_POPUP_BADGE_RED = new Color(0xFF, 0x72, 0x72);
     private static final Color VARIANT_POPUP_YOUR_ITEM_BLUE = new Color(0x4A, 0xA8, 0xFF);
     private static final Color VARIANT_POPUP_MULTI_PURPLE = new Color(0xB8, 0x8B, 0xFF);
-    private static final String CURRENT_VERSION = "1.2.3";
+    private static final String CURRENT_VERSION = "1.3.0";
 
     // Linear-interpolates between two colors for smooth hover-fade animations. progress 0 = a, 1 = b.
     private static Color lerpColor(Color a, Color b, float progress) {
@@ -2971,7 +2971,7 @@ private String openBankItemName = null;
 
             whatsNewBox.add(whatsNewHeader);
 
-            JLabel whatsNewText = new JLabel("<html><body style='width:150px;color:#888888;font-family:monospaced;font-size:9px;'><span style='color:#888888;'>Aug 23, 2026</span><br><span style='color:#D4AF37;'>v" + CURRENT_VERSION + "</span> is here!<br>• Improved variant item tooltip (icons, owned variants, base pricing)<br>• Improved text readability across Bank, Search, Watchlist & charts<br>• Better hover feedback on buttons & controls</body></html>");
+            JLabel whatsNewText = new JLabel("<html><body style='width:150px;color:#888888;font-family:monospaced;font-size:9px;'><span style='color:#888888;'>Sep 7, 2026</span><br><span style='color:#D4AF37;'>v" + CURRENT_VERSION + "</span> is here!<br>• Rounded corners across the whole UI<br>• Smoother item row hover highlighting<br>• Fixed detail panel scrollbar crowding</body></html>");
             whatsNewText.setBorder(new EmptyBorder(4, 0, 0, 0));
             whatsNewBox.add(whatsNewText);
             whatsNewBox.add(Box.createVerticalStrut(4));
@@ -9405,6 +9405,29 @@ whatsNewBox.add(seeMoreLabel);
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         content.add(titleLabel);
         content.add(Box.createVerticalStrut(10));
+
+// v1.3.0
+        JLabel v130Label = new JLabel("v1.3.0 — September 7, 2026");
+        v130Label.setForeground(GOLD);
+        v130Label.setFont(new Font("Monospaced", Font.BOLD, FONT_STAT_LABEL));
+        v130Label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        content.add(v130Label);
+        content.add(Box.createVerticalStrut(3));
+        for (String line : new String[]{
+                "• Rounded corners across all cards, icons, and buttons for a softer look",
+                "• Smoother, more responsive hover highlighting on item rows",
+                "• Fixed item detail panel crowding against the sidebar scrollbar",
+                "• Item name text now scrolls on hover when it doesn't fit",
+                "• Sharper text rendering in price chart tooltips",
+                "• Various small visual polish and bug fixes"
+        }) {
+            JLabel l = new JLabel(line);
+            l.setForeground(DIALOG_TEXT_PRIMARY);
+            l.setFont(new Font("Monospaced", Font.PLAIN, FONT_STAT_LABEL));
+            l.setAlignmentX(Component.LEFT_ALIGNMENT);
+            content.add(l);
+        }
+        content.add(Box.createVerticalStrut(8));
 
 // v1.2.3
         JLabel v123Label = new JLabel("v1.2.3 — August 23, 2026");
