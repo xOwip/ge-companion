@@ -451,7 +451,6 @@ public class GECompanionPanel extends PluginPanel
     private JPanel currentOpenBankDetail = null;
     private JPanel currentOpenSearchRow = null;
     private JPanel currentOpenSearchInfo = null;
-    private JPanel currentOpenSearchIconWrapper = null;
     private JPanel currentOpenSearchDeltaRow = null;
     private JPanel currentOpenWatchlistRow = null;
     private JPanel currentOpenWatchlistInfo = null;
@@ -3592,7 +3591,6 @@ whatsNewBox.add(seeMoreLabel);
                             if (closingVP != null) { closingVP.setVisible(false); closingVP.setPreferredSize(null); }
                             if (currentOpenSearchRow != null) { currentOpenSearchRow.setBackground(currentOpenSearchRowColor); if (currentOpenSearchRow.getParent() instanceof JComponent) { ((JComponent) currentOpenSearchRow.getParent()).putClientProperty(ROW_EXPANDED_GOLD_KEY, false); currentOpenSearchRow.getParent().setBackground(currentOpenSearchRowColor); currentOpenSearchRow.getParent().repaint(); } }
                             if (currentOpenSearchInfo != null) { currentOpenSearchInfo.setBackground(currentOpenSearchRowColor); currentOpenSearchInfo = null; }
-                            if (currentOpenSearchIconWrapper != null) { currentOpenSearchIconWrapper.setBackground(currentOpenSearchRowColor); currentOpenSearchIconWrapper = null; }
                             if (currentOpenSearchDeltaRow != null) { currentOpenSearchDeltaRow.setBackground(currentOpenSearchRowColor); currentOpenSearchDeltaRow = null; }
                             searchResultsPanel.revalidate();
                             searchResultsPanel.repaint();
@@ -3664,7 +3662,6 @@ whatsNewBox.add(seeMoreLabel);
                             if (closingVP2 != null) { closingVP2.setVisible(false); closingVP2.setPreferredSize(null); }
                             if (closingRowParent instanceof JComponent) { ((JComponent) closingRowParent).putClientProperty(ROW_EXPANDED_GOLD_KEY, false); closingRowParent.setBackground(currentOpenSearchRowColor); closingRowParent.repaint(); }
                             if (currentOpenSearchInfo != null) { currentOpenSearchInfo.setBackground(currentOpenSearchRowColor); currentOpenSearchInfo = null; }
-                            if (currentOpenSearchIconWrapper != null) { currentOpenSearchIconWrapper.setBackground(currentOpenSearchRowColor); currentOpenSearchIconWrapper = null; }
                             if (currentOpenSearchDeltaRow != null) { currentOpenSearchDeltaRow.setBackground(currentOpenSearchRowColor); currentOpenSearchDeltaRow = null; }
                             searchResultsPanel.revalidate();
                             searchResultsPanel.repaint();
@@ -3693,7 +3690,6 @@ whatsNewBox.add(seeMoreLabel);
                 currentOpenSearchRowColor = rowBg;
                 currentOpenSearchDetail = detailSlot;
                 currentOpenSearchInfo = info;
-                currentOpenSearchIconWrapper = iconWrapper;
                 currentOpenSearchDeltaRow = deltaLimitRow;
                 graphWasOpen = false;
                 suppressSearchChange = true;
