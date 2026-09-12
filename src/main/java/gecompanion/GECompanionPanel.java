@@ -2971,7 +2971,7 @@ private String openBankItemName = null;
 
             whatsNewBox.add(whatsNewHeader);
 
-            JLabel whatsNewText = new JLabel("<html><body style='width:150px;color:#888888;font-family:monospaced;font-size:9px;'><span style='color:#888888;'>Sep 7, 2026</span><br><span style='color:#D4AF37;'>v" + CURRENT_VERSION + "</span> is here!<br>• Rounded corners across the whole UI<br>• Smoother item row hover highlighting<br>• Fixed detail panel scrollbar crowding</body></html>");
+            JLabel whatsNewText = new JLabel("<html><body style='width:150px;color:#888888;font-family:monospaced;font-size:9px;'><span style='color:#888888;'>Sep 12, 2026</span><br><span style='color:#D4AF37;'>v" + CURRENT_VERSION + "</span> is here!<br>• Rounded corners across the whole UI<br>• Smoother item row hover highlighting<br>• Fixed detail panel scrollbar crowding</body></html>");
             whatsNewText.setBorder(new EmptyBorder(4, 0, 0, 0));
             whatsNewBox.add(whatsNewText);
             whatsNewBox.add(Box.createVerticalStrut(4));
@@ -3438,9 +3438,6 @@ whatsNewBox.add(seeMoreLabel);
             public void paint(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                java.awt.Container parent = getParent();
-                g2.setColor(parent != null ? parent.getBackground() : getBackground());
-                g2.fillRect(0, 0, getWidth(), getHeight());
                 java.awt.geom.RoundRectangle2D roundedShape = new java.awt.geom.RoundRectangle2D.Float(
                         0, 0, getWidth(), getHeight(), RADIUS_ICON * 2, RADIUS_ICON * 2);
                 g2.clip(roundedShape);
@@ -4060,9 +4057,6 @@ whatsNewBox.add(seeMoreLabel);
             public void paint(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                java.awt.Container parent = getParent();
-                g2.setColor(parent != null ? parent.getBackground() : getBackground());
-                g2.fillRect(0, 0, getWidth(), getHeight());
                 java.awt.geom.RoundRectangle2D roundedShape = new java.awt.geom.RoundRectangle2D.Float(
                         0, 0, getWidth(), getHeight(), RADIUS_ICON * 2, RADIUS_ICON * 2);
                 g2.clip(roundedShape);
@@ -9407,7 +9401,7 @@ whatsNewBox.add(seeMoreLabel);
         content.add(Box.createVerticalStrut(10));
 
 // v1.3.0
-        JLabel v130Label = new JLabel("v1.3.0 — September 7, 2026");
+        JLabel v130Label = new JLabel("v1.3.0 — September 12, 2026");
         v130Label.setForeground(GOLD);
         v130Label.setFont(new Font("Monospaced", Font.BOLD, FONT_STAT_LABEL));
         v130Label.setAlignmentX(Component.LEFT_ALIGNMENT);
