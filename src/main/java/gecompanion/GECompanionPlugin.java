@@ -502,7 +502,7 @@ private void fetchMapping()
             }
             return;
         }
-        if (!event.getKey().equals("recentSearches") && !event.getKey().equals("bankValueLog") && !event.getKey().equals("bankValue") && !event.getKey().equals("bankValueHidden") && !event.getKey().equals("pinnedItems"))
+		if (!event.getKey().equals("recentSearches") && !event.getKey().equals("bankValueLog") && !event.getKey().equals("bankValue") && !event.getKey().equals("wealthValue") && !event.getKey().equals("bankValueHidden") && !event.getKey().equals("pinnedItems"))
 		{
 			javax.swing.SwingUtilities.invokeLater(() -> panel.showTab(panel.getActiveTab()));
 		}
